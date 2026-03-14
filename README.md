@@ -85,7 +85,6 @@ After refining, users can share their stats via a pre-filled X (Twitter) post.
   WalletSearch.tsx         — Wallet address search input
   OilStats.tsx             — Stats dashboard, refine action, share on X
   Footer.tsx               — Footer with copyright, socials, and Helius branding
-  HeliusLogo.tsx           — Helius logo placeholder (replace with official asset)
 
 /lib
   helius.ts                — Helius API integration
@@ -111,14 +110,13 @@ After refining, users can share their stats via a pre-filled X (Twitter) post.
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/your-org/solana-oil-factory.git
+git clone https://github.com/vip-ultr/solana-oil-factory.git
 cd solana-oil-factory
 
 # 2. Install dependencies
 npm install
 
 # 3. Create environment file
-cp .env.example .env.local
 # Add your Helius API key to .env.local:
 # HELIUS_API_KEY=your-key-here
 
