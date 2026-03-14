@@ -85,7 +85,7 @@ export default function Home() {
         {/* Empty state — no wallet connected, no search, not loading */}
         {!data && !loading && !error && (
           <div className="empty-state">
-            <p className="empty-state-text">Connect Wallet to Enter the Refinery</p>
+            <p className="empty-state-text">Connect or Search Wallet to Enter the Refinery</p>
             <button onClick={open} className="btn-connect btn-connect--large">
               Connect Wallet
             </button>
