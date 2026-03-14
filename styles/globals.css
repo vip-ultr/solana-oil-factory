@@ -37,7 +37,9 @@ html { scroll-behavior: smooth; }
 body {
   background-color: var(--bg-base);
   color: var(--text-primary);
-  font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", "Helvetica Neue", sans-serif;
+  font-family: var(--font-body), "Space Grotesk", sans-serif;
+  display: flex;
+  flex-direction: column;
   min-height: 100vh;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
@@ -46,7 +48,9 @@ body {
 
 /* ─── Page Wrapper ──────────────────────────────── */
 .page {
+  flex: 1;
   max-width: 1160px;
+  width: 100%;
   margin: 0 auto;
   padding: 0 24px;
 }
@@ -606,14 +610,17 @@ body {
    FOOTER
 ══════════════════════════════════════════════════ */
 .footer {
+  height: 60px;
+  flex-shrink: 0;
   border-top: 2px solid var(--border-base);
   background: var(--bg-base);
 }
 
 .footer-inner {
   max-width: 1160px;
+  height: 100%;
   margin: 0 auto;
-  padding: 20px 24px;
+  padding: 0 24px;
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
@@ -683,7 +690,7 @@ body {
 /* ── Footer: stays a single horizontal row on ALL screen sizes ── */
 @media (max-width: 640px) {
   .footer-inner {
-    padding: 14px 16px;
+    padding: 0 16px;
     gap: 8px;
   }
   .footer-copy {
