@@ -21,11 +21,11 @@ export default function OilStats({ data }: OilStatsProps) {
 
   const { address, oilUnits, barrels, crude, title } = data;
 
-  const shareText = `🛢️ Solana Oil Factory
+  const shareText = `Solana Oil Factory 🛢️
 
-I just refined ${crude} $CRUDE
+I just refined ${crude.toLocaleString()} CRUDE
 
-📊 Transactions: ${oilUnits}
+📊 Transactions: ${oilUnits.toLocaleString()}
 🏷️ Title: ${title}
 
 Check your barrel:

@@ -21,7 +21,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={font.variable}>
       <body>
-        <Providers>{children}</Providers>
+        <div style={{ flex: 1 }}>
+          <Providers>{children}</Providers>
+        </div>
         <Footer />
       </body>
     </html>
