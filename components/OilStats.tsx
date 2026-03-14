@@ -16,7 +16,7 @@ export default function OilStats({ data }: OilStatsProps) {
     setTimeout(() => {
       setRefining(false);
       setRefined(true);
-    }, 10000);
+    }, 5000);
   };
 
   const { address, oilUnits, barrels, crude, title } = data;
@@ -34,7 +34,7 @@ https://solanaoilfactory.xyz`;
   const handleShare = () => {
     window.open(
       `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`,
-      "_blank"
+      "_blank",
     );
   };
 
@@ -44,7 +44,6 @@ https://solanaoilfactory.xyz`;
     <>
       {/* ── Stats + Refinery row ── */}
       <div className="panels-row">
-
         {/* Stats Panel */}
         <div className="panel">
           <p className="panel-label">Production Stats</p>
@@ -81,14 +80,23 @@ https://solanaoilfactory.xyz`;
         <div className="panel refinery-panel">
           <p className="panel-label">Refinery</p>
           <p className="refinery-desc">
-            <h3>Every 10 oil units yields 1 $CRUDE token.</h3>
-            <h3>Every 10 oil units yields 1 $CRUDE token.</h3>
-            Refine to unlock your prestige title.
+            <h2>Refine to unlock your prestige title.</h2>
+            <h1>How it works?</h1>
+            <p>
+              1. Every transaction generates <b>Oil Units</b>.
+            </p>
+            <p>
+              2. 50 Oil Units fill one <b>oil barrel</b>.
+            </p>
+            <p>
+              3. Every 10 Oil Units refine into <b>1 $CRUDE</b>.
+            </p>
+            <p>
+              4. Your total $CRUDE determines your <b>Prestige Title</b>.
+            </p>
           </p>
           {refining ? (
-            <div className="loading-msg">
-              ⚙️ Refining your oil...
-            </div>
+            <div className="loading-msg">⚙️ Refining your oil...</div>
           ) : !refined ? (
             <button onClick={handleRefine} className="btn-refine">
               🛢 Refine Oil
@@ -96,12 +104,11 @@ https://solanaoilfactory.xyz`;
           ) : (
             <div className="refined-result">
               <p className="refined-text">
-                Refined <strong>{crude} $CRUDE</strong>  —  {title}
+                Refined <strong>{crude} $CRUDE</strong> — {title}
               </p>
             </div>
           )}
         </div>
-
       </div>
 
       {/* ── Share Panel (only after refining) ── */}
