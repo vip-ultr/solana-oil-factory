@@ -47,13 +47,33 @@ After refining, users can share their stats via a pre-filled X (Twitter) post.
 
 ## Prestige Titles
 
-| $CRUDE Range | Title            |
-|-------------|------------------|
-| 0 – 5       | Dry Well         |
-| 5 – 50      | Backyard Driller |
-| 50 – 200    | Oil Producer     |
-| 200 – 1,000 | Refinery Boss    |
-| 1,000+      | Oil Tycoon       |
+| $CRUDE Required | Title                  |
+|-----------------|------------------------|
+| 0               | Dry Well               |
+| 1               | Mud Digger             |
+| 5               | Backyard Driller       |
+| 10              | Small Rig Operator     |
+| 20              | Pump Jack Runner       |
+| 50              | Oil Producer           |
+| 80              | Field Driller          |
+| 120             | Rig Supervisor         |
+| 200             | Pipeline Operator      |
+| 350             | Refinery Engineer      |
+| 500             | Black Gold Miner       |
+| 800             | Refinery Boss          |
+| 1,200           | Pipeline Baron         |
+| 2,000           | Oil Baron              |
+| 3,500           | Crude Commander        |
+| 5,000           | Petroleum Magnate      |
+| 8,000           | Oil Syndicate Leader   |
+| 10,000          | Global Refiner         |
+| 20,000          | Petrostate Architect   |
+| 50,000          | Black Gold Emperor     |
+| 100,000         | Industrial Titan       |
+| 250,000         | Energy Overlord        |
+| 500,000         | Crude Sovereign        |
+| 1,000,000       | Oil Tycoon             |
+| 5,000,000       | Supreme PetroLord      |
 
 ---
 
@@ -167,7 +187,7 @@ Oil Units:  214
 Barrels:    4 full + 1 partial
 Fill:       [100%, 100%, 100%, 100%, 28%]
 $CRUDE:     21
-Title:      Backyard Driller
+Title:      Pump Jack Runner
 ```
 
 ---
@@ -186,7 +206,7 @@ GET /api/wallet?address=<solana-wallet-address>
   "barrels": 4,
   "fillPercentages": [100, 100, 100, 100, 28],
   "crude": 21,
-  "title": "Backyard Driller"
+  "title": "Pump Jack Runner"
 }
 ```
 
