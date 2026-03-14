@@ -9,6 +9,15 @@ interface OilStatsProps {
 
 export default function OilStats({ data }: OilStatsProps) {
   const [refined, setRefined] = useState(false);
+  const [refining, setRefining] = useState(false);
+
+  const handleRefine = () => {
+    setRefining(true);
+    setTimeout(() => {
+      setRefining(false);
+      setRefined(true);
+    }, 10000);
+  };
 
   const { address, oilUnits, barrels, crude, title } = data;
 
@@ -72,11 +81,16 @@ https://solanaoilfactory.xyz`;
         <div className="panel refinery-panel">
           <p className="panel-label">Refinery</p>
           <p className="refinery-desc">
-            Every 10 oil units yields 1 $CRUDE token.
+            <h3>Every 10 oil units yields 1 $CRUDE token.</h3>
+            <h3>Every 10 oil units yields 1 $CRUDE token.</h3>
             Refine to unlock your prestige title.
           </p>
-          {!refined ? (
-            <button onClick={() => setRefined(true)} className="btn-refine">
+          {refining ? (
+            <div className="loading-msg">
+              ⚙️ Refining your oil...
+            </div>
+          ) : !refined ? (
+            <button onClick={handleRefine} className="btn-refine">
               🛢 Refine Oil
             </button>
           ) : (
