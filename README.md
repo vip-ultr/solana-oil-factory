@@ -1,4 +1,4 @@
-# 🛢 Solana Oil Factory
+#  Solana Oil Factory
 
 A Web3 dashboard that transforms your Solana wallet's on-chain activity into a visual oil production system. Every transaction you've made becomes oil — filling industrial barrels, earning you $CRUDE tokens, and unlocking a prestige title you can flex on X.
 
