@@ -65,7 +65,7 @@ export default function Home() {
       <header className="header">
         <h1 className="site-title">
           <img src="/logo.png" alt="Solana Oil Factory" className="site-logo" />
-          Solana Oil Factory
+          <span className="site-title-text">Solana Oil Factory</span>
         </h1>
         <div className="wallet-controls">
           <a href="/leaderboard" className="lb-nav-link">

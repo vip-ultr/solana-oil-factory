@@ -154,7 +154,8 @@ body {
     margin-bottom: 28px;
   }
   .site-title { font-size: 0.9rem; }
-  .site-logo { width: 26px; height: 26px; }
+  .site-logo { width: 38px; height: 38px; }
+  .site-title-text { display: none; }
   .wallet-controls { gap: 6px; }
   .wallet-address {
     font-size: 0.68rem;

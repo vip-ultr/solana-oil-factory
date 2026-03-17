@@ -3,39 +3,25 @@
 import { useState, useEffect, useCallback } from "react";
 import { useModal, useIsExtensionInstalled } from "@phantom/react-sdk";
 
-interface WalletOption {
-  name: string;
-  icon: string;
-  extensionUrl: string;
-  mobileUrl: string;
-  universalLink: string;
-}
-
-const WALLETS: WalletOption[] = [
+const WALLETS = [
   {
     name: "Phantom",
-    icon: "https://phantom.com/img/phantom-icon-purple.svg",
-    extensionUrl: "https://chrome.google.com/webstore/detail/phantom/bfnaelmomeimhlpmgjnjophhpkkoljpa",
-    mobileUrl: "https://phantom.app/download",
+    icon: "/phantom-icon.png",
     universalLink: "https://phantom.app/ul/browse/",
   },
   {
     name: "Solflare",
-    icon: "https://solflare.com/favicon.svg",
-    extensionUrl: "https://chrome.google.com/webstore/detail/solflare-wallet/bhhhlbepdkbapadjdcopmkaabnhkkfhm",
-    mobileUrl: "https://solflare.com/download",
+    icon: "/solflare-icon.png",
     universalLink: "https://solflare.com/ul/",
   },
   {
     name: "Backpack",
-    icon: "https://backpack.app/favicon.ico",
-    extensionUrl: "https://chrome.google.com/webstore/detail/backpack/aflkmfhebedbjioipglgcbcmnbpgliof",
-    mobileUrl: "https://backpack.app/download",
+    icon: "/backpack-icon.png",
     universalLink: "https://backpack.app/ul/",
   },
 ];
 
-function isMobileDevice(): boolean {
+function isMobile(): boolean {
   if (typeof navigator === "undefined") return false;
   return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 }
@@ -54,25 +40,23 @@ interface WalletConnectModalProps {
 export default function WalletConnectModal({ isOpen, onClose }: WalletConnectModalProps) {
   const { open: openPhantomModal } = useModal();
   const { isInstalled, isLoading } = useIsExtensionInstalled();
-  const [isMobile, setIsMobile] = useState(false);
-  const [walletInjected, setWalletInjected] = useState(false);
+  const [mobile, setMobile] = useState(false);
+  const [injected, setInjected] = useState(false);
 
   useEffect(() => {
-    setIsMobile(isMobileDevice());
-    setWalletInjected(hasInjectedWallet());
+    setMobile(isMobile());
+    setInjected(hasInjectedWallet());
   }, []);
 
-  // Close on ESC
   useEffect(() => {
-    if (!isOpen) return;
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
-  }, [isOpen, onClose]);
+    if (!isOpen || isLoading) return;
+    // Use Phantom SDK modal on desktop, or on mobile if a wallet is already injected
+    if (!mobile || injected || isInstalled) {
+      openPhantomModal();
+      onClose();
+    }
+  }, [isOpen, isLoading, mobile, injected, isInstalled, openPhantomModal, onClose]);
 
-  // Close on backdrop click
   const handleBackdropClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
       if (e.target === e.currentTarget) onClose();
@@ -80,14 +64,15 @@ export default function WalletConnectModal({ isOpen, onClose }: WalletConnectMod
     [onClose]
   );
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [isOpen, onClose]);
 
-  // If any wallet is detected (desktop extension or mobile browser with wallet), connect directly
-  if (!isLoading && (isInstalled || walletInjected)) {
-    openPhantomModal();
-    onClose();
-    return null;
-  }
+  // Only render the custom modal on mobile with no wallet detected
+  if (!isOpen || !mobile || injected || isInstalled) return null;
 
   const currentUrl = typeof window !== "undefined" ? window.location.href : "";
 
@@ -96,58 +81,36 @@ export default function WalletConnectModal({ isOpen, onClose }: WalletConnectMod
       <div className="wcm-modal">
         <div className="wcm-header">
           <h3 className="wcm-title">Connect a Wallet</h3>
-          <button onClick={onClose} className="wcm-close" aria-label="Close">
-            &times;
-          </button>
+          <button onClick={onClose} className="wcm-close" aria-label="Close">&times;</button>
         </div>
 
-        <p className="wcm-desc">
-          {isMobile
-            ? "Select a wallet app to connect. You'll be redirected to the app."
-            : "Select a wallet to install, or use the search bar to look up any address."}
-        </p>
+        <p className="wcm-desc">Select a wallet app to connect. You&apos;ll be redirected to the app.</p>
 
         <div className="wcm-list">
-          {WALLETS.map((wallet) => {
-            const href = isMobile
-              ? `${wallet.universalLink}${encodeURIComponent(currentUrl)}`
-              : wallet.extensionUrl;
-
-            return (
-              <a
-                key={wallet.name}
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="wcm-wallet-btn"
-              >
-                <img
-                  src={wallet.icon}
-                  alt={wallet.name}
-                  className="wcm-wallet-icon"
-                  width={32}
-                  height={32}
-                />
-                <div className="wcm-wallet-info">
-                  <span className="wcm-wallet-name">{wallet.name}</span>
-                  <span className="wcm-wallet-action">
-                    {isMobile ? "Open App" : "Install Extension"}
-                  </span>
-                </div>
-                <svg className="wcm-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M7 17L17 7M17 7H7M17 7V17" />
-                </svg>
-              </a>
-            );
-          })}
+          {WALLETS.map(({ name, icon, universalLink }) => (
+            <a
+              key={name}
+              href={`${universalLink}${encodeURIComponent(currentUrl)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="wcm-wallet-btn"
+            >
+              <img src={icon} alt={name} className="wcm-wallet-icon" width={32} height={32} />
+              <div className="wcm-wallet-info">
+                <span className="wcm-wallet-name">{name}</span>
+                <span className="wcm-wallet-action">Open App</span>
+              </div>
+              <svg className="wcm-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M7 17L17 7M17 7H7M17 7V17" />
+              </svg>
+            </a>
+          ))}
         </div>
 
-        <div className="wcm-divider">
-          <span>or</span>
-        </div>
+        <div className="wcm-divider"><span>or</span></div>
 
         <p className="wcm-alt-text">
-          Use the <strong>search bar</strong> above to look up any Solana wallet address without connecting.
+          Use the <strong>search bar</strong> to look up any Solana wallet address without connecting.
         </p>
       </div>
     </div>
