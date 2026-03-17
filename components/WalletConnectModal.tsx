@@ -1,11 +1,44 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useModal, useIsExtensionInstalled } from "@phantom/react-sdk";
+
+function PhantomIcon() {
+  return (
+    <svg width="32" height="32" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="128" height="128" rx="28" fill="#AB9FF2"/>
+      <path d="M110.584 64.906c0 24.17-19.593 43.764-43.764 43.764-7.896 0-15.3-2.087-21.698-5.742l-22.04 5.742 5.742-22.04C25.17 80.233 23.082 72.83 23.082 64.934c0-24.17 19.594-43.764 43.764-43.764S110.584 40.764 110.584 64.906z" fill="white"/>
+      <ellipse cx="52" cy="62" rx="7" ry="9" fill="#AB9FF2"/>
+      <ellipse cx="76" cy="62" rx="7" ry="9" fill="#AB9FF2"/>
+      <ellipse cx="54" cy="60" rx="3" ry="3.5" fill="white"/>
+      <ellipse cx="78" cy="60" rx="3" ry="3.5" fill="white"/>
+    </svg>
+  );
+}
+
+function SolflareIcon() {
+  return (
+    <svg width="32" height="32" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="128" height="128" rx="28" fill="#FC6F35"/>
+      <path d="M64 20 L78 54 L114 54 L86 74 L98 108 L64 88 L30 108 L42 74 L14 54 L50 54 Z" fill="white" opacity="0.95"/>
+    </svg>
+  );
+}
+
+function BackpackIcon() {
+  return (
+    <svg width="32" height="32" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="128" height="128" rx="28" fill="#E33E3F"/>
+      <rect x="38" y="50" width="52" height="48" rx="10" fill="white"/>
+      <path d="M50 50 C50 36 78 36 78 50" stroke="white" strokeWidth="7" fill="none" strokeLinecap="round"/>
+      <rect x="56" y="68" width="16" height="10" rx="3" fill="#E33E3F"/>
+    </svg>
+  );
+}
 
 interface WalletOption {
   name: string;
-  icon: string;
+  Icon: () => React.ReactElement;
   extensionUrl: string;
   mobileUrl: string;
   universalLink: string;
@@ -14,21 +47,21 @@ interface WalletOption {
 const WALLETS: WalletOption[] = [
   {
     name: "Phantom",
-    icon: "https://phantom.com/img/phantom-icon-purple.svg",
+    Icon: PhantomIcon,
     extensionUrl: "https://chrome.google.com/webstore/detail/phantom/bfnaelmomeimhlpmgjnjophhpkkoljpa",
     mobileUrl: "https://phantom.app/download",
     universalLink: "https://phantom.app/ul/browse/",
   },
   {
     name: "Solflare",
-    icon: "https://solflare.com/favicon.svg",
+    Icon: SolflareIcon,
     extensionUrl: "https://chrome.google.com/webstore/detail/solflare-wallet/bhhhlbepdkbapadjdcopmkaabnhkkfhm",
     mobileUrl: "https://solflare.com/download",
     universalLink: "https://solflare.com/ul/",
   },
   {
     name: "Backpack",
-    icon: "https://backpack.app/favicon.ico",
+    Icon: BackpackIcon,
     extensionUrl: "https://chrome.google.com/webstore/detail/backpack/aflkmfhebedbjioipglgcbcmnbpgliof",
     mobileUrl: "https://backpack.app/download",
     universalLink: "https://backpack.app/ul/",
@@ -108,28 +141,24 @@ export default function WalletConnectModal({ isOpen, onClose }: WalletConnectMod
         </p>
 
         <div className="wcm-list">
-          {WALLETS.map((wallet) => {
+          {WALLETS.map(({ name, Icon, extensionUrl, universalLink }) => {
             const href = isMobile
-              ? `${wallet.universalLink}${encodeURIComponent(currentUrl)}`
-              : wallet.extensionUrl;
+              ? `${universalLink}${encodeURIComponent(currentUrl)}`
+              : extensionUrl;
 
             return (
               <a
-                key={wallet.name}
+                key={name}
                 href={href}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="wcm-wallet-btn"
               >
-                <img
-                  src={wallet.icon}
-                  alt={wallet.name}
-                  className="wcm-wallet-icon"
-                  width={32}
-                  height={32}
-                />
+                <span className="wcm-wallet-icon">
+                  <Icon />
+                </span>
                 <div className="wcm-wallet-info">
-                  <span className="wcm-wallet-name">{wallet.name}</span>
+                  <span className="wcm-wallet-name">{name}</span>
                   <span className="wcm-wallet-action">
                     {isMobile ? "Open App" : "Install Extension"}
                   </span>
