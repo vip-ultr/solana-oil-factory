@@ -1,3 +1,5 @@
+import { SiSolana } from "react-icons/si";
+
 export default function Footer() {
   return (
     <footer className="footer">
@@ -45,21 +47,12 @@ export default function Footer() {
           </a>
         </div>
 
-        {/* Right — Powered by + Helius logo PNG */}
-        <a
-          href="https://helius.dev"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="footer-helius"
-        >
-          <span className="footer-powered-text">Powered by</span>
-          {/* Drop your Helius PNG into /public/helius-logo.png */}
-          <img
-            src="/helius-logo.png"
-            alt="Helius"
-            className="footer-helius-logo"
-          />
-        </a>
+        {/* Right — Powered by Solana */}
+        <div className="footer-powered">
+          <span className="footer-powered-label">powered by</span>
+          <SiSolana size={16} className="footer-sol-icon" />
+          <span className="footer-sol-text">solana</span>
+        </div>
 
       </div>
     </footer>
