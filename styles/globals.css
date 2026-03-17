@@ -141,31 +141,33 @@ body {
 /* ── Header: tablet ── */
 @media (max-width: 640px) {
   .header {
-    gap: 10px;
-    padding: 16px 0;
-    margin-bottom: 32px;
+    gap: 8px;
+    padding: 14px 0;
+    margin-bottom: 28px;
   }
-  .site-title { font-size: 0.95rem; }
-  /* Keep address visible but compact */
+  .site-title { font-size: 0.9rem; }
+  .wallet-controls { gap: 6px; }
   .wallet-address {
-    font-size: 0.7rem;
-    max-width: 90px;
+    font-size: 0.68rem;
+    max-width: 80px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .connected-wallet { padding: 6px 10px; gap: 6px; }
+  .connected-wallet { padding: 5px 9px; gap: 6px; }
   .btn-connect,
-  .btn-disconnect { padding: 7px 14px; font-size: 0.8rem; }
+  .btn-disconnect { padding: 6px 12px; font-size: 0.75rem; }
+  .lb-nav-link { padding: 6px 10px; font-size: 0.75rem; }
 }
 
 /* ── Header: small phone ── */
 @media (max-width: 400px) {
-  .site-title { font-size: 0.85rem; }
-  .wallet-address { max-width: 70px; font-size: 0.65rem; }
+  .site-title { font-size: 0.78rem; }
+  .wallet-address { max-width: 60px; font-size: 0.62rem; display: none; }
   .btn-connect,
-  .btn-disconnect { padding: 6px 11px; font-size: 0.75rem; }
-  .connected-wallet { padding: 5px 8px; gap: 5px; }
+  .btn-disconnect { padding: 5px 10px; font-size: 0.7rem; }
+  .connected-wallet { padding: 5px 8px; gap: 4px; }
+  .lb-nav-link { padding: 5px 8px; font-size: 0.7rem; }
 }
 
 /* ═══════════════════════════════════════════════════
@@ -773,11 +775,14 @@ body {
   letter-spacing: 0.9px;
   font-weight: 600;
   border-bottom: 1px solid var(--border-base);
+  border-right: 1px solid var(--border-subtle);
   white-space: nowrap;
   background: var(--bg-elevated);
 }
+.lb-th:last-child { border-right: none; }
 .lb-th:first-child { border-radius: 14px 0 0 0; }
 .lb-th:last-child  { border-radius: 0 14px 0 0; }
+.lb-th-crude, .lb-th-txns { text-align: right; }
 
 .lb-row {
   border-bottom: 1px solid var(--border-subtle);
@@ -790,7 +795,9 @@ body {
   padding: 13px 16px;
   color: var(--text-secondary);
   vertical-align: middle;
+  border-right: 1px solid var(--border-subtle);
 }
+.lb-td:last-child { border-right: none; }
 
 .lb-td-rank {
   color: var(--text-muted);
@@ -821,7 +828,7 @@ body {
   color: var(--accent);
   font-weight: 700;
   font-family: ui-monospace, "Cascadia Code", monospace;
-  /* text-align: right; */
+  text-align: right;
 }
 
 .lb-td-title {
@@ -834,6 +841,7 @@ body {
 .lb-td-txns {
   font-family: ui-monospace, "Cascadia Code", monospace;
   font-size: 0.82rem;
+  text-align: right;
 }
 
 /* .lb-td-updated {
