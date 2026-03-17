@@ -6,7 +6,7 @@ export interface LeaderboardEntry {
   oil_units: number;
   barrels: number;
   prestige_title: string;
-  last_updated: string;
+  // last_updated: string;
 }
 
 interface LeaderboardTableProps {
@@ -43,10 +43,10 @@ export default function LeaderboardTable({ entries }: LeaderboardTableProps) {
           <tr>
             <th className="lb-th lb-th-rank">#</th>
             <th className="lb-th lb-th-wallet">Wallet</th>
-            <th className="lb-th lb-th-crude">$CRUDE</th>
+            <th className="lb-th lb-th-crude">CRUDE Production</th>
             <th className="lb-th lb-th-title">Prestige Title</th>
             <th className="lb-th lb-th-txns">Transactions</th>
-            <th className="lb-th lb-th-updated">Updated</th>
+            {/* <th className="lb-th lb-th-updated">Updated</th> */}
           </tr>
         </thead>
         <tbody>
@@ -67,7 +67,7 @@ export default function LeaderboardTable({ entries }: LeaderboardTableProps) {
               <td className="lb-td lb-td-crude">{entry.crude.toLocaleString()}</td>
               <td className="lb-td lb-td-title">{entry.prestige_title}</td>
               <td className="lb-td lb-td-txns">{entry.oil_units.toLocaleString()}</td>
-              <td className="lb-td lb-td-updated">{timeAgo(entry.last_updated)}</td>
+              {/* <td className="lb-td lb-td-updated">{timeAgo(entry.last_updated)}</td> */}
             </tr>
           ))}
         </tbody>

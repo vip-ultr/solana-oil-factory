@@ -43,7 +43,8 @@ export default async function LeaderboardPage() {
             <div className="barrel-hero-rule" />
           </div>
           <p className="lb-subtitle">
-            Top {entries.length} wallets ranked by $CRUDE produced. Updates whenever any wallet is searched.
+            Wallets are ranked by CRUDE produced. <br />
+            Leaderboard is updated whenever a wallet joins the refinery.
           </p>
         </div>
 

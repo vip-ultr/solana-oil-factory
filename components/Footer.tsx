@@ -49,7 +49,7 @@ export default function Footer() {
 
         {/* Right — Powered by Solana */}
         <div className="footer-powered">
-          <span className="footer-powered-label">powered by</span>
+          <span className="footer-powered-label">Powered By</span>
           <SiSolana size={16} className="footer-sol-icon" />
           <span className="footer-sol-text">solana</span>
         </div>

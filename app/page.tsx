@@ -1,23 +1,31 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { usePhantom, useModal, useDisconnect, AddressType } from "@phantom/react-sdk";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { usePhantom, useDisconnect, AddressType } from "@phantom/react-sdk";
 import WalletSearch from "@/components/WalletSearch";
 import BarrelGrid from "@/components/BarrelGrid";
 import OilStats from "@/components/OilStats";
+import WalletConnectModal from "@/components/WalletConnectModal";
 import type { OilData } from "@/lib/oilCalculator";
 
 type WalletData = OilData & { address: string };
 
 export default function Home() {
   const { isConnected, addresses } = usePhantom();
-  const { open } = useModal();
   const { disconnect } = useDisconnect();
+  const [showConnectModal, setShowConnectModal] = useState(false);
+  const openConnectModal = useCallback(() => setShowConnectModal(true), []);
+  const closeConnectModal = useCallback(() => setShowConnectModal(false), []);
   const solanaAddress = addresses.find((a) => a.addressType === AddressType.solana)?.address ?? null;
   const [data, setData] = useState<WalletData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+
+  // Close connect modal when wallet connects
+  useEffect(() => {
+    if (isConnected) setShowConnectModal(false);
+  }, [isConnected]);
 
   // Auto-load connected wallet data
   useEffect(() => {
@@ -70,7 +78,7 @@ export default function Home() {
               </button>
             </div>
           ) : (
-            <button onClick={open} className="btn-connect">
+            <button onClick={openConnectModal} className="btn-connect">
               Connect Wallet
             </button>
           )}
@@ -89,7 +97,7 @@ export default function Home() {
         {!data && !loading && !error && (
           <div className="empty-state">
             <p className="empty-state-text">Connect or Search Wallet to Enter the Refinery</p>
-            <button onClick={open} className="btn-connect btn-connect--large">
+            <button onClick={openConnectModal} className="btn-connect btn-connect--large">
               Connect Wallet
             </button>
           </div>
@@ -130,6 +138,9 @@ export default function Home() {
         )}
 
       </main>
+
+      {/* Wallet Connect Modal — shows wallet options even if extensions aren't installed */}
+      <WalletConnectModal isOpen={showConnectModal} onClose={closeConnectModal} />
     </div>
   );
 }

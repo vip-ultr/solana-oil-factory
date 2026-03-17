@@ -666,10 +666,10 @@ body {
   align-items: center;
   gap: 5px;
   justify-self: end;
-  text-transform: uppercase;
+  /* text-transform: uppercase; */
   font-size: 0.75rem;
   letter-spacing: 0.2px;
-  color: var(--red-h);
+  color: #ffff;
 }
 .footer-powered-label {
   font-weight: 600;
@@ -680,8 +680,9 @@ body {
   flex-shrink: 0;
 }
 .footer-sol-text {
+  text-transform: uppercase;
   font-weight: 700;
-  color: #9945FF;
+  color: #ffff;
   white-space: nowrap;
 }
 
@@ -844,7 +845,7 @@ body {
 @media (max-width: 640px) {
   .lb-table { font-size: 0.8rem; }
   .lb-th, .lb-td { padding: 10px 12px; }
-  .lb-th-updated, .lb-td-updated, .lb-td-title,
+  .lb-th-updated, .lb-td-updated,
   .lb-th-txns,    .lb-td-txns { display: none; }
 }
 
