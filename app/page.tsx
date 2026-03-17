@@ -57,6 +57,9 @@ export default function Home() {
       <header className="header">
         <h1 className="site-title">🛢 Solana Oil Factory</h1>
         <div className="wallet-controls">
+          <a href="/leaderboard" className="lb-nav-link">
+            Leaderboard
+          </a>
           {isConnected && solanaAddress ? (
             <div className="connected-wallet">
               <span className="wallet-address">

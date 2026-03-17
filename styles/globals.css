@@ -712,3 +712,141 @@ body {
   .footer-socials { gap: 10px; }
   .footer-social-link svg { width: 14px; height: 14px; }
 }
+
+/* ═══════════════════════════════════════════════════
+   LEADERBOARD
+═══════════════════════════════════════════════════ */
+
+.lb-nav-link {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  border: 1px solid var(--border-base);
+  padding: 7px 14px;
+  border-radius: 9px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+.lb-nav-link:hover {
+  color: var(--text-primary);
+  border-color: var(--border-mid);
+  background: var(--bg-elevated);
+}
+
+.lb-header {
+  margin-bottom: 28px;
+}
+
+.lb-subtitle {
+  font-size: 0.83rem;
+  color: var(--text-muted);
+  margin-top: 8px;
+}
+
+.lb-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  border: 1px solid var(--border-base);
+  border-radius: 14px;
+  background: var(--bg-surface);
+}
+
+.lb-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border-base);
+  border-radius: 14px;
+  background: var(--bg-surface);
+}
+
+.lb-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.lb-th {
+  padding: 14px 16px;
+  text-align: left;
+  font-size: 0.67rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.9px;
+  font-weight: 600;
+  border-bottom: 1px solid var(--border-base);
+  white-space: nowrap;
+  background: var(--bg-elevated);
+}
+.lb-th:first-child { border-radius: 14px 0 0 0; }
+.lb-th:last-child  { border-radius: 0 14px 0 0; }
+
+.lb-row {
+  border-bottom: 1px solid var(--border-subtle);
+  transition: background 0.15s ease;
+}
+.lb-row:last-child { border-bottom: none; }
+.lb-row:hover { background: var(--bg-elevated); }
+
+.lb-td {
+  padding: 13px 16px;
+  color: var(--text-secondary);
+  vertical-align: middle;
+}
+
+.lb-td-rank {
+  color: var(--text-muted);
+  font-family: ui-monospace, "Cascadia Code", monospace;
+  font-size: 0.8rem;
+  width: 44px;
+  text-align: center;
+}
+
+/* Gold / silver / bronze for top 3 */
+.lb-row:nth-child(1) .lb-td-rank { color: var(--accent); font-weight: 800; font-size: 0.9rem; }
+.lb-row:nth-child(2) .lb-td-rank { color: #b0b8c4;        font-weight: 700; }
+.lb-row:nth-child(3) .lb-td-rank { color: #cd7f32;        font-weight: 700; }
+
+.lb-td-wallet {
+  font-family: ui-monospace, "Cascadia Code", monospace;
+  font-size: 0.82rem;
+}
+
+.lb-wallet-link {
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+.lb-wallet-link:hover { color: var(--accent); }
+
+.lb-td-crude {
+  color: var(--accent);
+  font-weight: 700;
+  font-family: ui-monospace, "Cascadia Code", monospace;
+}
+
+.lb-td-title {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: var(--text-muted);
+}
+
+.lb-td-txns {
+  font-family: ui-monospace, "Cascadia Code", monospace;
+  font-size: 0.82rem;
+}
+
+.lb-td-updated {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .lb-table { font-size: 0.8rem; }
+  .lb-th, .lb-td { padding: 10px 12px; }
+  .lb-th-updated, .lb-td-updated,
+  .lb-th-txns,    .lb-td-txns { display: none; }
+}
