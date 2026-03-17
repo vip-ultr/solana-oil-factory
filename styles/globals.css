@@ -80,7 +80,15 @@ body {
   letter-spacing: -0.4px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+}
+
+.site-logo {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  display: block;
+  flex-shrink: 0;
 }
 
 .wallet-controls {
@@ -146,6 +154,7 @@ body {
     margin-bottom: 28px;
   }
   .site-title { font-size: 0.9rem; }
+  .site-logo { width: 26px; height: 26px; }
   .wallet-controls { gap: 6px; }
   .wallet-address {
     font-size: 0.68rem;

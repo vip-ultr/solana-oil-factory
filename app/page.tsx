@@ -63,7 +63,10 @@ export default function Home() {
     <div className="page">
       {/* ── Header ── */}
       <header className="header">
-        <h1 className="site-title">🛢 Solana Oil Factory</h1>
+        <h1 className="site-title">
+          <img src="/logo.png" alt="Solana Oil Factory" className="site-logo" />
+          Solana Oil Factory
+        </h1>
         <div className="wallet-controls">
           <a href="/leaderboard" className="lb-nav-link">
             Leaderboard

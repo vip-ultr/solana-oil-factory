@@ -11,7 +11,7 @@ export default function Footer() {
         {/* Center — social icons */}
         <div className="footer-socials">
           <a
-            href="https://x.com/vip_ultr"
+            href="https://x.com/solanaOilFac/"
             target="_blank"
             rel="noopener noreferrer"
             className="footer-social-link"
