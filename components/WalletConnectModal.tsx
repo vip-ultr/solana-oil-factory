@@ -40,6 +40,12 @@ function isMobileDevice(): boolean {
   return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 }
 
+function hasInjectedWallet(): boolean {
+  if (typeof window === "undefined") return false;
+  const w = window as Record<string, unknown>;
+  return !!(w.phantom || w.solana || w.solflare || w.backpack);
+}
+
 interface WalletConnectModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -49,9 +55,11 @@ export default function WalletConnectModal({ isOpen, onClose }: WalletConnectMod
   const { open: openPhantomModal } = useModal();
   const { isInstalled, isLoading } = useIsExtensionInstalled();
   const [isMobile, setIsMobile] = useState(false);
+  const [walletInjected, setWalletInjected] = useState(false);
 
   useEffect(() => {
     setIsMobile(isMobileDevice());
+    setWalletInjected(hasInjectedWallet());
   }, []);
 
   // Close on ESC
@@ -74,8 +82,8 @@ export default function WalletConnectModal({ isOpen, onClose }: WalletConnectMod
 
   if (!isOpen) return null;
 
-  // If Phantom extension IS installed and we're on desktop, use the SDK modal directly
-  if (!isLoading && isInstalled && !isMobile) {
+  // If any wallet is detected (desktop extension or mobile browser with wallet), connect directly
+  if (!isLoading && (isInstalled || walletInjected)) {
     openPhantomModal();
     onClose();
     return null;
