@@ -15,6 +15,10 @@ const font = Space_Grotesk({
 export const metadata: Metadata = {
   title: "Solana Oil Factory",
   description: "Convert your Solana wallet activity into oil production",
+  icons: {
+    icon: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

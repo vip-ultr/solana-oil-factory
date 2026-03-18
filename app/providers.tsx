@@ -10,7 +10,12 @@ const phantomConfig: PhantomSDKConfig = {
 
 export default function Providers({ children }: { children: ReactNode }) {
   return (
-    <PhantomProvider config={phantomConfig} theme={darkTheme}>
+    <PhantomProvider
+      config={phantomConfig}
+      theme={darkTheme}
+      appName="Solana Oil Factory"
+      appIcon="/logo.png"
+    >
       {children}
     </PhantomProvider>
   );
