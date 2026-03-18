@@ -29,7 +29,7 @@ function isMobile(): boolean {
 function hasInjectedWallet(): boolean {
   if (typeof window === "undefined") return false;
   const w = window as unknown as Record<string, unknown>;
-  return !!(w.phantom || w.solana || w.solflare || w.backpack);
+  return !!(w.phantom || w.solana || w.solflare || w.backpack || w.jupiter || w.coin98 || w.slope);
 }
 
 interface WalletConnectModalProps {
@@ -45,7 +45,14 @@ export default function WalletConnectModal({ isOpen, onClose }: WalletConnectMod
 
   useEffect(() => {
     setMobile(isMobile());
-    setInjected(hasInjectedWallet());
+    // Check immediately, then retry after a short delay — some in-app browsers
+    // (Jupiter, Backpack, etc.) inject the wallet provider asynchronously
+    if (hasInjectedWallet()) {
+      setInjected(true);
+    } else {
+      const t = setTimeout(() => setInjected(hasInjectedWallet()), 500);
+      return () => clearTimeout(t);
+    }
   }, []);
 
   useEffect(() => {
