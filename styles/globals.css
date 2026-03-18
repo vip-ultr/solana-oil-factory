@@ -1396,6 +1396,27 @@ body {
   margin: 0 auto;
 }
 
+.btn-check-updates {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+  padding: 8px 16px;
+  font-size: 0.76rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.btn-check-updates:hover {
+  color: var(--text-primary);
+  border-color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.03);
+}
+
 /* ── New transactions since last refine ── */
 .refine-new-txns {
   display: flex;
@@ -1425,4 +1446,180 @@ body {
 .btn-refine--rerefine:hover {
   background: #1db954;
   box-shadow: 0 0 18px rgba(34, 197, 94, 0.25);
+}
+
+/* ─── CRUDE Breakdown ──────────────────────────── */
+.crude-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 2px;
+}
+.crude-base {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+.crude-base span {
+  font-family: ui-monospace, "Cascadia Code", "Fira Code", monospace;
+}
+.crude-bonus {
+  font-size: 0.78rem;
+  color: var(--green);
+  margin: 0;
+}
+.crude-bonus span {
+  font-family: ui-monospace, "Cascadia Code", "Fira Code", monospace;
+  font-weight: 600;
+}
+.crude-total {
+  font-size: 0.82rem;
+  color: var(--text-primary);
+  margin: 2px 0 0;
+  padding-top: 3px;
+  border-top: 1px solid var(--border-subtle);
+}
+.crude-total .stat-card-value {
+  font-size: 1.1rem;
+}
+
+/* ─── Bags Panel ───────────────────────────────── */
+.bags-section {
+  margin-bottom: 18px;
+}
+.bags-panel {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-base);
+  border-radius: 10px;
+  padding: 16px 18px;
+}
+.bags-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  
+}
+.bags-panel-icon {
+  width: 25px;
+  height: 25px;
+  border-radius: 6px;
+  object-fit: contain;
+}
+.bags-panel-label {
+  
+  text-transform: uppercase;
+  
+  color: #fff;
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  
+  letter-spacing: 1.8px;
+}
+.bags-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.88rem;
+  margin: 0 0 6px;
+}
+.bags-status-active {
+  color: var(--green);
+}
+.bags-check-icon {
+  flex-shrink: 0;
+}
+.bags-status-inactive {
+  color: var(--text-muted);
+  font-style: normal;
+}
+.bags-output {
+  margin: 6px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.bags-output-line {
+  font-size: 0.84rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+.bags-output-value {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-family: ui-monospace, "Cascadia Code", "Fira Code", monospace;
+}
+.bags-output-bonus .bags-output-value {
+  color: var(--green);
+}
+
+/* Feed toggle */
+.bags-feed-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  cursor: pointer;
+  padding: 8px 0 0;
+  margin-top: 8px;
+  border-top: 1px solid var(--border-subtle);
+  transition: color 0.15s;
+}
+.bags-feed-toggle:hover {
+  color: var(--text-secondary);
+}
+.bags-chevron {
+  transition: transform 0.2s ease;
+}
+.bags-chevron--open {
+  transform: rotate(90deg);
+}
+
+/* Feed list */
+.bags-feed-list {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.bags-feed-loading,
+.bags-feed-empty {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+.bags-feed-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  text-decoration: none;
+  padding: 4px 6px;
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+.bags-feed-item:hover {
+  background: var(--bg-highlight);
+}
+.bags-feed-item:hover .bags-feed-item-name {
+  color: var(--accent);
+}
+.bags-feed-item-img {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--bg-elevated);
+}
+.bags-feed-item-name {
+  color: var(--text-primary);
+}
+.bags-feed-item-symbol {
+  color: var(--text-muted);
+  font-size: 0.76rem;
 }

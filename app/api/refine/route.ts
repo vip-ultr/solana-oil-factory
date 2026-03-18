@@ -1,17 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
-import { calculateOilData } from "@/lib/oilCalculator";
+import { calculateOilData, getPrestigeTitle } from "@/lib/oilCalculator";
 
 /**
  * POST /api/refine
- * Body: { address: string, oilUnits: number }
+ * Body: { address: string, oilUnits: number, bonusCrude?: number }
  *
  * Marks the wallet as refined and upserts it to the leaderboard.
  * This is the ONLY path that writes wallet data to Supabase —
  * no refine = no leaderboard entry.
  */
 export async function POST(request: NextRequest) {
-  let body: { address?: string; oilUnits?: number };
+  let body: { address?: string; oilUnits?: number; bonusCrude?: number };
 
   try {
     body = await request.json();
@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { address, oilUnits } = body;
+  const { address, oilUnits, bonusCrude } = body;
 
   if (!address || typeof oilUnits !== "number") {
     return NextResponse.json(
@@ -31,6 +31,10 @@ export async function POST(request: NextRequest) {
   // Compute stats from oil units
   const data = calculateOilData(oilUnits);
 
+  const safeBonusCrude = typeof bonusCrude === "number" ? bonusCrude : 0;
+  const totalCrude = data.crude + safeBonusCrude;
+  const prestigeTitle = getPrestigeTitle(totalCrude);
+
   // Upsert wallet with leaderboard stats + refine state in a single write
   const { error } = await supabase
     .from("wallets")
@@ -38,9 +42,11 @@ export async function POST(request: NextRequest) {
       {
         wallet_address: address,
         crude: data.crude,
+        bonus_crude: safeBonusCrude,
+        total_crude: totalCrude,
         oil_units: data.oilUnits,
         barrels: data.barrels,
-        prestige_title: data.title,
+        prestige_title: prestigeTitle,
         last_refined_oil_units: oilUnits,
         last_updated: new Date().toISOString(),
       },

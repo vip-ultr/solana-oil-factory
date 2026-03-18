@@ -5,6 +5,10 @@ export interface OilData {
   fillPercentages: number[];
   crude: number;
   title: string;
+  /** Bonus CRUDE earned from Bags platform fees */
+  bonusCrude?: number;
+  /** Total CRUDE = crude + bonusCrude */
+  totalCrude?: number;
 }
 
 const BARREL_SIZE = 50;

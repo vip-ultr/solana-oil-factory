@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getTransactionCount } from "@/lib/helius";
-import { calculateOilData } from "@/lib/oilCalculator";
+import { calculateOilData, getPrestigeTitle } from "@/lib/oilCalculator";
 import { supabase } from "@/lib/supabase";
+import { fetchBagsWalletData } from "@/lib/bags";
 
 // Allow this route to run up to 60s on Vercel (Pro plan).
 // Hobby plan caps at 10s regardless — upgrade if large wallets still timeout.
@@ -16,8 +17,29 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const { count: txCount, partial } = await getTransactionCount(address);
+    // Run Helius + Bags calls in parallel — Bags failure never blocks the flow
+    const [heliusResult, bagsResult] = await Promise.allSettled([
+      getTransactionCount(address),
+      fetchBagsWalletData(address),
+    ]);
+
+    // Helius is required
+    if (heliusResult.status === "rejected") {
+      throw heliusResult.reason;
+    }
+
+    const { count: txCount, partial } = heliusResult.value;
     const data = calculateOilData(txCount);
+
+    // Bags is optional — use safe defaults on failure
+    const bags =
+      bagsResult.status === "fulfilled"
+        ? bagsResult.value
+        : { totalFeesSol: 0, bonusCrude: 0, isActive: false, positionCount: 0 };
+
+    const bonusCrude = bags.bonusCrude;
+    const totalCrude = data.crude + bonusCrude;
+    const title = getPrestigeTitle(totalCrude);
 
     // Fetch existing refine state (if any) from Supabase
     let lastRefinedOilUnits = 0;
@@ -37,6 +59,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       address,
       ...data,
+      // Override title with totalCrude-based title
+      title,
+      bonusCrude,
+      totalCrude,
+      totalFeesSol: bags.totalFeesSol,
+      bagsActive: bags.isActive,
       partial,
       lastRefinedOilUnits,
     });

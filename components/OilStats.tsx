@@ -11,6 +11,8 @@ interface OilStatsProps {
   onConnectWallet: () => void;
   /** called after a successful refine so the parent can update its state */
   onRefined?: (oilUnits: number) => void;
+  /** triggers a fresh fetch from the blockchain to detect new transactions */
+  onCheckUpdates?: () => void;
 }
 
 export default function OilStats({
@@ -18,8 +20,11 @@ export default function OilStats({
   isOwner,
   onConnectWallet,
   onRefined,
+  onCheckUpdates,
 }: OilStatsProps) {
   const { address, oilUnits, barrels, crude, title } = data;
+  const bonusCrude = data.bonusCrude ?? 0;
+  const totalCrude = data.totalCrude ?? crude;
   const lastRefined = data.lastRefinedOilUnits ?? 0;
 
   // Derive refine state from persisted data
@@ -53,7 +58,7 @@ export default function OilStats({
         await fetch("/api/refine", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ address, oilUnits }),
+          body: JSON.stringify({ address, oilUnits, bonusCrude }),
         });
       } catch (err) {
         console.error("Failed to persist refine:", err);
@@ -67,12 +72,12 @@ export default function OilStats({
 
   const shortAddress = `${address.slice(0, 6)}...${address.slice(-4)}`;
 
-  const shareText = `Solana Oil Factory 🛢️
+  const shareText = `Solana Oil Factory \u{1F6E2}\u{FE0F}
 
-I just refined ${crude.toLocaleString()} CRUDE
+I just refined ${totalCrude.toLocaleString()} CRUDE${bonusCrude > 0 ? ` (${bonusCrude.toLocaleString()} bonus from @BagsApp)` : ""}
 
-📊 Transactions: ${oilUnits.toLocaleString()}
-🏷️ Title: ${title}
+\u{1F4CA} Transactions: ${oilUnits.toLocaleString()}
+\u{1F3F7}\u{FE0F} Title: ${title}
 
 Check your barrel:
 https://solanaoilfactory.xyz`;
@@ -130,12 +135,21 @@ https://solanaoilfactory.xyz`;
       return (
         <div className="refine-done-msg">
           <p className="refine-done-text">
-            Refined — <strong>{crude.toLocaleString()} $CRUDE</strong>
+            Refined — <strong>{totalCrude.toLocaleString()} $CRUDE</strong>
           </p>
           <p className="refine-done-sub">
             Make more transactions on Solana to unlock more barrels, then come back to
             refine again!
           </p>
+          {isOwner && onCheckUpdates && (
+            <button onClick={onCheckUpdates} className="btn-check-updates">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="23 4 23 10 17 10" />
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+              </svg>
+              Check for new transactions
+            </button>
+          )}
         </div>
       );
     }
@@ -170,11 +184,23 @@ https://solanaoilfactory.xyz`;
             </div>
             <div className="stat-card">
               <p className="stat-card-label">$CRUDE Balance</p>
-              <p
-                className={`stat-card-value${revealed ? " accent" : " dim"}`}
-              >
-                {revealed ? crude.toLocaleString() : "—"}
-              </p>
+              {revealed ? (
+                <div className="crude-breakdown">
+                  <p className="crude-base">
+                    Base: <span>{crude.toLocaleString()}</span>
+                  </p>
+                  {bonusCrude > 0 && (
+                    <p className="crude-bonus">
+                      Bonus (Bags): <span>+{bonusCrude.toLocaleString()}</span>
+                    </p>
+                  )}
+                  <p className="crude-total">
+                    Total: <span className="stat-card-value accent">{totalCrude.toLocaleString()}</span>
+                  </p>
+                </div>
+              ) : (
+                <p className="stat-card-value dim">—</p>
+              )}
             </div>
           </div>
 

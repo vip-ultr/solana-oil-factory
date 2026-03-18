@@ -6,6 +6,7 @@ import { usePhantom, useDisconnect, useSolana, AddressType } from "@phantom/reac
 import WalletSearch from "@/components/WalletSearch";
 import BarrelGrid from "@/components/BarrelGrid";
 import OilStats from "@/components/OilStats";
+import BagsPanel from "@/components/BagsPanel";
 import WalletConnectModal from "@/components/WalletConnectModal";
 import type { OilData } from "@/lib/oilCalculator";
 
@@ -13,6 +14,8 @@ type WalletData = OilData & {
   address: string;
   partial?: boolean;
   lastRefinedOilUnits?: number;
+  totalFeesSol?: number;
+  bagsActive?: boolean;
 };
 
 export default function Home() {
@@ -32,12 +35,16 @@ export default function Home() {
   const [isVerified, setIsVerified] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [verifyError, setVerifyError] = useState<string | null>(null);
+  // Track whether we've checked stored data for this wallet
+  const [storedChecked, setStoredChecked] = useState(false);
+  const [storedLoading, setStoredLoading] = useState(false);
 
   // Helper: sessionStorage key scoped to the wallet address
   const verifiedKey = solanaAddress ? `sof_verified_${solanaAddress}` : null;
 
   // On mount or wallet change: restore verification from sessionStorage
   useEffect(() => {
+    setStoredChecked(false);
     if (verifiedKey && typeof sessionStorage !== "undefined") {
       const stored = sessionStorage.getItem(verifiedKey);
       if (stored === "true") {
@@ -50,6 +57,34 @@ export default function Home() {
     setVerifyError(null);
     setData(null);
   }, [solanaAddress]);
+
+  // After verification, auto-load stored data from Supabase (cheap, no Helius call)
+  useEffect(() => {
+    if (!isVerified || !solanaAddress || storedChecked || data || loading) return;
+
+    let cancelled = false;
+    async function loadStored() {
+      setStoredLoading(true);
+      try {
+        const res = await fetch(`/api/wallet/stored?address=${encodeURIComponent(solanaAddress!)}`);
+        if (!res.ok) throw new Error("Failed to check stored data");
+        const json = await res.json();
+        if (!cancelled && json.found) {
+          setData(json);
+        }
+      } catch (err) {
+        console.error("Failed to load stored data:", err);
+      } finally {
+        if (!cancelled) {
+          setStoredChecked(true);
+          setStoredLoading(false);
+        }
+      }
+    }
+    loadStored();
+
+    return () => { cancelled = true; };
+  }, [isVerified, solanaAddress, storedChecked, data, loading]);
 
   // Close connect modal when wallet connects
   useEffect(() => {
@@ -127,8 +162,9 @@ export default function Home() {
 
   // Derived states
   const isWalletReady = isConnected && solanaAddress;
-  const showVerifyPrompt = isWalletReady && !isVerified && !data && !loading && !error;
-  const showExtractPrompt = isWalletReady && isVerified && !data && !loading && !error;
+  const showVerifyPrompt = isWalletReady && !isVerified && !data && !loading && !storedLoading && !error;
+  // Only show extract prompt for first-time users (stored check done, no data found)
+  const showExtractPrompt = isWalletReady && isVerified && !data && !loading && !storedLoading && storedChecked && !error;
 
   return (
     <div className="page">
@@ -255,10 +291,17 @@ export default function Home() {
           <div className="error-msg">⚠️ {error}</div>
         )}
 
-        {/* Loading */}
+        {/* Loading — stored data check */}
+        {storedLoading && !loading && (
+          <div className="loading-msg">
+            Loading your refinery data...
+          </div>
+        )}
+
+        {/* Loading — full extraction */}
         {loading && (
           <div className="loading-msg">
-            ⚙️ Extracting oil from the blockchain...
+            Extracting oil from the blockchain...
           </div>
         )}
 
@@ -290,6 +333,13 @@ export default function Home() {
               />
             </section>
 
+            {/* Bags Refinery Data */}
+            <BagsPanel
+              bagsActive={data.bagsActive ?? false}
+              totalFeesSol={data.totalFeesSol ?? 0}
+              bonusCrude={data.bonusCrude ?? 0}
+            />
+
             {/* Stats + Refinery + Share */}
             <section className="stats-section">
               <OilStats
@@ -301,6 +351,7 @@ export default function Home() {
                     prev ? { ...prev, lastRefinedOilUnits: units } : prev
                   )
                 }
+                onCheckUpdates={() => fetchWalletData(data.address)}
               />
             </section>
           </>

@@ -3,6 +3,8 @@
 export interface LeaderboardEntry {
   wallet_address: string;
   crude: number;
+  bonus_crude: number;
+  total_crude: number;
   oil_units: number;
   barrels: number;
   prestige_title: string;
@@ -45,7 +47,7 @@ export default function LeaderboardTable({ entries }: LeaderboardTableProps) {
     );
   }
 
-  const maxCrude = entries[0].crude || 1;
+  const maxCrude = entries[0].total_crude || 1;
 
   return (
     <div className="lb-table-wrap">
@@ -79,7 +81,7 @@ export default function LeaderboardTable({ entries }: LeaderboardTableProps) {
         </thead>
         <tbody>
           {entries.map((entry, i) => {
-            const pct = Math.max(3, Math.round((entry.crude / maxCrude) * 100));
+            const pct = Math.max(3, Math.round((entry.total_crude / maxCrude) * 100));
             const ts = titleStyle(entry.prestige_title);
             const isTop3 = i < 3;
 
@@ -120,7 +122,7 @@ export default function LeaderboardTable({ entries }: LeaderboardTableProps) {
                 {/* CRUDE with progress bar */}
                 <td className="lb-td lb-td-crude">
                   <div className="lb-crude-wrap">
-                    <span className="lb-crude-num">{entry.crude.toLocaleString()}</span>
+                    <span className="lb-crude-num">{entry.total_crude.toLocaleString()}</span>
                     <div className="lb-crude-bar-bg">
                       <div
                         className={`lb-crude-bar${i === 0 ? " lb-crude-bar-gold" : ""}`}
