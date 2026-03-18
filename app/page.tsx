@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import Link from "next/link";
 import { usePhantom, useDisconnect, useSolana, AddressType } from "@phantom/react-sdk";
 import WalletSearch from "@/components/WalletSearch";
 import BarrelGrid from "@/components/BarrelGrid";
@@ -27,32 +28,54 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
-  // Verification state
+  // Verification state — persisted in sessionStorage per wallet address
   const [isVerified, setIsVerified] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [verifyError, setVerifyError] = useState<string | null>(null);
+
+  // Helper: sessionStorage key scoped to the wallet address
+  const verifiedKey = solanaAddress ? `sof_verified_${solanaAddress}` : null;
+
+  // On mount or wallet change: restore verification from sessionStorage
+  useEffect(() => {
+    if (verifiedKey && typeof sessionStorage !== "undefined") {
+      const stored = sessionStorage.getItem(verifiedKey);
+      if (stored === "true") {
+        setIsVerified(true);
+        setVerifyError(null);
+        return;
+      }
+    }
+    setIsVerified(false);
+    setVerifyError(null);
+    setData(null);
+  }, [solanaAddress]);
 
   // Close connect modal when wallet connects
   useEffect(() => {
     if (isConnected) setShowConnectModal(false);
   }, [isConnected]);
 
-  // Reset everything when wallet disconnects or changes
+  // Reset everything when wallet disconnects (not on initial mount)
+  const wasConnectedRef = useRef(false);
   useEffect(() => {
-    if (!isConnected) {
+    if (isConnected) {
+      wasConnectedRef.current = true;
+    } else if (wasConnectedRef.current) {
+      // User explicitly disconnected (was connected, now isn't)
+      wasConnectedRef.current = false;
       setData(null);
       setError(null);
       setIsVerified(false);
       setVerifyError(null);
+      // Clear all verification keys from sessionStorage
+      if (typeof sessionStorage !== "undefined") {
+        Object.keys(sessionStorage)
+          .filter((k) => k.startsWith("sof_verified_"))
+          .forEach((k) => sessionStorage.removeItem(k));
+      }
     }
   }, [isConnected]);
-
-  // Reset verification when wallet address changes (different wallet connected)
-  useEffect(() => {
-    setIsVerified(false);
-    setVerifyError(null);
-    setData(null);
-  }, [solanaAddress]);
 
   async function handleVerify() {
     if (!solana || !isSolanaAvailable || !solanaAddress) return;
@@ -64,6 +87,7 @@ export default function Home() {
       const message = `Solana Oil Factory\n\nVerify wallet ownership\n\nWallet: ${solanaAddress}\nTimestamp: ${Date.now()}`;
       await solana.signMessage(message);
       setIsVerified(true);
+      if (verifiedKey) sessionStorage.setItem(verifiedKey, "true");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Unknown error";
       // User rejected the signature request
@@ -115,9 +139,9 @@ export default function Home() {
           <span className="site-title-text">Solana Oil Factory</span>
         </h1>
         <div className="wallet-controls">
-          <a href="/leaderboard" className="lb-nav-link">
+          <Link href="/leaderboard" className="lb-nav-link">
             Leaderboard
-          </a>
+          </Link>
           {isConnected && solanaAddress ? (
             <div className="wallet-chip">
               <span className={`wallet-chip-dot${isVerified ? "" : " wallet-chip-dot--pending"}`} />

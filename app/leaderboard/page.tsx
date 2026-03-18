@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import LeaderboardTable, { type LeaderboardEntry } from "@/components/LeaderboardTable";
 import { supabase } from "@/lib/supabase";
 
@@ -35,9 +36,9 @@ export default async function LeaderboardPage() {
           <img src="/logo.png" alt="Solana Oil Factory" className="site-logo" />
           <span className="site-title-text">Solana Oil Factory</span>
         </h1>
-        <a href="/" className="lb-nav-link">
+        <Link href="/" className="lb-nav-link">
           ← Back to Refinery
-        </a>
+        </Link>
       </header>
 
       <main className="main">
