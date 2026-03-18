@@ -8,7 +8,11 @@ import OilStats from "@/components/OilStats";
 import WalletConnectModal from "@/components/WalletConnectModal";
 import type { OilData } from "@/lib/oilCalculator";
 
-type WalletData = OilData & { address: string; partial?: boolean };
+type WalletData = OilData & {
+  address: string;
+  partial?: boolean;
+  lastRefinedOilUnits?: number;
+};
 
 export default function Home() {
   const { isConnected, addresses } = usePhantom();
@@ -27,12 +31,13 @@ export default function Home() {
     if (isConnected) setShowConnectModal(false);
   }, [isConnected]);
 
-  // Auto-load connected wallet data
+  // Clear results when wallet disconnects
   useEffect(() => {
-    if (isConnected && solanaAddress) {
-      fetchWalletData(solanaAddress);
+    if (!isConnected) {
+      setData(null);
+      setError(null);
     }
-  }, [isConnected, solanaAddress]);
+  }, [isConnected]);
 
   async function fetchWalletData(address: string) {
     // Cancel any in-flight request so a newer fetch always wins
@@ -58,6 +63,9 @@ export default function Home() {
       if (!controller.signal.aborted) setLoading(false);
     }
   }
+
+  // Whether to show the "connected, ready to extract" state
+  const showExtractPrompt = isConnected && solanaAddress && !data && !loading && !error;
 
   return (
     <div className="page">
@@ -97,11 +105,31 @@ export default function Home() {
         </section>
 
         {/* Empty state — no wallet connected, no search, not loading */}
-        {!data && !loading && !error && (
+        {!isConnected && !data && !loading && !error && (
           <div className="empty-state">
             <p className="empty-state-text">Connect or Search Wallet to Enter the Refinery</p>
             <button onClick={openConnectModal} className="btn-connect btn-connect--large">
               Connect Wallet
+            </button>
+          </div>
+        )}
+
+        {/* Connected state — wallet linked, waiting for user to start extraction */}
+        {showExtractPrompt && (
+          <div className="extract-prompt">
+            <div className="extract-prompt-icon">🛢</div>
+            <h2 className="extract-prompt-title">Wallet Connected</h2>
+            <p className="extract-prompt-address">
+              {solanaAddress.slice(0, 6)}...{solanaAddress.slice(-4)}
+            </p>
+            <p className="extract-prompt-desc">
+              Ready to scan your on-chain activity and convert it into oil production.
+            </p>
+            <button
+              onClick={() => fetchWalletData(solanaAddress)}
+              className="btn-extract"
+            >
+              ⛏️ Start Extracting Oil
             </button>
           </div>
         )}
@@ -152,6 +180,11 @@ export default function Home() {
                 data={data}
                 isOwner={isConnected && solanaAddress === data.address}
                 onConnectWallet={openConnectModal}
+                onRefined={(units) =>
+                  setData((prev) =>
+                    prev ? { ...prev, lastRefinedOilUnits: units } : prev
+                  )
+                }
               />
             </section>
           </>

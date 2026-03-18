@@ -1,34 +1,71 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { OilData } from "@/lib/oilCalculator";
 
 interface OilStatsProps {
-  data: OilData & { address: string };
+  data: OilData & { address: string; lastRefinedOilUnits?: number };
   /** true only when the viewed wallet is the connected wallet */
   isOwner: boolean;
   /** opens the wallet connect modal */
   onConnectWallet: () => void;
+  /** called after a successful refine so the parent can update its state */
+  onRefined?: (oilUnits: number) => void;
 }
 
-export default function OilStats({ data, isOwner, onConnectWallet }: OilStatsProps) {
-  const [refined, setRefined] = useState(false);
+export default function OilStats({
+  data,
+  isOwner,
+  onConnectWallet,
+  onRefined,
+}: OilStatsProps) {
+  const { address, oilUnits, barrels, crude, title } = data;
+  const lastRefined = data.lastRefinedOilUnits ?? 0;
+
+  // Derive refine state from persisted data
+  const alreadyRefined = lastRefined > 0;
+  const hasNewTransactions = oilUnits > lastRefined;
+
+  // Start "revealed" if the wallet was previously refined (show $CRUDE immediately)
+  const [revealed, setRevealed] = useState(alreadyRefined);
   const [refining, setRefining] = useState(false);
   const [showOwnerMsg, setShowOwnerMsg] = useState(false);
 
-  const handleRefine = () => {
+  // When data changes (e.g. different wallet searched), reset local state
+  useEffect(() => {
+    setRevealed(lastRefined > 0);
+    setRefining(false);
+    setShowOwnerMsg(false);
+  }, [address, lastRefined]);
+
+  const handleRefine = async () => {
     if (!isOwner) {
       setShowOwnerMsg(true);
       return;
     }
+
     setRefining(true);
-    setTimeout(() => {
+
+    // Start the animation, then persist the refine
+    setTimeout(async () => {
+      // Save refine state to Supabase
+      try {
+        await fetch("/api/refine", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ address, oilUnits }),
+        });
+      } catch (err) {
+        console.error("Failed to persist refine:", err);
+      }
+
       setRefining(false);
-      setRefined(true);
+      setRevealed(true);
+      onRefined?.(oilUnits);
     }, 5000);
   };
 
-  const { address, oilUnits, barrels, crude, title } = data;
+  const shortAddress = `${address.slice(0, 6)}...${address.slice(-4)}`;
 
   const shareText = `Solana Oil Factory 🛢️
 
@@ -43,11 +80,73 @@ https://solanaoilfactory.xyz`;
   const handleShare = () => {
     window.open(
       `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`,
-      "_blank",
+      "_blank"
     );
   };
 
-  const shortAddress = `${address.slice(0, 6)}...${address.slice(-4)}`;
+  // Determine what the refinery panel should show
+  const renderRefineryAction = () => {
+    // Currently refining
+    if (refining) {
+      return <div className="loading-msg">⚙️ Refining your oil...</div>;
+    }
+
+    // Not the owner — show connect message
+    if (showOwnerMsg && !isOwner) {
+      return (
+        <div className="refine-owner-msg">
+          <p className="refine-owner-text">
+            You can only refine oil from your own wallet. Connect this wallet to
+            refine.
+          </p>
+          <button
+            onClick={onConnectWallet}
+            className="btn-refine btn-refine--connect"
+          >
+            Connect Wallet to Refine
+          </button>
+        </div>
+      );
+    }
+
+    // Already refined and has NEW transactions → can re-refine
+    if (revealed && hasNewTransactions && isOwner) {
+      const newTxCount = oilUnits - lastRefined;
+      return (
+        <div className="refine-new-txns">
+          <p className="refine-new-txns-text">
+            <strong>{newTxCount.toLocaleString()}</strong> new transactions
+            detected since your last refine. Re-refine to update your stats!
+          </p>
+          <button onClick={handleRefine} className="btn-refine btn-refine--rerefine">
+            🛢 Re-Refine Oil
+          </button>
+        </div>
+      );
+    }
+
+    // Already refined, no new transactions
+    if (revealed && !hasNewTransactions) {
+      return (
+        <div className="refine-done-msg">
+          <p className="refine-done-text">
+            ✅ Already refined — <strong>{crude.toLocaleString()} $CRUDE</strong>
+          </p>
+          <p className="refine-done-sub">
+            Make more transactions on Solana to unlock new oil, then come back to
+            re-refine.
+          </p>
+        </div>
+      );
+    }
+
+    // Never refined — show refine button
+    return (
+      <button onClick={handleRefine} className="btn-refine">
+        🛢 Refine Oil
+      </button>
+    );
+  };
 
   return (
     <>
@@ -71,13 +170,15 @@ https://solanaoilfactory.xyz`;
             </div>
             <div className="stat-card">
               <p className="stat-card-label">$CRUDE Balance</p>
-              <p className={`stat-card-value${refined ? " accent" : " dim"}`}>
-                {refined ? crude.toLocaleString() : "—"}
+              <p
+                className={`stat-card-value${revealed ? " accent" : " dim"}`}
+              >
+                {revealed ? crude.toLocaleString() : "—"}
               </p>
             </div>
           </div>
 
-          {refined && (
+          {revealed && (
             <div className="title-badge">
               <span className="title-badge-label">Prestige Title</span>
               <span className="title-badge-value">{title}</span>
@@ -104,33 +205,12 @@ https://solanaoilfactory.xyz`;
               4. Your total $CRUDE determines your <b>Prestige Title</b>.
             </p>
           </p>
-          {refining ? (
-            <div className="loading-msg">⚙️ Refining your oil...</div>
-          ) : showOwnerMsg && !isOwner ? (
-            <div className="refine-owner-msg">
-              <p className="refine-owner-text">
-                You can only refine oil from your own wallet. Connect this wallet to refine.
-              </p>
-              <button onClick={onConnectWallet} className="btn-refine btn-refine--connect">
-                Connect Wallet to Refine
-              </button>
-            </div>
-          ) : !refined ? (
-            <button onClick={handleRefine} className="btn-refine">
-              🛢 Refine Oil
-            </button>
-          ) : (
-            <div className="refined-result">
-              <p className="refined-text">
-                Refined <strong>{crude} $CRUDE</strong> — {title}
-              </p>
-            </div>
-          )}
+          {renderRefineryAction()}
         </div>
       </div>
 
       {/* ── Share Panel (only after refining) ── */}
-      {refined && (
+      {revealed && (
         <div className="panel share-panel">
           <p className="panel-label">Share</p>
           <p className="share-desc">Share your refinery status.</p>

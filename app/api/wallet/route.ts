@@ -19,7 +19,19 @@ export async function GET(request: NextRequest) {
     const { count: txCount, partial } = await getTransactionCount(address);
     const data = calculateOilData(txCount);
 
-    // Only add to leaderboard if the wallet has actually refined oil
+    // Fetch existing refine state (if any) from Supabase
+    let lastRefinedOilUnits = 0;
+    const { data: existing } = await supabase
+      .from("wallets")
+      .select("last_refined_oil_units")
+      .eq("wallet_address", address)
+      .single();
+
+    if (existing) {
+      lastRefinedOilUnits = existing.last_refined_oil_units ?? 0;
+    }
+
+    // Only add to leaderboard if the wallet has actually produced oil
     if (data.crude > 0) {
       // Fire-and-forget upsert — never blocks the response
       supabase
@@ -43,8 +55,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       address,
       ...data,
-      // Signal to the frontend that the count is a lower bound
       partial,
+      lastRefinedOilUnits,
     });
   } catch (error) {
     const message =
