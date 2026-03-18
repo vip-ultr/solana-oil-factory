@@ -1120,3 +1120,35 @@ body {
 .wcm-alt-text strong {
   color: var(--text-secondary);
 }
+
+/* ═══════════════════════════════════════════════════
+   PARTIAL DATA BANNER
+═══════════════════════════════════════════════════ */
+
+.partial-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 18px;
+  border: 1px solid var(--accent-dim);
+  border-left: 3px solid var(--accent);
+  border-radius: 10px;
+  background: rgba(245, 166, 35, 0.05);
+  margin-bottom: 28px;
+}
+
+.partial-banner-icon {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+  line-height: 1.4;
+}
+
+.partial-banner-text {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+
+.partial-banner-text strong {
+  color: var(--accent);
+}

@@ -3,6 +3,10 @@ import { getTransactionCount } from "@/lib/helius";
 import { calculateOilData } from "@/lib/oilCalculator";
 import { supabase } from "@/lib/supabase";
 
+// Allow this route to run up to 60s on Vercel (Pro plan).
+// Hobby plan caps at 10s regardless — upgrade if large wallets still timeout.
+export const maxDuration = 60;
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const address = searchParams.get("address");
@@ -12,35 +16,55 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const txCount = await getTransactionCount(address);
+    const { count: txCount, partial } = await getTransactionCount(address);
     const data = calculateOilData(txCount);
 
     // Only add to leaderboard if the wallet has actually refined oil
-    if (data.crude <= 0) {
-      return NextResponse.json({ address, ...data });
+    if (data.crude > 0) {
+      // Fire-and-forget upsert — never blocks the response
+      supabase
+        .from("wallets")
+        .upsert(
+          {
+            wallet_address: address,
+            crude: data.crude,
+            oil_units: data.oilUnits,
+            barrels: data.barrels,
+            prestige_title: data.title,
+            last_updated: new Date().toISOString(),
+          },
+          { onConflict: "wallet_address" }
+        )
+        .then(({ error }) => {
+          if (error) console.error("[supabase upsert]", error.message);
+        });
     }
 
-    // Fire-and-forget upsert — never blocks the response
-    supabase
-      .from("wallets")
-      .upsert(
-        {
-          wallet_address: address,
-          crude: data.crude,
-          oil_units: data.oilUnits,
-          barrels: data.barrels,
-          prestige_title: data.title,
-          last_updated: new Date().toISOString(),
-        },
-        { onConflict: "wallet_address" }
-      )
-      .then(({ error }) => {
-        if (error) console.error("[supabase upsert]", error.message);
-      });
-
-    return NextResponse.json({ address, ...data });
+    return NextResponse.json({
+      address,
+      ...data,
+      // Signal to the frontend that the count is a lower bound
+      partial,
+    });
   } catch (error) {
-    console.error("Failed to fetch wallet data:", error);
-    return NextResponse.json({ error: "Failed to fetch wallet data" }, { status: 500 });
+    const message =
+      error instanceof Error ? error.message : "Unknown error";
+
+    const isTimeout =
+      message.includes("abort") || message.includes("timeout");
+
+    console.error(
+      `[wallet route] ${isTimeout ? "TIMEOUT" : "ERROR"} for ${address}:`,
+      message
+    );
+
+    return NextResponse.json(
+      {
+        error: isTimeout
+          ? "This wallet has too many transactions — fetching timed out. Please try again."
+          : "Failed to fetch wallet data",
+      },
+      { status: isTimeout ? 504 : 500 }
+    );
   }
 }

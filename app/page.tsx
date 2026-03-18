@@ -8,7 +8,7 @@ import OilStats from "@/components/OilStats";
 import WalletConnectModal from "@/components/WalletConnectModal";
 import type { OilData } from "@/lib/oilCalculator";
 
-type WalletData = OilData & { address: string };
+type WalletData = OilData & { address: string; partial?: boolean };
 
 export default function Home() {
   const { isConnected, addresses } = usePhantom();
@@ -121,6 +121,19 @@ export default function Home() {
         {/* Results — Barrels first, then Stats */}
         {data && !loading && (
           <>
+            {/* Partial data notice */}
+            {data.partial && (
+              <div className="partial-banner">
+                <span className="partial-banner-icon">⚡</span>
+                <div className="partial-banner-text">
+                  <strong>Whale wallet detected!</strong> This wallet has more transactions than we
+                  could count in time. The stats below show at least{" "}
+                  <strong>{data.oilUnits.toLocaleString()}</strong> transactions — actual numbers
+                  may be higher.
+                </div>
+              </div>
+            )}
+
             {/* Hero: Barrel Grid */}
             <section className="barrel-hero-section">
               <div className="barrel-hero-header">
