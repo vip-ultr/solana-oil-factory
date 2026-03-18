@@ -770,6 +770,7 @@ body {
 /* ── Table shell ── */
 .lb-table-wrap {
   overflow-x: auto;
+  scrollbar-width: none;
   border-radius: 20px;
   background: var(--bg-surface);
   position: relative;
@@ -783,6 +784,8 @@ body {
 }
 
 /* glowing accent line at very top */
+.lb-table-wrap::-webkit-scrollbar { display: none; }
+
 .lb-table-wrap::before {
   content: '';
   position: absolute;
