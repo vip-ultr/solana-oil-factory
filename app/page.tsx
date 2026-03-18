@@ -80,17 +80,31 @@ export default function Home() {
             Leaderboard
           </a>
           {isConnected && solanaAddress ? (
-            <div className="connected-wallet">
-              <span className="wallet-address">
-                {solanaAddress.slice(0, 6)}...{solanaAddress.slice(-4)}
+            <div className="wallet-chip">
+              <span className="wallet-chip-dot" />
+              <span className="wallet-chip-addr">
+                {solanaAddress.slice(0, 4)}...{solanaAddress.slice(-4)}
               </span>
-              <button onClick={disconnect} className="btn-disconnect">
-                Disconnect
+              <button
+                onClick={disconnect}
+                className="wallet-chip-disconnect"
+                aria-label="Disconnect wallet"
+                title="Disconnect"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
+                  <polyline points="16 17 21 12 16 7" />
+                  <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
               </button>
             </div>
           ) : (
             <button onClick={openConnectModal} className="btn-connect">
-              Connect Wallet
+              <svg className="btn-connect-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="6" width="20" height="12" rx="3" />
+                <path d="M16 12h.01" />
+              </svg>
+              <span>Connect</span>
             </button>
           )}
         </div>
