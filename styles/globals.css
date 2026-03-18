@@ -361,7 +361,7 @@ body {
 }
 
 .barrel-hero-title {
-  font-size: 0.68rem;
+  font-size: 0.88rem;
   font-weight: 700;
   color: #fff;
   text-transform: uppercase;
@@ -477,7 +477,7 @@ body {
 }
 
 .panel-label {
-  font-size: 0.68rem;
+  font-size: 0.88rem;
   font-weight: 700;
   color: #fff;
   text-transform: uppercase;
@@ -1522,21 +1522,22 @@ body {
   align-items: center;
   gap: 8px;
   margin-bottom: 10px;
-  
 }
 .bags-panel-icon {
   width: 25px;
   height: 25px;
   border-radius: 6px;
   object-fit: contain;
+  flex-shrink: 0;
 }
 .bags-panel-label {
   text-transform: uppercase;
   color: #fff;
-  margin: 0;
-  font-size: 0.68rem;
+  margin: 0 !important;
+  font-size: 0.88rem;
   font-weight: 700;
   letter-spacing: 1.8px;
+  line-height: 1;
 }
 .bags-status {
   display: flex;
@@ -1652,7 +1653,7 @@ body {
   .search-section { margin-bottom: 40px; }
 
   .panel { padding: 20px 20px; border-radius: 12px; }
-  .panel-label { font-size: 0.62rem; letter-spacing: 1.4px; margin-bottom: 16px; }
+  .panel-label { font-size: 0.78rem; letter-spacing: 1.5px; margin-bottom: 16px; }
 
   .stat-card { padding: 12px 14px; border-radius: 8px; }
   .stat-card-label { font-size: 0.6rem; letter-spacing: 0.7px; margin-bottom: 4px; }
@@ -1672,14 +1673,14 @@ body {
   .share-preview-text { font-size: 0.72rem; }
 
   .bags-panel { padding: 14px 16px; }
-  .bags-panel-label { font-size: 0.62rem; letter-spacing: 1.4px; }
+  .bags-panel-label { font-size: 0.78rem; letter-spacing: 1.5px; }
   .bags-panel-icon { width: 22px; height: 22px; }
   .bags-status { font-size: 0.8rem; }
   .bags-output-line { font-size: 0.78rem; }
   .bags-feed-toggle { font-size: 0.72rem; }
   .bags-feed-item { font-size: 0.76rem; }
 
-  .barrel-hero-title { font-size: 0.62rem; letter-spacing: 1.4px; }
+  .barrel-hero-title { font-size: 0.78rem; letter-spacing: 1.5px; }
 }
 
 /* ═══════════════════════════════════════════════════
@@ -1695,7 +1696,7 @@ body {
   .btn-connect--large { font-size: 0.88rem; padding: 12px 28px; }
 
   .panel { padding: 16px 16px; border-radius: 10px; }
-  .panel-label { font-size: 0.58rem; letter-spacing: 1.2px; margin-bottom: 14px; }
+  .panel-label { font-size: 0.7rem; letter-spacing: 1.3px; margin-bottom: 14px; }
 
   .stats-grid { gap: 8px; }
   .stat-card { padding: 10px 12px; border-radius: 8px; }
@@ -1735,7 +1736,7 @@ body {
   .bags-panel { padding: 12px 14px; border-radius: 8px; }
   .bags-panel-header { gap: 6px; margin-bottom: 8px; }
   .bags-panel-icon { width: 20px; height: 20px; border-radius: 5px; }
-  .bags-panel-label { font-size: 0.58rem; letter-spacing: 1.2px; }
+  .bags-panel-label { font-size: 0.7rem; letter-spacing: 1.3px; }
   .bags-status { font-size: 0.76rem; margin-bottom: 4px; }
   .bags-check-icon { width: 14px; height: 14px; }
   .bags-output { gap: 1px; }
@@ -1745,7 +1746,7 @@ body {
   .bags-feed-item-img { width: 18px; height: 18px; }
   .bags-feed-item-symbol { font-size: 0.68rem; }
 
-  .barrel-hero-title { font-size: 0.58rem; letter-spacing: 1.2px; }
+  .barrel-hero-title { font-size: 0.7rem; letter-spacing: 1.3px; }
   .barrel-hero-header { gap: 12px; margin-bottom: 24px; }
 
   .verify-prompt { padding: 36px 18px; border-radius: 12px; }
