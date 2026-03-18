@@ -14,7 +14,6 @@ export default function Providers({ children }: { children: ReactNode }) {
       config={phantomConfig}
       theme={darkTheme}
       appName="Solana Oil Factory"
-      appIcon="/logo.png"
     >
       {children}
     </PhantomProvider>
