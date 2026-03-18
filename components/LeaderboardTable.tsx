@@ -75,12 +75,6 @@ export default function LeaderboardTable({ entries }: LeaderboardTableProps) {
                 Prestige
               </span>
             </th>
-            <th className="lb-th lb-th-txns">
-              <span className="lb-th-inner lb-th-right">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
-                Txns
-              </span>
-            </th>
           </tr>
         </thead>
         <tbody>
@@ -146,8 +140,6 @@ export default function LeaderboardTable({ entries }: LeaderboardTableProps) {
                   </span>
                 </td>
 
-                {/* Transactions */}
-                <td className="lb-td lb-td-txns">{entry.oil_units.toLocaleString()}</td>
               </tr>
             );
           })}

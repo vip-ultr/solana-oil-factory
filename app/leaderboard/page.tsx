@@ -13,6 +13,7 @@ async function getLeaderboard(): Promise<LeaderboardEntry[]> {
   const { data, error } = await supabase
     .from("wallets")
     .select("wallet_address, crude, oil_units, barrels, prestige_title, last_updated")
+    .gt("crude", 0)
     .order("crude", { ascending: false })
     .limit(100);
 

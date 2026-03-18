@@ -15,6 +15,11 @@ export async function GET(request: NextRequest) {
     const txCount = await getTransactionCount(address);
     const data = calculateOilData(txCount);
 
+    // Only add to leaderboard if the wallet has actually refined oil
+    if (data.crude <= 0) {
+      return NextResponse.json({ address, ...data });
+    }
+
     // Fire-and-forget upsert — never blocks the response
     supabase
       .from("wallets")
