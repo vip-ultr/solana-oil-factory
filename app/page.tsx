@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { usePhantom, useDisconnect, AddressType } from "@phantom/react-sdk";
+import { usePhantom, useDisconnect, useSolana, AddressType } from "@phantom/react-sdk";
 import WalletSearch from "@/components/WalletSearch";
 import BarrelGrid from "@/components/BarrelGrid";
 import OilStats from "@/components/OilStats";
@@ -17,6 +17,7 @@ type WalletData = OilData & {
 export default function Home() {
   const { isConnected, addresses } = usePhantom();
   const { disconnect } = useDisconnect();
+  const { solana, isAvailable: isSolanaAvailable } = useSolana();
   const [showConnectModal, setShowConnectModal] = useState(false);
   const openConnectModal = useCallback(() => setShowConnectModal(true), []);
   const closeConnectModal = useCallback(() => setShowConnectModal(false), []);
@@ -26,21 +27,57 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
+  // Verification state
+  const [isVerified, setIsVerified] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  const [verifyError, setVerifyError] = useState<string | null>(null);
+
   // Close connect modal when wallet connects
   useEffect(() => {
     if (isConnected) setShowConnectModal(false);
   }, [isConnected]);
 
-  // Clear results when wallet disconnects
+  // Reset everything when wallet disconnects or changes
   useEffect(() => {
     if (!isConnected) {
       setData(null);
       setError(null);
+      setIsVerified(false);
+      setVerifyError(null);
     }
   }, [isConnected]);
 
+  // Reset verification when wallet address changes (different wallet connected)
+  useEffect(() => {
+    setIsVerified(false);
+    setVerifyError(null);
+    setData(null);
+  }, [solanaAddress]);
+
+  async function handleVerify() {
+    if (!solana || !isSolanaAvailable || !solanaAddress) return;
+
+    setVerifying(true);
+    setVerifyError(null);
+
+    try {
+      const message = `Solana Oil Factory\n\nVerify wallet ownership\n\nWallet: ${solanaAddress}\nTimestamp: ${Date.now()}`;
+      await solana.signMessage(message);
+      setIsVerified(true);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Unknown error";
+      // User rejected the signature request
+      if (msg.includes("reject") || msg.includes("cancel") || msg.includes("denied")) {
+        setVerifyError("Signature rejected. Please sign the message to verify ownership.");
+      } else {
+        setVerifyError("Verification failed. Please try again.");
+      }
+    } finally {
+      setVerifying(false);
+    }
+  }
+
   async function fetchWalletData(address: string) {
-    // Cancel any in-flight request so a newer fetch always wins
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
@@ -64,8 +101,10 @@ export default function Home() {
     }
   }
 
-  // Whether to show the "connected, ready to extract" state
-  const showExtractPrompt = isConnected && solanaAddress && !data && !loading && !error;
+  // Derived states
+  const isWalletReady = isConnected && solanaAddress;
+  const showVerifyPrompt = isWalletReady && !isVerified && !data && !loading && !error;
+  const showExtractPrompt = isWalletReady && isVerified && !data && !loading && !error;
 
   return (
     <div className="page">
@@ -81,7 +120,7 @@ export default function Home() {
           </a>
           {isConnected && solanaAddress ? (
             <div className="wallet-chip">
-              <span className="wallet-chip-dot" />
+              <span className={`wallet-chip-dot${isVerified ? "" : " wallet-chip-dot--pending"}`} />
               <span className="wallet-chip-addr">
                 {solanaAddress.slice(0, 4)}...{solanaAddress.slice(-4)}
               </span>
@@ -128,19 +167,58 @@ export default function Home() {
           </div>
         )}
 
-        {/* Connected state — wallet linked, waiting for user to start extraction */}
+        {/* Verify ownership — wallet connected but not yet signed */}
+        {showVerifyPrompt && (
+          <div className="verify-prompt">
+            <div className="verify-prompt-icon">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                <path d="M9 12l2 2 4-4" />
+              </svg>
+            </div>
+            <h2 className="verify-prompt-title">Verify Wallet Ownership</h2>
+            <p className="verify-prompt-address">
+              {solanaAddress!.slice(0, 6)}...{solanaAddress!.slice(-4)}
+            </p>
+            <p className="verify-prompt-desc">
+              Sign a message to prove you own this wallet.
+              This is free and does not send any transaction.
+            </p>
+            {verifyError && (
+              <p className="verify-prompt-error">{verifyError}</p>
+            )}
+            <button
+              onClick={handleVerify}
+              className="btn-verify"
+              disabled={verifying}
+            >
+              {verifying ? (
+                <>Waiting for signature...</>
+              ) : (
+                <>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                  </svg>
+                  Sign Message
+                </>
+              )}
+            </button>
+          </div>
+        )}
+
+        {/* Extract prompt — verified, ready to extract */}
         {showExtractPrompt && (
           <div className="extract-prompt">
             <div className="extract-prompt-icon">🛢</div>
-            <h2 className="extract-prompt-title">Wallet Connected</h2>
+            <h2 className="extract-prompt-title">Wallet Verified</h2>
             <p className="extract-prompt-address">
-              {solanaAddress.slice(0, 6)}...{solanaAddress.slice(-4)}
+              {solanaAddress!.slice(0, 6)}...{solanaAddress!.slice(-4)}
             </p>
             <p className="extract-prompt-desc">
               Ready to scan your on-chain activity and convert it into oil production.
             </p>
             <button
-              onClick={() => fetchWalletData(solanaAddress)}
+              onClick={() => fetchWalletData(solanaAddress!)}
               className="btn-extract"
             >
               ⛏️ Start Extracting Oil
@@ -179,7 +257,7 @@ export default function Home() {
             {/* Hero: Barrel Grid */}
             <section className="barrel-hero-section">
               <div className="barrel-hero-header">
-                <h2 className="barrel-hero-title">Your Oil Barrels</h2>
+                <h2 className="barrel-hero-title">Oil Barrels</h2>
                 <div className="barrel-hero-rule" />
               </div>
               <BarrelGrid
@@ -192,7 +270,7 @@ export default function Home() {
             <section className="stats-section">
               <OilStats
                 data={data}
-                isOwner={isConnected && solanaAddress === data.address}
+                isOwner={isVerified && isConnected && solanaAddress === data.address}
                 onConnectWallet={openConnectModal}
                 onRefined={(units) =>
                   setData((prev) =>

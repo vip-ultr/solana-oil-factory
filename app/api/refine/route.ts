@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { calculateOilData } from "@/lib/oilCalculator";
 
 /**
  * POST /api/refine
  * Body: { address: string, oilUnits: number }
  *
- * Marks the wallet as refined at the given oil unit count.
- * Called by the frontend after the refine animation completes.
+ * Marks the wallet as refined and upserts it to the leaderboard.
+ * This is the ONLY path that writes wallet data to Supabase —
+ * no refine = no leaderboard entry.
  */
 export async function POST(request: NextRequest) {
   let body: { address?: string; oilUnits?: number };
@@ -26,10 +28,24 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Compute stats from oil units
+  const data = calculateOilData(oilUnits);
+
+  // Upsert wallet with leaderboard stats + refine state in a single write
   const { error } = await supabase
     .from("wallets")
-    .update({ last_refined_oil_units: oilUnits })
-    .eq("wallet_address", address);
+    .upsert(
+      {
+        wallet_address: address,
+        crude: data.crude,
+        oil_units: data.oilUnits,
+        barrels: data.barrels,
+        prestige_title: data.title,
+        last_refined_oil_units: oilUnits,
+        last_updated: new Date().toISOString(),
+      },
+      { onConflict: "wallet_address" }
+    );
 
   if (error) {
     console.error("[refine]", error.message);

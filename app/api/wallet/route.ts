@@ -31,26 +31,8 @@ export async function GET(request: NextRequest) {
       lastRefinedOilUnits = existing.last_refined_oil_units ?? 0;
     }
 
-    // Only add to leaderboard if the wallet has actually produced oil
-    if (data.crude > 0) {
-      // Fire-and-forget upsert — never blocks the response
-      supabase
-        .from("wallets")
-        .upsert(
-          {
-            wallet_address: address,
-            crude: data.crude,
-            oil_units: data.oilUnits,
-            barrels: data.barrels,
-            prestige_title: data.title,
-            last_updated: new Date().toISOString(),
-          },
-          { onConflict: "wallet_address" }
-        )
-        .then(({ error }) => {
-          if (error) console.error("[supabase upsert]", error.message);
-        });
-    }
+    // NOTE: We do NOT upsert to Supabase here.
+    // Wallets only appear on the leaderboard after refining (via /api/refine).
 
     return NextResponse.json({
       address,

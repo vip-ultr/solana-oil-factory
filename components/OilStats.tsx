@@ -96,7 +96,7 @@ https://solanaoilfactory.xyz`;
       return (
         <div className="refine-owner-msg">
           <p className="refine-owner-text">
-            You can only refine oil from your own wallet. Connect this wallet to
+            Only connected wallets can refine oil, connect this wallet to
             refine.
           </p>
           <button
@@ -115,11 +115,11 @@ https://solanaoilfactory.xyz`;
       return (
         <div className="refine-new-txns">
           <p className="refine-new-txns-text">
-            <strong>{newTxCount.toLocaleString()}</strong> new transactions
-            detected since your last refine. Re-refine to update your stats!
+            <strong>{newTxCount.toLocaleString()}</strong> New transactions
+            detected since your last refine. Refine again to update your stats!
           </p>
           <button onClick={handleRefine} className="btn-refine btn-refine--rerefine">
-            🛢 Re-Refine Oil
+            🛢 Refine Oil
           </button>
         </div>
       );
@@ -130,11 +130,11 @@ https://solanaoilfactory.xyz`;
       return (
         <div className="refine-done-msg">
           <p className="refine-done-text">
-            ✅ Already refined — <strong>{crude.toLocaleString()} $CRUDE</strong>
+            Refined — <strong>{crude.toLocaleString()} $CRUDE</strong>
           </p>
           <p className="refine-done-sub">
-            Make more transactions on Solana to unlock new oil, then come back to
-            re-refine.
+            Make more transactions on Solana to unlock more barrels, then come back to
+            refine again!
           </p>
         </div>
       );
