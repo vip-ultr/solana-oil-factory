@@ -5,13 +5,22 @@ import type { OilData } from "@/lib/oilCalculator";
 
 interface OilStatsProps {
   data: OilData & { address: string };
+  /** true only when the viewed wallet is the connected wallet */
+  isOwner: boolean;
+  /** opens the wallet connect modal */
+  onConnectWallet: () => void;
 }
 
-export default function OilStats({ data }: OilStatsProps) {
+export default function OilStats({ data, isOwner, onConnectWallet }: OilStatsProps) {
   const [refined, setRefined] = useState(false);
   const [refining, setRefining] = useState(false);
+  const [showOwnerMsg, setShowOwnerMsg] = useState(false);
 
   const handleRefine = () => {
+    if (!isOwner) {
+      setShowOwnerMsg(true);
+      return;
+    }
     setRefining(true);
     setTimeout(() => {
       setRefining(false);
@@ -97,6 +106,15 @@ https://solanaoilfactory.xyz`;
           </p>
           {refining ? (
             <div className="loading-msg">⚙️ Refining your oil...</div>
+          ) : showOwnerMsg && !isOwner ? (
+            <div className="refine-owner-msg">
+              <p className="refine-owner-text">
+                You can only refine oil from your own wallet. Connect this wallet to refine.
+              </p>
+              <button onClick={onConnectWallet} className="btn-refine btn-refine--connect">
+                Connect Wallet to Refine
+              </button>
+            </div>
           ) : !refined ? (
             <button onClick={handleRefine} className="btn-refine">
               🛢 Refine Oil

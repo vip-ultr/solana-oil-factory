@@ -148,7 +148,11 @@ export default function Home() {
 
             {/* Stats + Refinery + Share */}
             <section className="stats-section">
-              <OilStats data={data} />
+              <OilStats
+                data={data}
+                isOwner={isConnected && solanaAddress === data.address}
+                onConnectWallet={openConnectModal}
+              />
             </section>
           </>
         )}
