@@ -483,10 +483,21 @@ body {
   }
 }
 
+@media (max-width: 860px) {
+  .barrel-wrapper,
+  .barrel-last-slot {
+    max-width: 110px;
+  }
+}
+
 @media (max-width: 480px) {
   .barrel-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 14px;
+  }
+  .barrel-wrapper,
+  .barrel-last-slot {
+    max-width: 90px;
   }
 }
 
