@@ -488,9 +488,6 @@ body {
   .barrel-last-slot {
     max-width: 110px;
   }
-  .barrel-gauge {
-    right: 2%;
-  }
 }
 
 @media (max-width: 480px) {
@@ -501,9 +498,6 @@ body {
   .barrel-wrapper,
   .barrel-last-slot {
     max-width: 90px;
-  }
-  .barrel-gauge {
-    right: 2%;
   }
 }
 
@@ -547,6 +541,9 @@ body {
   width: 8px;
   display: flex;
   align-items: stretch;
+}
+@media (max-width: 860px) {
+  .barrel-gauge { right: 2%; }
 }
 
 .barrel-gauge-track {
@@ -632,7 +629,6 @@ body {
 
 .barrel-last-slot {
   position: relative;
-  isolation: isolate;       /* creates a stacking context — overlay always wins */
   width: 100%;
   max-width: 160px;
   margin: 0 auto;
@@ -646,12 +642,10 @@ body {
   align-items: center;
   justify-content: center;
   gap: clamp(5px, 1.5vw, 9px);
-  background: var(--glass-bg);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid var(--glass-border);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-base);
   border-radius: 10px;
-  z-index: 10;              /* well above any barrel child stacking context */
+  z-index: 10;
 }
 /* Stack-of-barrels hint icon */
 .barrel-overflow-icon {
