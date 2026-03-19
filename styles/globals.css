@@ -414,27 +414,79 @@ body {
   background: linear-gradient(to right, var(--border-base));
 }
 
+.barrel-hero-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid var(--border-base);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  flex-shrink: 0;
+}
+.barrel-hero-toggle:hover {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+}
+.barrel-hero-toggle-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.barrel-hero-chevron {
+  transition: transform 0.3s ease;
+}
+.barrel-hero-chevron--collapsed {
+  transform: rotate(180deg);
+}
+
+/* Collapse body using grid-template-rows for smooth animation */
+.barrel-hero-body {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 0.35s ease;
+}
+.barrel-hero-body--collapsed {
+  grid-template-rows: 0fr;
+}
+.barrel-hero-body-inner {
+  overflow: hidden;
+}
+
+/* Remove bottom margin from header when collapsed */
+.barrel-hero-body--collapsed + * {
+  margin-top: 0;
+}
+.barrel-hero-section:has(.barrel-hero-body--collapsed) .barrel-hero-header {
+  margin-bottom: 0;
+}
+
 /* ═══════════════════════════════════════════════════
    BARREL GRID
 ══════════════════════════════════════════════════ */
 .barrel-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 22px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
   align-items: start;
 }
 
 @media (max-width: 860px) {
   .barrel-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
   }
 }
 
 @media (max-width: 480px) {
   .barrel-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
+    gap: 16px;
   }
 }
 
@@ -452,83 +504,148 @@ body {
   transition: transform 0.25s ease;
 }
 
-.barrel-svg {
+/* Barrel visual container — holds image + gauge */
+.barrel-visual {
+  position: relative;
+  width: 100%;
+}
+
+.barrel-img {
   width: 100%;
   height: auto;
   display: block;
-  filter: drop-shadow(0 3px 5px rgba(0,0,0,0.12));
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
   transition: filter 0.3s ease, transform 0.3s ease;
 }
 
-/* Oil fill smooth transition */
-.oil-fill {
-  transition: y 0.8s ease-out, height 0.8s ease-out;
+/* ── Oil Level Gauge ── */
+.barrel-gauge {
+  position: absolute;
+  right: 16%;
+  top: 15%;
+  bottom: 18%;
+  width: 8px;
+  display: flex;
+  align-items: stretch;
 }
 
-/* Subtle oil surface oscillation */
-@keyframes oil-wobble {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(1.5px); }
+.barrel-gauge-track {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  overflow: hidden;
 }
-.oil-group {
-  animation: oil-wobble 3s ease-in-out infinite;
+
+.barrel-gauge-fill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: linear-gradient(to top, #6b3a00, #c8860a);
+  border-radius: 0 0 3px 3px;
+  transition: height 0.8s ease-out;
+}
+
+.barrel-gauge-fill.barrel-gauge-high {
+  background: linear-gradient(to top, #8b4513, #d4940a);
+  box-shadow: 0 0 6px rgba(212, 148, 10, 0.35);
+}
+
+.barrel-gauge-tick {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.15);
+  pointer-events: none;
 }
 
 /* Hover — desktop only */
 @media (hover: hover) {
-  .barrel-wrapper:hover { transform: translateY(-5px); }
-  .barrel-wrapper:hover .barrel-svg {
-    filter: drop-shadow(0 0 14px rgba(245, 166, 35, 0.38)) brightness(1.05);
+  .barrel-wrapper:hover { transform: translateY(-3px); }
+  .barrel-wrapper:hover .barrel-img {
+    filter: drop-shadow(0 6px 12px rgba(0,0,0,0.35)) brightness(1.04);
     transform: scale(1.02);
   }
 }
 
 /* High-fill glow (>90%) */
-.high-fill .barrel-svg {
-  filter: drop-shadow(0 0 18px rgba(192, 57, 43, 0.25));
+.high-fill .barrel-img {
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3))
+          drop-shadow(0 0 8px rgba(212, 148, 10, 0.15));
 }
 @media (hover: hover) {
-  .high-fill:hover .barrel-svg {
-    filter: drop-shadow(0 0 18px rgba(192, 57, 43, 0.25))
-            drop-shadow(0 0 14px rgba(245, 166, 35, 0.38))
-            brightness(1.05);
+  .high-fill:hover .barrel-img {
+    filter: drop-shadow(0 6px 12px rgba(0,0,0,0.35))
+            drop-shadow(0 0 10px rgba(212, 148, 10, 0.2))
+            brightness(1.04);
     transform: scale(1.02);
   }
 }
 
 .barrel-label {
-  font-size: 0.72rem;
+  font-size: 0.68rem;
+  font-weight: 600;
   color: var(--text-muted);
-  font-family: ui-monospace, "Cascadia Code", monospace;
-  letter-spacing: 0.5px;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-subtle);
-  padding: 3px 9px;
-  border-radius: 4px;
+  font-family: ui-monospace, "Cascadia Code", "SF Mono", monospace;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  padding: 5px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 3px;
+  margin-top: 30px;
 }
 
-.barrel-overflow {
+.barrel-label-value {
+  color: var(--heading-color);
+  font-weight: 700;
+}
+
+.high-fill .barrel-label {
+  border-color: rgba(212, 148, 10, 0.15);
+  color: var(--heading-color);
+}
+
+.barrel-last-slot {
+  position: relative;
+  width: 100%;
+  align-self: start;
+}
+.barrel-overflow-overlay {
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  aspect-ratio: 485 / 780;
-  border: 2px dashed var(--border-base);
-  border-radius: 10px;
-  gap: 6px;
-  background: var(--bg-surface);
+  background: rgba(0, 0, 0, 0.58);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border-radius: 8px;
+  gap: 4px;
+  z-index: 2;
 }
 .barrel-overflow-count {
-  font-size: 1.5rem;
+  font-size: 1.8rem;
   font-weight: 800;
-  color: var(--red);
-  font-family: ui-monospace, monospace;
+  color: #fff;
+  font-family: ui-monospace, "Cascadia Code", "SF Mono", monospace;
+  letter-spacing: 1px;
+  line-height: 1;
 }
 .barrel-overflow-label {
-  font-size: 0.68rem;
-  color: var(--text-muted);
-  text-align: center;
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.65);
+  text-transform: uppercase;
+  letter-spacing: 1.6px;
 }
+
+
 
 /* ═══════════════════════════════════════════════════
    STATS SECTION  (wrapper below barrels)

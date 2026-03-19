@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { usePhantom, useSolana, AddressType } from "@phantom/react-sdk";
 import WalletSearch from "@/components/WalletSearch";
-import BarrelGrid from "@/components/BarrelGrid";
+import BarrelHeroSection from "@/components/BarrelHeroSection";
 import OilStats from "@/components/OilStats";
 import BagsPanel from "@/components/BagsPanel";
 import WalletConnectModal from "@/components/WalletConnectModal";
@@ -278,16 +278,10 @@ export default function Home() {
             )}
 
             {/* Hero: Barrel Grid */}
-            <section className="barrel-hero-section">
-              <div className="barrel-hero-header">
-                <h2 className="barrel-hero-title">Oil Barrels</h2>
-                <div className="barrel-hero-rule" />
-              </div>
-              <BarrelGrid
-                fillPercentages={data.fillPercentages}
-                totalBarrels={data.barrels}
-              />
-            </section>
+            <BarrelHeroSection
+              fillPercentages={data.fillPercentages}
+              totalBarrels={data.barrels}
+            />
 
             {/* Refinery → Bags Refinery Data → Production Stats */}
             <section className="stats-section">

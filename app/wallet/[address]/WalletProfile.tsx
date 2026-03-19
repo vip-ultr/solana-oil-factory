@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePhantom, AddressType } from "@phantom/react-sdk";
-import BarrelGrid from "@/components/BarrelGrid";
+import BarrelHeroSection from "@/components/BarrelHeroSection";
 import BagsPanel from "@/components/BagsPanel";
 
 interface WalletProfileProps {
@@ -132,16 +132,10 @@ https://solanaoilfactory.xyz/wallet/${address}`;
         )}
 
         {/* Barrel Grid */}
-        <section className="barrel-hero-section">
-          <div className="barrel-hero-header">
-            <h2 className="barrel-hero-title">Oil Barrels</h2>
-            <div className="barrel-hero-rule" />
-          </div>
-          <BarrelGrid
-            fillPercentages={fillPercentages}
-            totalBarrels={barrels}
-          />
-        </section>
+        <BarrelHeroSection
+          fillPercentages={fillPercentages}
+          totalBarrels={barrels}
+        />
 
         {/* Stats */}
         <section className="stats-section">

@@ -51,16 +51,17 @@ export function calculateOilData(txCount: number): OilData {
   const title = getPrestigeTitle(crude);
 
   // Build fill percentages array (capped at MAX_BARRELS)
+  // Partial barrel always comes FIRST, full barrels follow
   const fillPercentages: number[] = [];
   const displayBarrels = Math.min(barrels, MAX_BARRELS);
 
-  for (let i = 0; i < displayBarrels; i++) {
-    fillPercentages.push(100);
+  // Add partial barrel first if there's a remainder and we haven't hit the cap
+  if (remainder > 0 && displayBarrels < MAX_BARRELS) {
+    fillPercentages.push(Math.round((remainder / BARREL_SIZE) * 100));
   }
 
-  // Add partial barrel if there's a remainder and we haven't hit the cap
-  if (remainder > 0 && fillPercentages.length < MAX_BARRELS) {
-    fillPercentages.push(Math.round((remainder / BARREL_SIZE) * 100));
+  for (let i = 0; i < displayBarrels; i++) {
+    fillPercentages.push(100);
   }
 
   return { oilUnits, barrels, remainder, fillPercentages, crude, title };

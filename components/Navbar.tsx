@@ -57,14 +57,12 @@ export default function Navbar() {
                 {link.label}
               </Link>
             ))}
-            {isConnected && solanaAddress && (
-              <Link
-                href={`/wallet/${solanaAddress}`}
-                className={`navbar-link${pathname.startsWith("/wallet/") ? " navbar-link--active" : ""}`}
-              >
-                Profile
-              </Link>
-            )}
+            <Link
+              href={isConnected && solanaAddress ? `/wallet/${solanaAddress}` : "/profile"}
+              className={`navbar-link${pathname.startsWith("/wallet/") || pathname === "/profile" ? " navbar-link--active" : ""}`}
+            >
+              Profile
+            </Link>
           </div>
 
           {/* ── Right: Actions (desktop + mobile) ── */}
