@@ -67,9 +67,12 @@ export default function BagsPanel({ bagsActive, totalFeesSol, bonusCrude }: Bags
             <span>Active on Bags</span>
           </div>
         ) : (
-          <p className="bags-status bags-status-inactive">
-            No refinery activity detected
-          </p>
+          <div className="bags-status bags-status-inactive">
+            <p className="bags-inactive-title">No refinery activity detected.</p>
+            <p className="bags-inactive-hint">
+              Trade on <a href="https://bags.fm" target="_blank" rel="noopener noreferrer" className="bags-inline-link">Bags</a> to earn fee rewards and unlock bonus CRUDE.
+            </p>
+          </div>
         )}
 
         {bagsActive && (

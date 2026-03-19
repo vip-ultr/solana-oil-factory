@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import Link from "next/link";
-import { usePhantom, useDisconnect, useSolana, AddressType } from "@phantom/react-sdk";
+import { usePhantom, useSolana, AddressType } from "@phantom/react-sdk";
 import WalletSearch from "@/components/WalletSearch";
 import BarrelGrid from "@/components/BarrelGrid";
 import OilStats from "@/components/OilStats";
@@ -20,7 +19,6 @@ type WalletData = OilData & {
 
 export default function Home() {
   const { isConnected, addresses } = usePhantom();
-  const { disconnect } = useDisconnect();
   const { solana, isAvailable: isSolanaAvailable } = useSolana();
   const [showConnectModal, setShowConnectModal] = useState(false);
   const openConnectModal = useCallback(() => setShowConnectModal(true), []);
@@ -168,48 +166,6 @@ export default function Home() {
 
   return (
     <div className="page">
-      {/* ── Header ── */}
-      <header className="header">
-        <h1 className="site-title">
-          <img src="/logo.png" alt="Solana Oil Factory" className="site-logo" />
-          <span className="site-title-text">Solana Oil Factory</span>
-        </h1>
-        <div className="wallet-controls">
-          <Link href="/leaderboard" className="lb-nav-link">
-            Leaderboard
-          </Link>
-          {isConnected && solanaAddress ? (
-            <div className="wallet-chip">
-              <span className={`wallet-chip-dot${isVerified ? "" : " wallet-chip-dot--pending"}`} />
-              <span className="wallet-chip-addr">
-                {solanaAddress.slice(0, 4)}...{solanaAddress.slice(-4)}
-              </span>
-              <button
-                onClick={disconnect}
-                className="wallet-chip-disconnect"
-                aria-label="Disconnect wallet"
-                title="Disconnect"
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
-                  <polyline points="16 17 21 12 16 7" />
-                  <line x1="21" y1="12" x2="9" y2="12" />
-                </svg>
-              </button>
-            </div>
-          ) : (
-            <button onClick={openConnectModal} className="btn-connect">
-              <svg className="btn-connect-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="2" y="6" width="20" height="12" rx="3" />
-                <path d="M16 12h.01" />
-              </svg>
-              <span>Connect</span>
-            </button>
-          )}
-        </div>
-      </header>
-
-      {/* ── Main ── */}
       <main className="main">
 
         {/* Search */}

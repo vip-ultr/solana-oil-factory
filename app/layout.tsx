@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { Space_Grotesk } from "next/font/google";
 import Providers from "./providers";
+import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import "../styles/globals.css";
 
@@ -23,11 +24,12 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className={font.variable}>
+    <html lang="en" className={font.variable} suppressHydrationWarning>
       <body>
-        <div style={{ flex: 1 }}>
-          <Providers>{children}</Providers>
-        </div>
+        <Providers>
+          <Navbar />
+          <div style={{ flex: 1 }}>{children}</div>
+        </Providers>
         <Footer />
       </body>
     </html>
