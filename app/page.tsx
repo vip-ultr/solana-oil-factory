@@ -289,14 +289,7 @@ export default function Home() {
               />
             </section>
 
-            {/* Bags Refinery Data */}
-            <BagsPanel
-              bagsActive={data.bagsActive ?? false}
-              totalFeesSol={data.totalFeesSol ?? 0}
-              bonusCrude={data.bonusCrude ?? 0}
-            />
-
-            {/* Stats + Refinery + Share */}
+            {/* Refinery → Bags Refinery Data → Production Stats */}
             <section className="stats-section">
               <OilStats
                 data={data}
@@ -308,6 +301,13 @@ export default function Home() {
                   )
                 }
                 onCheckUpdates={() => fetchWalletData(data.address)}
+                middleSlot={
+                  <BagsPanel
+                    bagsActive={data.bagsActive ?? false}
+                    totalFeesSol={data.totalFeesSol ?? 0}
+                    bonusCrude={data.bonusCrude ?? 0}
+                  />
+                }
               />
             </section>
           </>

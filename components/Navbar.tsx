@@ -13,7 +13,6 @@ export default function Navbar() {
   const { disconnect } = useDisconnect();
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
   const [showConnectModal, setShowConnectModal] = useState(false);
 
   const openConnectModal = useCallback(() => setShowConnectModal(true), []);
@@ -22,13 +21,8 @@ export default function Navbar() {
   const solanaAddress =
     addresses.find((a) => a.addressType === AddressType.solana)?.address ?? null;
 
-  // Avoid hydration mismatch for theme icon
   useEffect(() => setMounted(true), []);
 
-  // Close mobile menu on route change
-  useEffect(() => setMobileOpen(false), [pathname]);
-
-  // Close connect modal when wallet connects
   useEffect(() => {
     if (isConnected) setShowConnectModal(false);
   }, [isConnected]);
@@ -52,7 +46,7 @@ export default function Navbar() {
             <span className="navbar-brand-text">Solana Oil Factory</span>
           </Link>
 
-          {/* ── Center: Nav links (desktop) ── */}
+          {/* ── Center: Nav links (desktop only) ── */}
           <div className="navbar-links">
             {navLinks.map((link) => (
               <Link
@@ -73,9 +67,8 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* ── Right: Actions (desktop) ── */}
+          {/* ── Right: Actions (desktop + mobile) ── */}
           <div className="navbar-actions">
-            {/* Theme toggle */}
             {mounted && (
               <button
                 onClick={toggleTheme}
@@ -103,7 +96,6 @@ export default function Navbar() {
               </button>
             )}
 
-            {/* Wallet */}
             {isConnected && solanaAddress ? (
               <div className="navbar-wallet-chip">
                 <span className="navbar-wallet-dot" />
@@ -133,111 +125,63 @@ export default function Navbar() {
               </button>
             )}
           </div>
-
-          {/* ── Mobile hamburger ── */}
-          <button
-            className="navbar-mobile-toggle"
-            onClick={() => setMobileOpen((v) => !v)}
-            aria-label="Toggle menu"
-          >
-            {mobileOpen ? (
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            ) : (
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="3" y1="6" x2="21" y2="6" />
-                <line x1="3" y1="12" x2="21" y2="12" />
-                <line x1="3" y1="18" x2="21" y2="18" />
-              </svg>
-            )}
-          </button>
         </div>
+      </nav>
 
-        {/* ── Mobile dropdown ── */}
-        {mobileOpen && (
-          <div className="navbar-mobile-menu">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`navbar-mobile-link${pathname === link.href ? " navbar-mobile-link--active" : ""}`}
-                onClick={() => setMobileOpen(false)}
-              >
-                {link.label}
-              </Link>
-            ))}
-            {isConnected && solanaAddress && (
-              <Link
-                href={`/wallet/${solanaAddress}`}
-                className={`navbar-mobile-link${pathname.startsWith("/wallet/") ? " navbar-mobile-link--active" : ""}`}
-                onClick={() => setMobileOpen(false)}
-              >
-                Profile
-              </Link>
-            )}
+      {/* ── Mobile bottom nav ── */}
+      <nav className="bottom-nav" aria-label="Mobile navigation">
+        <Link
+          href="/"
+          className={`bottom-nav-item${pathname === "/" ? " bottom-nav-item--active" : ""}`}
+        >
+          {/* Refinery / flame icon */}
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 2C8 7 6 10 6 13a6 6 0 0 0 12 0c0-3-2-6-6-11z" />
+            <path d="M12 12c-1 2-0.5 4 1 4s2.5-2 1-4" />
+          </svg>
+          <span>Refinery</span>
+        </Link>
 
-            <div className="navbar-mobile-divider" />
+        <Link
+          href="/leaderboard"
+          className={`bottom-nav-item${pathname === "/leaderboard" ? " bottom-nav-item--active" : ""}`}
+        >
+          {/* Trophy icon */}
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M6 9H4a2 2 0 0 1-2-2V5h4" />
+            <path d="M18 9h2a2 2 0 0 0 2-2V5h-4" />
+            <path d="M6 4h12v6a6 6 0 0 1-12 0V4z" />
+            <path d="M12 16v4" />
+            <path d="M8 20h8" />
+          </svg>
+          <span>Leaderboard</span>
+        </Link>
 
-            {/* Theme toggle (mobile) */}
-            {mounted && (
-              <button onClick={toggleTheme} className="navbar-mobile-theme">
-                {resolvedTheme === "dark" ? (
-                  <>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="12" cy="12" r="5" />
-                      <line x1="12" y1="1" x2="12" y2="3" />
-                      <line x1="12" y1="21" x2="12" y2="23" />
-                      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-                      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-                      <line x1="1" y1="12" x2="3" y2="12" />
-                      <line x1="21" y1="12" x2="23" y2="12" />
-                      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-                      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-                    </svg>
-                    Light Mode
-                  </>
-                ) : (
-                  <>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-                    </svg>
-                    Dark Mode
-                  </>
-                )}
-              </button>
-            )}
-
-            {/* Wallet (mobile) */}
-            {isConnected && solanaAddress ? (
-              <div className="navbar-mobile-wallet">
-                <span className="navbar-wallet-dot" />
-                <span className="navbar-wallet-addr">
-                  {solanaAddress.slice(0, 4)}...{solanaAddress.slice(-4)}
-                </span>
-                <button
-                  onClick={() => { disconnect(); setMobileOpen(false); }}
-                  className="navbar-wallet-disconnect"
-                  aria-label="Disconnect wallet"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
-                    <polyline points="16 17 21 12 16 7" />
-                    <line x1="21" y1="12" x2="9" y2="12" />
-                  </svg>
-                </button>
-              </div>
-            ) : (
-              <button onClick={() => { openConnectModal(); setMobileOpen(false); }} className="navbar-connect-btn navbar-connect-btn--mobile">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="2" y="6" width="20" height="12" rx="3" />
-                  <path d="M16 12h.01" />
-                </svg>
-                <span>Connect Wallet</span>
-              </button>
-            )}
-          </div>
+        {isConnected && solanaAddress ? (
+          <Link
+            href={`/wallet/${solanaAddress}`}
+            className={`bottom-nav-item${pathname.startsWith("/wallet/") ? " bottom-nav-item--active" : ""}`}
+          >
+            {/* Profile icon */}
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="8" r="4" />
+              <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+            </svg>
+            <span>Profile</span>
+          </Link>
+        ) : (
+          <button
+            className="bottom-nav-item"
+            onClick={openConnectModal}
+            aria-label="Connect wallet"
+          >
+            {/* Wallet icon */}
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="6" width="20" height="12" rx="3" />
+              <path d="M16 12h.01" />
+            </svg>
+            <span>Connect</span>
+          </button>
         )}
       </nav>
 

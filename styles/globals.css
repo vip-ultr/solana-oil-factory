@@ -544,6 +544,34 @@ body {
   .panels-row { grid-template-columns: 1fr; }
 }
 
+/* ── Oil Stats responsive grid ── */
+/* Desktop: bags full-width, refinery + stats side-by-side, share full-width */
+.oil-stats-grid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: 1fr 1fr;
+  grid-template-areas:
+    "bags      bags"
+    "refinery  production"
+    "share     share";
+}
+.oil-stats-bags       { grid-area: bags; }
+.oil-stats-refinery   { grid-area: refinery; }
+.oil-stats-production { grid-area: production; }
+.oil-stats-share      { grid-area: share; }
+
+/* Mobile: single column — refinery → bags → production → share */
+@media (max-width: 720px) {
+  .oil-stats-grid {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "refinery"
+      "bags"
+      "production"
+      "share";
+  }
+}
+
 /* ═══════════════════════════════════════════════════
    STATS PANEL  — 2×2 metric cards
 ══════════════════════════════════════════════════ */
@@ -2256,121 +2284,86 @@ body {
   stroke: var(--btn-text);
 }
 
-/* ── Hamburger (hidden on desktop) ── */
-.navbar-mobile-toggle {
-  display: none;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  border: 1px solid var(--border-base);
-  background: transparent;
-  color: var(--text-primary);
-  cursor: pointer;
-  transition: all 0.15s ease;
-  padding: 0;
-  flex-shrink: 0;
-}
-.navbar-mobile-toggle:hover {
-  border-color: var(--border-mid);
-  background: var(--bg-highlight);
-}
-
-/* ── Mobile menu ── */
-.navbar-mobile-menu {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  background: var(--bg-surface);
-  border-bottom: 1px solid var(--border-subtle);
-  border-top: 1px solid var(--border-subtle);
-  padding: 12px 16px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  animation: fadeSlideUp 0.18s ease both;
-  box-shadow: 0 16px 48px var(--shadow-md), 0 4px 12px var(--shadow-sm);
-}
-
-.navbar-mobile-link {
-  display: flex;
-  align-items: center;
-  padding: 11px 14px;
-  border-radius: 10px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  text-decoration: none;
-  transition: background 0.15s ease, color 0.15s ease;
-}
-.navbar-mobile-link:hover {
-  color: var(--text-primary);
-  background: var(--bg-elevated);
-}
-.navbar-mobile-link--active {
-  color: var(--accent);
-  background: var(--accent-dim);
-}
-
-.navbar-mobile-divider {
-  height: 1px;
-  background: var(--border-subtle);
-  margin: 8px 0;
-}
-
-.navbar-mobile-theme {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 11px 14px;
-  border-radius: 10px;
-  font-size: 0.88rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  background: none;
-  border: none;
-  cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
-  width: 100%;
-  text-align: left;
-}
-.navbar-mobile-theme:hover {
-  color: var(--text-primary);
-  background: var(--bg-elevated);
-}
-
-.navbar-mobile-wallet {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-subtle);
-  border-radius: 10px;
-  margin-top: 4px;
-}
-
-.navbar-connect-btn--mobile {
-  width: 100%;
-  justify-content: center;
-  padding: 11px 14px;
-  margin-top: 4px;
-  border-radius: 10px;
-}
+/* ── Navbar connect button (shared) ── */
 
 /* ── Navbar responsive ── */
 @media (max-width: 720px) {
-  .navbar-links,
-  .navbar-actions {
+  /* Hide desktop nav links; keep actions (wallet + theme) visible */
+  .navbar-links {
     display: none;
-  }
-  .navbar-mobile-toggle {
-    display: flex;
   }
   .navbar-inner {
     padding: 0 16px;
+  }
+}
+
+/* ══════════════════════════════════════════════════
+   BOTTOM NAV  (mobile only)
+══════════════════════════════════════════════════ */
+.bottom-nav {
+  display: none; /* hidden on desktop */
+}
+
+@media (max-width: 720px) {
+  .bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 200;
+    background: var(--bg-surface);
+    border-top: 1px solid var(--border-subtle);
+    box-shadow: 0 -4px 24px var(--shadow-sm);
+    height: 62px;
+    align-items: stretch;
+    padding: 0 4px;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .bottom-nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 6px 4px;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    background: none;
+    border: none;
+    cursor: pointer;
+    border-radius: 12px;
+    transition: color 0.15s ease, background 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .bottom-nav-item svg {
+    flex-shrink: 0;
+    transition: stroke 0.15s ease;
+  }
+
+  .bottom-nav-item:hover {
+    color: var(--text-secondary);
+    background: var(--bg-elevated);
+  }
+
+  .bottom-nav-item--active {
+    color: var(--accent);
+  }
+
+  .bottom-nav-item--active svg {
+    stroke: var(--accent);
+  }
+
+  /* Offset page content so it doesn't hide under the bottom nav */
+  .main {
+    padding-bottom: calc(62px + 24px);
   }
 }
 
@@ -2385,9 +2378,6 @@ body {
   }
   .navbar-brand-text {
     font-size: 0.88rem;
-  }
-  .navbar-mobile-menu {
-    padding: 10px 12px 14px;
   }
 }
 

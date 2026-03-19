@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import type React from "react";
 import type { OilData } from "@/lib/oilCalculator";
 
 interface OilStatsProps {
@@ -13,6 +14,8 @@ interface OilStatsProps {
   onRefined?: (oilUnits: number) => void;
   /** triggers a fresh fetch from the blockchain to detect new transactions */
   onCheckUpdates?: () => void;
+  /** content rendered between Refinery and Production Stats panels */
+  middleSlot?: React.ReactNode;
 }
 
 export default function OilStats({
@@ -21,6 +24,7 @@ export default function OilStats({
   onConnectWallet,
   onRefined,
   onCheckUpdates,
+  middleSlot,
 }: OilStatsProps) {
   const { address, oilUnits, barrels, crude, title } = data;
   const bonusCrude = data.bonusCrude ?? 0;
@@ -166,81 +170,81 @@ https://solanaoilfactory.xyz`;
   };
 
   return (
-    <>
-      {/* ── Stats + Refinery row ── */}
-      <div className="panels-row">
-        {/* Stats Panel */}
-        <div className="panel">
-          <p className="panel-label">Production Stats</p>
-          <div className="stats-grid">
-            <div className="stat-card">
-              <p className="stat-card-label">Wallet</p>
-              <p className="stat-card-value">{shortAddress}</p>
-            </div>
-            <div className="stat-card">
-              <p className="stat-card-label">Oil Units</p>
-              <p className="stat-card-value">{oilUnits.toLocaleString()}</p>
-            </div>
-            <div className="stat-card">
-              <p className="stat-card-label">Barrels Produced</p>
-              <p className="stat-card-value">{barrels.toLocaleString()}</p>
-            </div>
-            <div className="stat-card">
-              <p className="stat-card-label">$CRUDE Balance</p>
-              {revealed ? (
-                <div className="crude-breakdown">
-                  <p className="crude-base">
-                    Base: <span>{crude.toLocaleString()}</span>
-                  </p>
-                  {bonusCrude > 0 && (
-                    <p className="crude-bonus">
-                      Bonus (Bags): <span>+{bonusCrude.toLocaleString()}</span>
-                    </p>
-                  )}
-                  <p className="crude-total">
-                    Total: <span className="stat-card-value accent">{totalCrude.toLocaleString()}</span>
-                  </p>
-                </div>
-              ) : (
-                <p className="stat-card-value dim">—</p>
-              )}
-            </div>
-          </div>
+    <div className="oil-stats-grid">
+      {/* ── Bags slot (full-width on desktop, between refinery+stats on mobile) ── */}
+      <div className="oil-stats-bags">{middleSlot}</div>
 
-          {revealed && (
-            <div className="title-badge">
-              <span className="title-badge-label">Prestige Title</span>
-              <span className="title-badge-value">{title}</span>
-            </div>
-          )}
-        </div>
-
-        {/* Refinery Panel */}
-        <div className="panel refinery-panel">
-          <p className="panel-label">Refinery</p>
-          <p className="refinery-desc">
-            <h2>Refine to unlock your prestige title.</h2>
-            <h1>How it works?</h1>
-            <p>
-              1. Every transaction generates <b>Oil Units</b>.
-            </p>
-            <p>
-              2. 50 Oil Units fill one <b>oil barrel</b>.
-            </p>
-            <p>
-              3. Every 10 Oil Units refine into <b>1 $CRUDE</b>.
-            </p>
-            <p>
-              4. Your total $CRUDE determines your <b>Prestige Title</b>.
-            </p>
+      {/* ── Refinery Panel ── */}
+      <div className="panel refinery-panel oil-stats-refinery">
+        <p className="panel-label">Refinery</p>
+        <p className="refinery-desc">
+          <h2>Refine to unlock your prestige title.</h2>
+          <h1>How it works?</h1>
+          <p>
+            1. Every transaction generates <b>Oil Units</b>.
           </p>
-          {renderRefineryAction()}
+          <p>
+            2. 50 Oil Units fill one <b>oil barrel</b>.
+          </p>
+          <p>
+            3. Every 10 Oil Units refine into <b>1 $CRUDE</b>.
+          </p>
+          <p>
+            4. Your total $CRUDE determines your <b>Prestige Title</b>.
+          </p>
+        </p>
+        {renderRefineryAction()}
+      </div>
+
+      {/* ── Production Stats Panel ── */}
+      <div className="panel oil-stats-production">
+        <p className="panel-label">Production Stats</p>
+        <div className="stats-grid">
+          <div className="stat-card">
+            <p className="stat-card-label">Wallet</p>
+            <p className="stat-card-value">{shortAddress}</p>
+          </div>
+          <div className="stat-card">
+            <p className="stat-card-label">Oil Units</p>
+            <p className="stat-card-value">{oilUnits.toLocaleString()}</p>
+          </div>
+          <div className="stat-card">
+            <p className="stat-card-label">Barrels Produced</p>
+            <p className="stat-card-value">{barrels.toLocaleString()}</p>
+          </div>
+          <div className="stat-card">
+            <p className="stat-card-label">$CRUDE Balance</p>
+            {revealed ? (
+              <div className="crude-breakdown">
+                <p className="crude-base">
+                  Base: <span>{crude.toLocaleString()}</span>
+                </p>
+                {bonusCrude > 0 && (
+                  <p className="crude-bonus">
+                    Bonus (Bags): <span>+{bonusCrude.toLocaleString()}</span>
+                  </p>
+                )}
+                <p className="crude-total">
+                  Total: <span className="stat-card-value accent">{totalCrude.toLocaleString()}</span>
+                </p>
+              </div>
+            ) : (
+              <p className="stat-card-value dim">—</p>
+            )}
+          </div>
         </div>
+
+        {revealed && (
+          <div className="title-badge">
+            <span className="title-badge-label">Prestige Title</span>
+            <span className="title-badge-value">{title}</span>
+          </div>
+        )}
       </div>
 
       {/* ── Share Panel (only after refining) ── */}
       {revealed && (
-        <div className="panel share-panel">
+        <div className="panel share-panel oil-stats-share">
           <p className="panel-label">Share</p>
           <p className="share-desc">Share your refinery status.</p>
           <button onClick={handleShare} className="btn-share">
@@ -261,6 +265,6 @@ https://solanaoilfactory.xyz`;
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
