@@ -681,7 +681,7 @@ body {
 .barrel-overflow-divider {
   width: clamp(20px, 5vw, 30px);
   height: 1px;
-  background: var(--border-base);
+  background: var(--color-black);
   border-radius: 1px;
 }
 .barrel-overflow-label {
