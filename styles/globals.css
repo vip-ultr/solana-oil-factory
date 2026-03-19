@@ -1440,11 +1440,11 @@ body {
   .lb-td-crude,  .lb-th-crude  { width: 110px; }
   .lb-td-wallet, .lb-th-wallet { width: auto; min-width: 0; }
 
-  /* Align CRUDE header and cells to start on mobile */
-  .lb-th-crude                 { text-align: left; }
-  .lb-th-crude .lb-th-right    { justify-content: flex-start; }
-  .lb-td-crude                 { text-align: left; }
-  .lb-crude-wrap               { align-items: flex-start; }
+  /* CRUDE column — right-aligned on mobile (header + data) */
+  .lb-th-crude                 { text-align: right; }
+  .lb-th-crude .lb-th-right    { justify-content: flex-end; }
+  .lb-td-crude                 { text-align: right; }
+  .lb-crude-wrap               { align-items: flex-end; }
 
   /* Wallet cell: stack address + prestige vertically */
   .lb-td-wallet {
