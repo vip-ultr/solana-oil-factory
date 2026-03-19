@@ -756,6 +756,111 @@ body {
 }
 
 /* ═══════════════════════════════════════════════════
+   SKELETON LOADING
+══════════════════════════════════════════════════ */
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+.lb-skeleton-block {
+  height: 14px;
+  border-radius: 6px;
+  background: var(--bg-highlight);
+  animation: skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+.lb-skeleton-block--badge {
+  height: 22px;
+  width: 80px;
+  border-radius: 99px;
+}
+
+/* Leaderboard skeleton */
+.lb-skeleton-wrap {
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  box-shadow: 0 0 0 1px rgba(245,166,35,0.08), 0 8px 40px var(--shadow-sm);
+}
+
+.lb-skeleton-header {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border-dim);
+  padding: 14px 18px;
+}
+
+.lb-skeleton-row {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--border-subtle);
+  animation: skeleton-pulse 1.4s ease-in-out infinite;
+}
+.lb-skeleton-row:last-child { border-bottom: none; }
+
+.lb-skeleton-cell {
+  padding: 14px 18px;
+}
+.lb-skeleton-cell--rank   { width: 56px; flex-shrink: 0; }
+.lb-skeleton-cell--wallet { flex: 1; }
+.lb-skeleton-cell--crude  { width: 160px; flex-shrink: 0; }
+.lb-skeleton-cell--title  { width: 140px; flex-shrink: 0; }
+
+@media (max-width: 640px) {
+  .lb-skeleton-cell--title { display: none; }
+  .lb-skeleton-cell--crude { width: 110px; }
+}
+
+/* Wallet profile skeleton */
+.wl-skeleton-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-base);
+  border-radius: 14px;
+  margin-bottom: 32px;
+  animation: skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+.wl-skeleton-barrels {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 22px;
+}
+.wl-skeleton-barrel {
+  aspect-ratio: 1 / 1.4;
+  border-radius: 10px;
+  background: var(--bg-elevated);
+  animation: skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+@media (max-width: 860px) {
+  .wl-skeleton-barrels { grid-template-columns: repeat(3, 1fr); gap: 16px; }
+}
+
+.wl-skeleton-panel {
+  animation: skeleton-pulse 1.4s ease-in-out infinite;
+  margin-bottom: 28px;
+}
+
+.wl-skeleton-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.wl-skeleton-stat {
+  background: var(--bg-elevated);
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+/* ═══════════════════════════════════════════════════
    FOOTER
 ══════════════════════════════════════════════════ */
 .footer {
@@ -908,13 +1013,8 @@ body {
   border-radius: 20px;
   background: var(--bg-surface);
   position: relative;
-  /* gradient border */
-  border: 1px solid transparent;
-  background-clip: padding-box;
-  box-shadow:
-    0 0 0 1px rgba(245,166,35,0.15),
-    0 8px 60px rgba(0,0,0,0.5),
-    0 2px 16px rgba(0,0,0,0.3);
+  border: 1px solid var(--border-subtle);
+  box-shadow: 0 4px 24px var(--shadow-sm), 0 1px 4px var(--shadow-sm);
 }
 
 /* glowing accent line at very top */
@@ -948,10 +1048,14 @@ body {
   text-transform: uppercase;
   letter-spacing: 1.1px;
   font-weight: 700;
-  white-space: nowrap;
+  white-space: nowrap; /* overridden to normal on mobile */
   background: var(--bg-elevated);
   border-bottom: 1px solid var(--border-dim);
   border-right: 1px solid var(--border-subtle);
+}
+
+@media (max-width: 640px) {
+  .lb-th { white-space: normal; }
 }
 .lb-th:last-child  { border-right: none; }
 .lb-th:first-child { border-radius: 20px 0 0 0; }
@@ -968,6 +1072,12 @@ body {
 }
 .lb-th-inner svg { opacity: 0.5; flex-shrink: 0; }
 .lb-th-crude, .lb-th-txns { text-align: right; }
+.lb-th-crude-short { display: none; }
+
+@media (max-width: 640px) {
+  .lb-th-crude-full  { display: none; }
+  .lb-th-crude-short { display: inline; }
+}
 
 /* ── Rows ── */
 .lb-row {
@@ -1031,8 +1141,36 @@ body {
   color: var(--text-secondary);
   text-decoration: none;
   transition: color 0.15s ease;
+  position: relative;
 }
-.lb-wallet-link:hover { color: var(--accent); }
+.lb-wallet-link:hover { color: var(--text-muted); }
+
+.lb-wallet-link::after {
+  content: "View on Solscan";
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 100%;
+  right: auto;
+  transform: translateX(-8px) translateY(4px);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  border: 1px solid var(--border-base);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 0.72rem;
+  font-family: var(--font-body), sans-serif;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  box-shadow: 0 4px 16px var(--shadow-md);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  z-index: 10;
+}
+.lb-wallet-link:hover::after {
+  opacity: 1;
+  transform: translateX(-8px) translateY(0);
+}
 
 /* ── CRUDE + progress bar ── */
 .lb-td-crude { min-width: 160px; }
@@ -1082,6 +1220,9 @@ body {
   white-space: nowrap;
 }
 
+/* Prestige badge shown inline under wallet address on mobile */
+.lb-prestige-mobile { display: none; }
+
 /* ── Transactions ── */
 .lb-td-txns {
   font-family: ui-monospace, "Cascadia Code", monospace;
@@ -1090,15 +1231,51 @@ body {
   color: var(--text-muted);
 }
 
-/* ── Mobile ── */
+/* ── Mobile (≤640px): prestige moves under wallet, 3-column layout ── */
 @media (max-width: 640px) {
-  .lb-th, .lb-td { padding: 11px 12px; }
+  .lb-table-wrap  { overflow-x: hidden; border-radius: 14px; }
+  .lb-table       { font-size: 0.82rem; table-layout: fixed; width: 100%; }
+  .lb-th, .lb-td  { padding: 11px 10px; }
   .lb-th-txns, .lb-td-txns { display: none; }
-  .lb-table { font-size: 0.8rem; }
   .lb-crude-bar-bg { display: none; }
-  .lb-prestige-badge { font-size: 0.6rem; padding: 2px 7px; }
   .lb-medal-desktop { display: none; }
-  .lb-medal-mobile { display: inline; font-size: 1.3rem; line-height: 1; }
+  .lb-medal-mobile  { display: inline; font-size: 1.3rem; line-height: 1; }
+
+  /* Hide the standalone prestige column — shown inline instead */
+  .lb-th-title, .lb-td-title { display: none; }
+
+  /* Column widths: rank | wallet+prestige | crude */
+  .lb-td-rank,   .lb-th-rank   { width: 44px; }
+  .lb-td-crude,  .lb-th-crude  { width: 110px; }
+  .lb-td-wallet, .lb-th-wallet { width: auto; min-width: 0; }
+
+  /* Wallet cell: stack address + prestige vertically */
+  .lb-td-wallet {
+    display: table-cell; /* keep as cell */
+  }
+  .lb-wallet-link {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Inline prestige badge under wallet address */
+  .lb-prestige-mobile {
+    display: inline-block;
+    margin-top: 5px;
+    padding: 2px 8px;
+    border-radius: 99px;
+    font-size: 0.6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: 1px solid transparent;
+    white-space: nowrap;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }
 
 /* ═══════════════════════════════════════════════════
@@ -1912,6 +2089,43 @@ body {
    WALLET PROFILE PAGE
    ════════════════════════════════════════════════════════ */
 
+/* ── Profile connect prompt (unauthenticated /profile page) ── */
+.profile-connect-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+  padding: 80px 24px;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.profile-connect-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-base);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.profile-connect-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.3px;
+}
+
+.profile-connect-desc {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  line-height: 1.7;
+}
+
 .profile-wallet-header {
   display: flex;
   align-items: center;
@@ -2391,20 +2605,5 @@ body {
    LEADERBOARD TABLE — LIGHT THEME OVERRIDES
 ═══════════════════════════════════════════════════ */
 [data-theme="dark"] .lb-table-wrap {
-  box-shadow:
-    0 0 0 1px rgba(245,166,35,0.15),
-    0 8px 60px rgba(0,0,0,0.5),
-    0 2px 16px rgba(0,0,0,0.3);
-}
-:root .lb-table-wrap {
-  box-shadow:
-    0 0 0 1px rgba(224,149,21,0.12),
-    0 8px 40px rgba(0,0,0,0.08),
-    0 2px 12px rgba(0,0,0,0.05);
-}
-[data-theme="dark"] .lb-table-wrap::before {
-  background: linear-gradient(90deg, transparent, rgba(245,166,35,0.7), transparent);
-}
-:root .lb-table-wrap::before {
-  background: linear-gradient(90deg, transparent, rgba(224,149,21,0.5), transparent);
+  box-shadow: 0 4px 32px rgba(0,0,0,0.4), 0 1px 6px rgba(0,0,0,0.3);
 }

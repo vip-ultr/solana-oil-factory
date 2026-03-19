@@ -176,7 +176,7 @@ https://solanaoilfactory.xyz`;
 
       {/* ── Refinery Panel ── */}
       <div className="panel refinery-panel oil-stats-refinery">
-        <p className="panel-label">Refinery</p>
+        <p className="panel-label"> CRUDE OIL Refinery</p>
         <p className="refinery-desc">
           <h2>Refine to unlock your prestige title.</h2>
           <h1>How it works?</h1>

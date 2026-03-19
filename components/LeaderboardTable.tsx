@@ -68,7 +68,8 @@ export default function LeaderboardTable({ entries }: LeaderboardTableProps) {
             </th>
             <th className="lb-th lb-th-crude">
               <span className="lb-th-inner lb-th-right">
-                CRUDE Production
+                <span className="lb-th-crude-full">CRUDE Production</span>
+                <span className="lb-th-crude-short">CRUDE</span>
               </span>
             </th>
             <th className="lb-th lb-th-title">
@@ -106,17 +107,22 @@ export default function LeaderboardTable({ entries }: LeaderboardTableProps) {
                   )}
                 </td>
 
-                {/* Wallet */}
+                {/* Wallet — prestige badge stacks below on mobile */}
                 <td className="lb-td lb-td-wallet">
                   <a
                     href={`https://solscan.io/account/${entry.wallet_address}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="lb-wallet-link"
-                    title={entry.wallet_address}
                   >
                     {truncateAddress(entry.wallet_address)}
                   </a>
+                  <span
+                    className="lb-prestige-mobile"
+                    style={{ background: ts.bg, color: ts.color, borderColor: `${ts.color}44` }}
+                  >
+                    {entry.prestige_title}
+                  </span>
                 </td>
 
                 {/* CRUDE with progress bar */}

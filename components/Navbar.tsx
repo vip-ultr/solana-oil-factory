@@ -157,32 +157,17 @@ export default function Navbar() {
           <span>Leaderboard</span>
         </Link>
 
-        {isConnected && solanaAddress ? (
-          <Link
-            href={`/wallet/${solanaAddress}`}
-            className={`bottom-nav-item${pathname.startsWith("/wallet/") ? " bottom-nav-item--active" : ""}`}
-          >
-            {/* Profile icon */}
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="8" r="4" />
-              <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
-            </svg>
-            <span>Profile</span>
-          </Link>
-        ) : (
-          <button
-            className="bottom-nav-item"
-            onClick={openConnectModal}
-            aria-label="Connect wallet"
-          >
-            {/* Wallet icon */}
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="2" y="6" width="20" height="12" rx="3" />
-              <path d="M16 12h.01" />
-            </svg>
-            <span>Connect</span>
-          </button>
-        )}
+        <Link
+          href={isConnected && solanaAddress ? `/wallet/${solanaAddress}` : "/profile"}
+          className={`bottom-nav-item${pathname.startsWith("/wallet/") || pathname === "/profile" ? " bottom-nav-item--active" : ""}`}
+        >
+          {/* Profile icon — always shown */}
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="8" r="4" />
+            <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+          </svg>
+          <span>Profile</span>
+        </Link>
       </nav>
 
       <WalletConnectModal isOpen={showConnectModal} onClose={closeConnectModal} />
