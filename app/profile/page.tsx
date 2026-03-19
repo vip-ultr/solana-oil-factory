@@ -32,7 +32,7 @@ export default function ProfilePage() {
           </div>
           <h2 className="profile-connect-title">No wallet connected</h2>
           <p className="profile-connect-desc">
-            Connect your Solana wallet to view your refinery profile, oil production stats, and prestige title.
+            Connect your Solana wallet to view your refinery profile.
           </p>
         </div>
       </main>

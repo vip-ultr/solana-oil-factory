@@ -451,17 +451,49 @@ body {
   align-self: start;
   transition: transform 0.25s ease;
 }
-.barrel-wrapper:hover { transform: translateY(-5px); }
-.barrel-wrapper:hover .barrel-svg {
-  filter: drop-shadow(0 0 14px rgba(245, 166, 35, 0.38));
-}
 
 .barrel-svg {
-  /* SVG viewBox 485:780 provides intrinsic ratio — height:auto computes it correctly on every device */
   width: 100%;
   height: auto;
   display: block;
-  transition: filter 0.3s ease;
+  filter: drop-shadow(0 3px 5px rgba(0,0,0,0.12));
+  transition: filter 0.3s ease, transform 0.3s ease;
+}
+
+/* Oil fill smooth transition */
+.oil-fill {
+  transition: y 0.8s ease-out, height 0.8s ease-out;
+}
+
+/* Subtle oil surface oscillation */
+@keyframes oil-wobble {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(1.5px); }
+}
+.oil-group {
+  animation: oil-wobble 3s ease-in-out infinite;
+}
+
+/* Hover — desktop only */
+@media (hover: hover) {
+  .barrel-wrapper:hover { transform: translateY(-5px); }
+  .barrel-wrapper:hover .barrel-svg {
+    filter: drop-shadow(0 0 14px rgba(245, 166, 35, 0.38)) brightness(1.05);
+    transform: scale(1.02);
+  }
+}
+
+/* High-fill glow (>90%) */
+.high-fill .barrel-svg {
+  filter: drop-shadow(0 0 18px rgba(192, 57, 43, 0.25));
+}
+@media (hover: hover) {
+  .high-fill:hover .barrel-svg {
+    filter: drop-shadow(0 0 18px rgba(192, 57, 43, 0.25))
+            drop-shadow(0 0 14px rgba(245, 166, 35, 0.38))
+            brightness(1.05);
+    transform: scale(1.02);
+  }
 }
 
 .barrel-label {
