@@ -2510,10 +2510,8 @@ body {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: var(--glass-bg);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--glass-border);
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-base);
   transition: background 0.3s ease, border-color 0.3s ease;
 }
 
