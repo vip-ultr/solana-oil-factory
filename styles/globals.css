@@ -478,6 +478,7 @@ body {
 
 @media (max-width: 860px) {
   .barrel-grid {
+    justify-content: center;
     grid-template-columns: repeat(2, 1fr);
     gap: 20px;
   }
@@ -492,6 +493,7 @@ body {
 
 @media (max-width: 480px) {
   .barrel-grid {
+    justify-content: center;
     grid-template-columns: repeat(2, 1fr);
     gap: 14px;
   }
