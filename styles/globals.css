@@ -478,7 +478,6 @@ body {
 
 @media (max-width: 860px) {
   .barrel-grid {
-    justify-content: center;
     grid-template-columns: repeat(2, 1fr);
     gap: 20px;
   }
@@ -489,17 +488,22 @@ body {
   .barrel-last-slot {
     max-width: 110px;
   }
+  .barrel-gauge {
+    right: 2%;
+  }
 }
 
 @media (max-width: 480px) {
   .barrel-grid {
-    justify-content: center;
     grid-template-columns: repeat(2, 1fr);
     gap: 14px;
   }
   .barrel-wrapper,
   .barrel-last-slot {
     max-width: 90px;
+  }
+  .barrel-gauge {
+    right: 2%;
   }
 }
 
