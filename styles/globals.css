@@ -471,22 +471,22 @@ body {
 ══════════════════════════════════════════════════ */
 .barrel-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 32px;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 24px;
   align-items: start;
 }
 
 @media (max-width: 860px) {
   .barrel-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 24px;
+    gap: 20px;
   }
 }
 
 @media (max-width: 480px) {
   .barrel-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
+    gap: 14px;
   }
 }
 
@@ -500,12 +500,15 @@ body {
   gap: 10px;
   cursor: default;
   width: 100%;
+  max-width: 160px;
+  margin: 0 auto;
   align-self: start;
   transition: transform 0.25s ease;
 }
 
 /* Barrel visual container — holds image + gauge */
 .barrel-visual {
+  margin-top: 20px;
   position: relative;
   width: 100%;
 }
@@ -521,7 +524,7 @@ body {
 /* ── Oil Level Gauge ── */
 .barrel-gauge {
   position: absolute;
-  right: 16%;
+  right: -5%;
   top: 15%;
   bottom: 18%;
   width: 8px;
@@ -595,9 +598,9 @@ body {
   text-transform: uppercase;
   padding: 5px 12px;
   background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 3px;
-  margin-top: 30px;
+  border: 2px solid rgba(255, 255, 255, 0.06);
+  border-radius: 5px;
+  margin-top: 10px;
 }
 
 .barrel-label-value {
@@ -612,7 +615,10 @@ body {
 
 .barrel-last-slot {
   position: relative;
+  isolation: isolate;       /* creates a stacking context — overlay always wins */
   width: 100%;
+  max-width: 160px;
+  margin: 0 auto;
   align-self: start;
 }
 .barrel-overflow-overlay {
@@ -622,27 +628,52 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.58);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  border-radius: 8px;
-  gap: 4px;
-  z-index: 2;
+  gap: clamp(5px, 1.5vw, 9px);
+  background: var(--glass-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  z-index: 10;              /* well above any barrel child stacking context */
 }
+/* Stack-of-barrels hint icon */
+.barrel-overflow-icon {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  opacity: 0.4;
+  margin-bottom: 2px;
+}
+.barrel-overflow-icon span {
+  display: block;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--text-primary);
+}
+.barrel-overflow-icon span:nth-child(1) { width: clamp(18px, 4vw, 24px); }
+.barrel-overflow-icon span:nth-child(2) { width: clamp(13px, 3vw, 17px); }
+.barrel-overflow-icon span:nth-child(3) { width: clamp(8px,  2vw, 11px); }
 .barrel-overflow-count {
-  font-size: 1.8rem;
+  font-size: clamp(1.3rem, 3.5vw, 1.9rem);
   font-weight: 800;
-  color: #fff;
+  color: var(--accent);
   font-family: ui-monospace, "Cascadia Code", "SF Mono", monospace;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
   line-height: 1;
 }
+.barrel-overflow-divider {
+  width: clamp(20px, 5vw, 30px);
+  height: 1px;
+  background: var(--border-base);
+  border-radius: 1px;
+}
 .barrel-overflow-label {
-  font-size: 0.62rem;
+  font-size: clamp(0.5rem, 1.2vw, 0.63rem);
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.65);
+  color: var(--text-secondary);
   text-transform: uppercase;
-  letter-spacing: 1.6px;
+  letter-spacing: 1.4px;
+  text-align: center;
 }
 
 

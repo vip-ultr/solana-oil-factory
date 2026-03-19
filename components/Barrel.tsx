@@ -5,9 +5,10 @@ import Image from "next/image";
 
 interface BarrelProps {
   fillPercent: number;
+  hideGauge?: boolean;
 }
 
-const Barrel = React.memo(function Barrel({ fillPercent }: BarrelProps) {
+const Barrel = React.memo(function Barrel({ fillPercent, hideGauge = false }: BarrelProps) {
   const clampedFill = Math.max(0, Math.min(100, fillPercent));
   const isHighFill = clampedFill > 90;
 
@@ -24,20 +25,19 @@ const Barrel = React.memo(function Barrel({ fillPercent }: BarrelProps) {
         />
 
         {/* Oil level gauge — right side */}
-        <div className="barrel-gauge">
-          <div className="barrel-gauge-track">
-            {/* Tick marks */}
-            <span className="barrel-gauge-tick" style={{ bottom: "25%" }} />
-            <span className="barrel-gauge-tick" style={{ bottom: "50%" }} />
-            <span className="barrel-gauge-tick" style={{ bottom: "75%" }} />
-
-            {/* Fill bar */}
-            <div
-              className={`barrel-gauge-fill${isHighFill ? " barrel-gauge-high" : ""}`}
-              style={{ height: `${clampedFill}%` }}
-            />
+        {!hideGauge && (
+          <div className="barrel-gauge">
+            <div className="barrel-gauge-track">
+              <span className="barrel-gauge-tick" style={{ bottom: "25%" }} />
+              <span className="barrel-gauge-tick" style={{ bottom: "50%" }} />
+              <span className="barrel-gauge-tick" style={{ bottom: "75%" }} />
+              <div
+                className={`barrel-gauge-fill${isHighFill ? " barrel-gauge-high" : ""}`}
+                style={{ height: `${clampedFill}%` }}
+              />
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       <p className="barrel-label">

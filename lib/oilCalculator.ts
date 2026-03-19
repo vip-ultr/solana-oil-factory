@@ -14,6 +14,7 @@ export interface OilData {
 const BARREL_SIZE = 50;
 const CRUDE_RATE = 10;
 const MAX_BARRELS = 10;
+const SHOWCASE_BARRELS = 5;
 
 export function getPrestigeTitle(crude: number): string {
   if (crude >= 5000000) return "Supreme PetroLord";
@@ -43,6 +44,15 @@ export function getPrestigeTitle(crude: number): string {
   return "Dry Well";
 }
 
+/** Simple seeded RNG (LCG) — deterministic per wallet so fills don't change on reload */
+function makeSeededRandom(seed: number) {
+  let s = seed >>> 0;
+  return () => {
+    s = (Math.imul(s, 1664525) + 1013904223) >>> 0;
+    return s / 0xffffffff;
+  };
+}
+
 export function calculateOilData(txCount: number): OilData {
   const oilUnits = txCount;
   const barrels = Math.floor(oilUnits / BARREL_SIZE);
@@ -50,18 +60,29 @@ export function calculateOilData(txCount: number): OilData {
   const crude = Math.floor(oilUnits / CRUDE_RATE);
   const title = getPrestigeTitle(crude);
 
-  // Build fill percentages array (capped at MAX_BARRELS)
-  // Partial barrel always comes FIRST, full barrels follow
+  // Build fill percentages array
   const fillPercentages: number[] = [];
-  const displayBarrels = Math.min(barrels, MAX_BARRELS);
 
-  // Add partial barrel first if there's a remainder and we haven't hit the cap
-  if (remainder > 0 && displayBarrels < MAX_BARRELS) {
-    fillPercentages.push(Math.round((remainder / BARREL_SIZE) * 100));
-  }
-
-  for (let i = 0; i < displayBarrels; i++) {
-    fillPercentages.push(100);
+  if (barrels > 9) {
+    // Show SHOWCASE_BARRELS partial fills first to demonstrate the gauge,
+    // then up to MAX_BARRELS full barrels — total display cap = SHOWCASE_BARRELS + MAX_BARRELS
+    const displayCount = Math.min(barrels, SHOWCASE_BARRELS + MAX_BARRELS);
+    const rand = makeSeededRandom(oilUnits);
+    for (let i = 0; i < SHOWCASE_BARRELS; i++) {
+      fillPercentages.push(Math.round(15 + rand() * 75)); // 15–90%
+    }
+    for (let i = SHOWCASE_BARRELS; i < displayCount; i++) {
+      fillPercentages.push(100);
+    }
+  } else {
+    // Normal path: partial barrel first, then full barrels
+    const displayBarrels = Math.min(barrels, MAX_BARRELS);
+    if (remainder > 0 && displayBarrels < MAX_BARRELS) {
+      fillPercentages.push(Math.round((remainder / BARREL_SIZE) * 100));
+    }
+    for (let i = 0; i < displayBarrels; i++) {
+      fillPercentages.push(100);
+    }
   }
 
   return { oilUnits, barrels, remainder, fillPercentages, crude, title };
