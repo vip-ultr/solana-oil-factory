@@ -1444,7 +1444,7 @@ body {
   .lb-th-crude                 { text-align: left; }
   .lb-th-crude .lb-th-right    { justify-content: flex-start; }
   .lb-td-crude                 { text-align: left; }
-  .lb-crude-wrap               { justify-content: flex-start; }
+  .lb-crude-wrap               { align-items: flex-start; }
 
   /* Wallet cell: stack address + prestige vertically */
   .lb-td-wallet {
