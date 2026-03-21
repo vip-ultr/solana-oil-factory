@@ -2781,13 +2781,23 @@ body {
     background: var(--bg-surface);
     border-top: 1px solid var(--border-subtle);
     box-shadow: 0 -4px 24px var(--shadow-sm);
-    /* 62px for button area + safe-area for wallet browser toolbars */
-    height: calc(62px + env(safe-area-inset-bottom, 0px));
-    align-items: flex-start;         /* pin items to top of bar */
+    height: 62px;
+    align-items: stretch;
     padding: 0 4px;
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-    box-sizing: border-box;          /* padding included in height */
-    overflow: hidden;                 /* nothing escapes the bar */
+    box-sizing: border-box;
+    overflow: visible;
+  }
+
+  /* Safe-area filler — extends the background below the nav
+     into the wallet-browser toolbar zone without growing the bar */
+  .bottom-nav::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    height: env(safe-area-inset-bottom, 0px);
+    background: var(--bg-surface);
   }
 
   .bottom-nav-item {
@@ -2797,8 +2807,7 @@ body {
     align-items: center;
     justify-content: center;
     gap: 3px;
-    height: 62px;                    /* fixed content height, independent of safe-area */
-    min-width: 0;                    /* prevent flex blowout on tiny screens */
+    min-width: 0;
     padding: 6px 2px;
     color: var(--text-muted);
     text-decoration: none;
@@ -2809,10 +2818,10 @@ body {
     background: none;
     border: none;
     cursor: pointer;
-    border-radius: 12px;
-    transition: color 0.15s ease, background 0.15s ease;
+    border-radius: 0;
+    transition: color 0.15s ease;
     -webkit-tap-highlight-color: transparent;
-    overflow: hidden;                /* clip any overflow text */
+    overflow: hidden;
     white-space: nowrap;
   }
 
@@ -2821,9 +2830,10 @@ body {
     transition: stroke 0.15s ease;
   }
 
-  .bottom-nav-item:hover {
-    color: var(--text-secondary);
-    background: var(--bg-elevated);
+  /* No hover/active background flash on mobile */
+  .bottom-nav-item:hover,
+  .bottom-nav-item:active {
+    background: none;
   }
 
   .bottom-nav-item--active {
@@ -2836,7 +2846,7 @@ body {
 
   /* Offset page content so it doesn't hide under the bottom nav */
   .main {
-    padding-bottom: calc(62px + env(safe-area-inset-bottom, 0px) + 24px);
+    padding-bottom: calc(62px + 24px);
   }
 }
 
