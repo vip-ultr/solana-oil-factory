@@ -3,13 +3,14 @@
 import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useWalletConnection } from "@solana/react-hooks";
+import { usePhantom, useDisconnect, AddressType } from "@phantom/react-sdk";
 import { useTheme } from "next-themes";
 import WalletConnectModal from "./WalletConnectModal";
 
 export default function Navbar() {
   const pathname = usePathname();
-  const { connected, disconnect, wallet, isReady } = useWalletConnection();
+  const { isConnected, addresses } = usePhantom();
+  const { disconnect } = useDisconnect();
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [showConnectModal, setShowConnectModal] = useState(false);
@@ -17,13 +18,14 @@ export default function Navbar() {
   const openConnectModal = useCallback(() => setShowConnectModal(true), []);
   const closeConnectModal = useCallback(() => setShowConnectModal(false), []);
 
-  const solanaAddress = wallet?.account.address?.toString() ?? null;
+  const solanaAddress =
+    addresses.find((a) => a.addressType === AddressType.solana)?.address ?? null;
 
   useEffect(() => setMounted(true), []);
 
   useEffect(() => {
-    if (connected) setShowConnectModal(false);
-  }, [connected]);
+    if (isConnected) setShowConnectModal(false);
+  }, [isConnected]);
 
   const toggleTheme = () => {
     setTheme(resolvedTheme === "dark" ? "light" : "dark");
@@ -56,7 +58,7 @@ export default function Navbar() {
               </Link>
             ))}
             <Link
-              href={connected && solanaAddress ? `/wallet/${solanaAddress}` : "/profile"}
+              href={isConnected && solanaAddress ? `/wallet/${solanaAddress}` : "/profile"}
               className={`navbar-link${pathname.startsWith("/wallet/") || pathname === "/profile" ? " navbar-link--active" : ""}`}
             >
               Profile
@@ -92,14 +94,14 @@ export default function Navbar() {
               </button>
             )}
 
-            {isReady && connected && solanaAddress ? (
+            {isConnected && solanaAddress ? (
               <div className="navbar-wallet-chip">
                 <span className="navbar-wallet-dot" />
                 <span className="navbar-wallet-addr">
                   {solanaAddress.slice(0, 4)}...{solanaAddress.slice(-4)}
                 </span>
                 <button
-                  onClick={() => disconnect()}
+                  onClick={disconnect}
                   className="navbar-wallet-disconnect"
                   aria-label="Disconnect wallet"
                   title="Disconnect"
@@ -154,7 +156,7 @@ export default function Navbar() {
         </Link>
 
         <Link
-          href={connected && solanaAddress ? `/wallet/${solanaAddress}` : "/profile"}
+          href={isConnected && solanaAddress ? `/wallet/${solanaAddress}` : "/profile"}
           className={`bottom-nav-item${pathname.startsWith("/wallet/") || pathname === "/profile" ? " bottom-nav-item--active" : ""}`}
         >
           {/* Profile icon — always shown */}

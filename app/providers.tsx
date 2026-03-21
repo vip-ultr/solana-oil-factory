@@ -1,27 +1,31 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { ThemeProvider } from "next-themes";
-import { SolanaProvider } from "@solana/react-hooks";
-import { autoDiscover, createClient } from "@solana/client";
+import { ThemeProvider, useTheme } from "next-themes";
+import { PhantomProvider, AddressType, darkTheme, PhantomSDKConfig } from "@phantom/react-sdk";
 
-const endpoint =
-  process.env.NEXT_PUBLIC_SOLANA_RPC_URL ?? "https://api.mainnet-beta.solana.com";
+const phantomConfig: PhantomSDKConfig = {
+  providers: ["injected"],
+  addressTypes: [AddressType.solana],
+};
 
-const websocketEndpoint =
-  process.env.NEXT_PUBLIC_SOLANA_WS_URL ??
-  endpoint.replace("https://", "wss://").replace("http://", "ws://");
-
-const solanaClient = createClient({
-  endpoint,
-  websocketEndpoint,
-  walletConnectors: autoDiscover(),
-});
+function PhantomWrapper({ children }: { children: ReactNode }) {
+  const { resolvedTheme } = useTheme();
+  return (
+    <PhantomProvider
+      config={phantomConfig}
+      theme={resolvedTheme === "dark" ? darkTheme : undefined}
+      appName="Solana Oil Factory"
+    >
+      {children}
+    </PhantomProvider>
+  );
+}
 
 export default function Providers({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider attribute="data-theme" defaultTheme="system" enableSystem>
-      <SolanaProvider client={solanaClient}>{children}</SolanaProvider>
+      <PhantomWrapper>{children}</PhantomWrapper>
     </ThemeProvider>
   );
 }

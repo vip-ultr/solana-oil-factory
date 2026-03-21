@@ -1,7 +1,71 @@
 "use client";
 
-import { useCallback, useEffect } from "react";
-import { useWalletModalState } from "@solana/react-hooks";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useModal, useIsExtensionInstalled } from "@phantom/react-sdk";
+
+const WALLETS = [
+  {
+    name: "Phantom",
+    icon: "/phantom-icon.png",
+    universalLink: "https://phantom.app/ul/browse/",
+  },
+  {
+    name: "Solflare",
+    icon: "/solflare-icon.png",
+    universalLink: "https://solflare.com/ul/",
+  },
+  {
+    name: "Backpack",
+    icon: "/backpack-icon.png",
+    universalLink: "https://backpack.app/ul/",
+  },
+];
+
+function isMobile(): boolean {
+  if (typeof navigator === "undefined") return false;
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+    navigator.userAgent
+  );
+}
+
+/**
+ * Detects any injected Solana wallet provider.
+ *
+ * In-app wallet browsers (Jupiter, Phantom, Backpack, Solflare, etc.) inject
+ * their provider at different paths and sometimes asynchronously:
+ *  - window.solana             (most wallets)
+ *  - window.phantom?.solana    (Phantom, Jupiter via Phantom adapter)
+ *  - window.solflare           (Solflare)
+ *  - window.backpack?.solana   (Backpack)
+ *  - window.phantom            (Phantom extension)
+ *
+ * We also listen for the Wallet Standard "register" event, which is the
+ * modern standard that wallets like Jupiter use.
+ */
+function hasInjectedWallet(): boolean {
+  if (typeof window === "undefined") return false;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const w = window as any;
+
+  // Check direct top-level providers
+  if (w.solana) return true;
+  if (w.phantom?.solana) return true;
+  if (w.solflare) return true;
+  if (w.backpack?.solana) return true;
+  if (w.coin98) return true;
+
+  // Check Wallet Standard registrations
+  // Wallets that follow the standard push into window.navigator.wallets
+  if (
+    w.navigator?.wallets?.length > 0 ||
+    w.navigator?.wallets?.get?.()?.length > 0
+  ) {
+    return true;
+  }
+
+  return false;
+}
 
 interface WalletConnectModalProps {
   isOpen: boolean;
@@ -12,23 +76,55 @@ export default function WalletConnectModal({
   isOpen,
   onClose,
 }: WalletConnectModalProps) {
-  const modal = useWalletModalState({ closeOnConnect: true });
+  const { open: openPhantomModal } = useModal();
+  const { isInstalled, isLoading } = useIsExtensionInstalled();
+  const [mobile, setMobile] = useState(false);
+  const [injected, setInjected] = useState(false);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Sync external isOpen prop → internal modal state
+  // Detect mobile + poll for injected wallet (in-app browsers inject late)
   useEffect(() => {
-    if (isOpen && !modal.isOpen) modal.open();
-    if (!isOpen && modal.isOpen) modal.close();
-  }, [isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
+    setMobile(isMobile());
 
-  // Close parent when modal closes (e.g. after connect)
-  useEffect(() => {
-    if (!modal.isOpen && isOpen) onClose();
-  }, [modal.isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (hasInjectedWallet()) {
+      setInjected(true);
+      return;
+    }
 
-  // Close parent when wallet connects
+    // Poll every 200ms for up to 3 seconds — covers slow in-app browser injection
+    let elapsed = 0;
+    const interval = setInterval(() => {
+      elapsed += 200;
+      if (hasInjectedWallet()) {
+        setInjected(true);
+        clearInterval(interval);
+      } else if (elapsed >= 3000) {
+        clearInterval(interval);
+      }
+    }, 200);
+    pollRef.current = interval;
+
+    // Also listen for the Wallet Standard register event
+    const handleRegister = () => {
+      setInjected(true);
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
+    window.addEventListener("wallet-standard:register", handleRegister);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("wallet-standard:register", handleRegister);
+    };
+  }, []);
+
+  // When the modal opens: if a wallet IS available, delegate to the Phantom SDK modal
   useEffect(() => {
-    if (modal.connected) onClose();
-  }, [modal.connected]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (!isOpen || isLoading) return;
+    if (!mobile || injected || isInstalled) {
+      openPhantomModal();
+      onClose();
+    }
+  }, [isOpen, isLoading, mobile, injected, isInstalled, openPhantomModal, onClose]);
 
   const handleBackdropClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
@@ -46,33 +142,11 @@ export default function WalletConnectModal({
     return () => window.removeEventListener("keydown", handleKey);
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  // Only render the custom modal on mobile with no wallet detected
+  if (!isOpen || !mobile || injected || isInstalled) return null;
 
-  // Wait for hydration — connectors aren't available during SSR
-  if (!modal.isReady) {
-    return (
-      <div className="wcm-backdrop" onClick={handleBackdropClick}>
-        <div className="wcm-modal">
-          <div className="wcm-header">
-            <h3 className="wcm-title">Connect a Wallet</h3>
-            <button onClick={onClose} className="wcm-close" aria-label="Close">
-              &times;
-            </button>
-          </div>
-          <p className="wcm-desc">Detecting wallets...</p>
-        </div>
-      </div>
-    );
-  }
-
-  const handleConnect = async (connectorId: string) => {
-    try {
-      await modal.connect(connectorId);
-      onClose();
-    } catch {
-      // User rejected or connection failed — stay on modal
-    }
-  };
+  const currentUrl =
+    typeof window !== "undefined" ? window.location.href : "";
 
   return (
     <div className="wcm-backdrop" onClick={handleBackdropClick}>
@@ -84,120 +158,44 @@ export default function WalletConnectModal({
           </button>
         </div>
 
-        {modal.connectors.length === 0 ? (
-          <>
-            <p className="wcm-desc">
-              No wallets detected. Install a Solana wallet to continue.
-            </p>
-            <div className="wcm-list">
-              <a
-                href="https://phantom.app/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="wcm-wallet-btn"
+        <p className="wcm-desc">
+          Select a wallet app to connect. You&apos;ll be redirected to the app.
+        </p>
+
+        <div className="wcm-list">
+          {WALLETS.map(({ name, icon, universalLink }) => (
+            <a
+              key={name}
+              href={`${universalLink}${encodeURIComponent(currentUrl)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="wcm-wallet-btn"
+            >
+              <img
+                src={icon}
+                alt={name}
+                className="wcm-wallet-icon"
+                width={32}
+                height={32}
+              />
+              <div className="wcm-wallet-info">
+                <span className="wcm-wallet-name">{name}</span>
+                <span className="wcm-wallet-action">Open App</span>
+              </div>
+              <svg
+                className="wcm-arrow"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
               >
-                <img
-                  src="/phantom-icon.png"
-                  alt="Phantom"
-                  className="wcm-wallet-icon"
-                  width={32}
-                  height={32}
-                />
-                <div className="wcm-wallet-info">
-                  <span className="wcm-wallet-name">Phantom</span>
-                  <span className="wcm-wallet-action">Get Wallet</span>
-                </div>
-                <svg
-                  className="wcm-arrow"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="M7 17L17 7M17 7H7M17 7V17" />
-                </svg>
-              </a>
-              <a
-                href="https://solflare.com/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="wcm-wallet-btn"
-              >
-                <img
-                  src="/solflare-icon.png"
-                  alt="Solflare"
-                  className="wcm-wallet-icon"
-                  width={32}
-                  height={32}
-                />
-                <div className="wcm-wallet-info">
-                  <span className="wcm-wallet-name">Solflare</span>
-                  <span className="wcm-wallet-action">Get Wallet</span>
-                </div>
-                <svg
-                  className="wcm-arrow"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="M7 17L17 7M17 7H7M17 7V17" />
-                </svg>
-              </a>
-            </div>
-          </>
-        ) : (
-          <>
-            <p className="wcm-desc">
-              Select a wallet to connect.
-            </p>
-            <div className="wcm-list">
-              {modal.connectors.map((connector) => (
-                <button
-                  key={connector.id}
-                  onClick={() => handleConnect(connector.id)}
-                  className="wcm-wallet-btn"
-                  disabled={modal.connecting}
-                >
-                  {connector.icon ? (
-                    <img
-                      src={connector.icon}
-                      alt={connector.name}
-                      className="wcm-wallet-icon"
-                      width={32}
-                      height={32}
-                    />
-                  ) : (
-                    <div className="wcm-wallet-icon-placeholder" />
-                  )}
-                  <div className="wcm-wallet-info">
-                    <span className="wcm-wallet-name">{connector.name}</span>
-                    <span className="wcm-wallet-action">
-                      {modal.connecting && modal.connectorId === connector.id
-                        ? "Connecting..."
-                        : "Connect"}
-                    </span>
-                  </div>
-                  <svg
-                    className="wcm-arrow"
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <polyline points="9 18 15 12 9 6" />
-                  </svg>
-                </button>
-              ))}
-            </div>
-          </>
-        )}
+                <path d="M7 17L17 7M17 7H7M17 7V17" />
+              </svg>
+            </a>
+          ))}
+        </div>
 
         <div className="wcm-divider">
           <span>or</span>

@@ -1610,21 +1610,13 @@ body {
   display: flex;
   align-items: center;
   gap: 14px;
-  width: 100%;
   padding: 14px 16px;
   border: 1px solid var(--border-base);
   border-radius: 12px;
   background: var(--bg-elevated);
-  color: inherit;
-  font: inherit;
-  text-align: left;
   text-decoration: none;
   transition: all 0.15s ease;
   cursor: pointer;
-}
-.wcm-wallet-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
 }
 .wcm-wallet-btn:hover {
   border-color: var(--border-mid);
@@ -1636,15 +1628,6 @@ body {
   height: 32px;
   border-radius: 8px;
   flex-shrink: 0;
-}
-
-.wcm-wallet-icon-placeholder {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  flex-shrink: 0;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-subtle);
 }
 
 .wcm-wallet-info {
