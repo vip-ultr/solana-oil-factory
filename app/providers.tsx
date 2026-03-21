@@ -1,31 +1,48 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { ThemeProvider, useTheme } from "next-themes";
-import { PhantomProvider, AddressType, darkTheme, PhantomSDKConfig } from "@phantom/react-sdk";
+import { ThemeProvider } from "next-themes";
+import { SolanaProvider } from "@solana/react-hooks";
+import { createClient, autoDiscover } from "@solana/client";
+import {
+  registerMwa,
+  createDefaultAuthorizationCache,
+  createDefaultChainSelector,
+  createDefaultWalletNotFoundHandler,
+} from "@solana-mobile/wallet-standard-mobile";
 
-const phantomConfig: PhantomSDKConfig = {
-  providers: ["injected"],
-  addressTypes: [AddressType.solana],
-};
+const endpoint =
+  process.env.NEXT_PUBLIC_SOLANA_RPC_URL ?? "https://api.mainnet-beta.solana.com";
 
-function PhantomWrapper({ children }: { children: ReactNode }) {
-  const { resolvedTheme } = useTheme();
-  return (
-    <PhantomProvider
-      config={phantomConfig}
-      theme={resolvedTheme === "dark" ? darkTheme : undefined}
-      appName="Solana Oil Factory"
-    >
-      {children}
-    </PhantomProvider>
-  );
+const websocketEndpoint =
+  process.env.NEXT_PUBLIC_SOLANA_WS_URL ??
+  endpoint.replace("https://", "wss://").replace("http://", "ws://");
+
+// Register Solana Mobile Wallet Adapter for native mobile wallet picker
+if (typeof window !== "undefined") {
+  registerMwa({
+    appIdentity: {
+      name: "Solana Oil Factory",
+      uri: typeof window !== "undefined" ? window.location.origin : undefined,
+      icon: typeof window !== "undefined" ? `${window.location.origin}/logo.png` : undefined,
+    },
+    authorizationCache: createDefaultAuthorizationCache(),
+    chains: ["solana:mainnet"],
+    chainSelector: createDefaultChainSelector(),
+    onWalletNotFound: createDefaultWalletNotFoundHandler(),
+  });
 }
+
+const solanaClient = createClient({
+  endpoint,
+  websocketEndpoint,
+  walletConnectors: autoDiscover(),
+});
 
 export default function Providers({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider attribute="data-theme" defaultTheme="system" enableSystem>
-      <PhantomWrapper>{children}</PhantomWrapper>
+      <SolanaProvider client={solanaClient}>{children}</SolanaProvider>
     </ThemeProvider>
   );
 }

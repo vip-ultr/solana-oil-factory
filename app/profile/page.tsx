@@ -2,23 +2,22 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { usePhantom, AddressType } from "@phantom/react-sdk";
+import { useWalletConnection } from "@solana/react-hooks";
 
 export default function ProfilePage() {
-  const { isConnected, addresses } = usePhantom();
+  const { connected, wallet } = useWalletConnection();
   const router = useRouter();
-  const solanaAddress =
-    addresses.find((a) => a.addressType === AddressType.solana)?.address ?? null;
+  const solanaAddress = wallet?.account?.address?.toString() ?? null;
 
   // Redirect to wallet profile when connected
   useEffect(() => {
-    if (isConnected && solanaAddress) {
+    if (connected && solanaAddress) {
       router.replace(`/wallet/${solanaAddress}`);
     }
-  }, [isConnected, solanaAddress, router]);
+  }, [connected, solanaAddress, router]);
 
   // While redirecting, render nothing
-  if (isConnected && solanaAddress) return null;
+  if (connected && solanaAddress) return null;
 
   return (
     <div className="page">

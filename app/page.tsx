@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { usePhantom, useSolana, AddressType } from "@phantom/react-sdk";
+import { useWalletConnection, useWalletSession } from "@solana/react-hooks";
 import WalletSearch from "@/components/WalletSearch";
 import BarrelHeroSection from "@/components/BarrelHeroSection";
 import OilStats from "@/components/OilStats";
@@ -18,12 +18,12 @@ type WalletData = OilData & {
 };
 
 export default function Home() {
-  const { isConnected, addresses } = usePhantom();
-  const { solana, isAvailable: isSolanaAvailable } = useSolana();
+  const { connected, disconnect, wallet } = useWalletConnection();
+  const session = useWalletSession();
   const [showConnectModal, setShowConnectModal] = useState(false);
   const openConnectModal = useCallback(() => setShowConnectModal(true), []);
   const closeConnectModal = useCallback(() => setShowConnectModal(false), []);
-  const solanaAddress = addresses.find((a) => a.addressType === AddressType.solana)?.address ?? null;
+  const solanaAddress = session?.account?.address?.toString() ?? null;
   const [data, setData] = useState<WalletData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -86,13 +86,13 @@ export default function Home() {
 
   // Close connect modal when wallet connects
   useEffect(() => {
-    if (isConnected) setShowConnectModal(false);
-  }, [isConnected]);
+    if (connected) setShowConnectModal(false);
+  }, [connected]);
 
   // Reset everything when wallet disconnects (not on initial mount)
   const wasConnectedRef = useRef(false);
   useEffect(() => {
-    if (isConnected) {
+    if (connected) {
       wasConnectedRef.current = true;
     } else if (wasConnectedRef.current) {
       // User explicitly disconnected (was connected, now isn't)
@@ -108,17 +108,17 @@ export default function Home() {
           .forEach((k) => sessionStorage.removeItem(k));
       }
     }
-  }, [isConnected]);
+  }, [connected]);
 
   async function handleVerify() {
-    if (!solana || !isSolanaAvailable || !solanaAddress) return;
+    if (!session?.signMessage || !solanaAddress) return;
 
     setVerifying(true);
     setVerifyError(null);
 
     try {
       const message = `Solana Oil Factory\n\nVerify wallet ownership\n\nWallet: ${solanaAddress}\nTimestamp: ${Date.now()}`;
-      await solana.signMessage(message);
+      await session.signMessage(new TextEncoder().encode(message));
       setIsVerified(true);
       if (verifiedKey) sessionStorage.setItem(verifiedKey, "true");
     } catch (err) {
@@ -159,7 +159,7 @@ export default function Home() {
   }
 
   // Derived states
-  const isWalletReady = isConnected && solanaAddress;
+  const isWalletReady = connected && solanaAddress;
   const showVerifyPrompt = isWalletReady && !isVerified && !data && !loading && !storedLoading && !error;
   // Only show extract prompt for first-time users (stored check done, no data found)
   const showExtractPrompt = isWalletReady && isVerified && !data && !loading && !storedLoading && storedChecked && !error;
@@ -174,7 +174,7 @@ export default function Home() {
         </section>
 
         {/* Empty state — no wallet connected, no search, not loading */}
-        {!isConnected && !data && !loading && !error && (
+        {!connected && !data && !loading && !error && (
           <div className="empty-state">
             <p className="empty-state-text">Connect or Search Wallet to Enter the Refinery</p>
             <button onClick={openConnectModal} className="btn-connect btn-connect--large">
@@ -287,7 +287,7 @@ export default function Home() {
             <section className="stats-section">
               <OilStats
                 data={data}
-                isOwner={isVerified && isConnected && solanaAddress === data.address}
+                isOwner={isVerified && connected && solanaAddress === data.address}
                 onConnectWallet={openConnectModal}
                 onRefined={(units) =>
                   setData((prev) =>
