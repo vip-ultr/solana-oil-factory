@@ -1697,6 +1697,74 @@ body {
   letter-spacing: 1px;
 }
 
+/* ── Connection error ── */
+.wcm-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  background: rgba(192, 57, 43, 0.08);
+  border: 1px solid rgba(192, 57, 43, 0.2);
+  border-radius: 10px;
+  color: var(--red-h, #E84125);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+.wcm-error svg {
+  flex-shrink: 0;
+}
+
+/* ── Connecting state ── */
+.wcm-connecting-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 24px 16px;
+  text-align: center;
+}
+.wcm-connecting-icon {
+  border-radius: 12px;
+  box-shadow: 0 2px 12px var(--shadow-sm);
+}
+.wcm-connecting-text {
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  margin: 0;
+}
+.wcm-connecting-hint {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+.wcm-connecting-spinner {
+  width: 28px;
+  height: 28px;
+  border: 2.5px solid var(--border-dim);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: wcmSpin 0.8s linear infinite;
+  margin: 4px 0;
+}
+@keyframes wcmSpin {
+  to { transform: rotate(360deg); }
+}
+.wcm-cancel-btn {
+  padding: 8px 24px;
+  border: 1px solid var(--border-base);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.wcm-cancel-btn:hover {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+}
+
 .wcm-alt-text {
   font-size: 0.78rem;
   color: var(--text-muted);

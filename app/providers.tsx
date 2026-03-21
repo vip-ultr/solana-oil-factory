@@ -20,17 +20,21 @@ const websocketEndpoint =
 
 // Register Solana Mobile Wallet Adapter for native mobile wallet picker
 if (typeof window !== "undefined") {
-  registerMwa({
-    appIdentity: {
-      name: "Solana Oil Factory",
-      uri: typeof window !== "undefined" ? window.location.origin : undefined,
-      icon: typeof window !== "undefined" ? `${window.location.origin}/logo.png` : undefined,
-    },
-    authorizationCache: createDefaultAuthorizationCache(),
-    chains: ["solana:mainnet"],
-    chainSelector: createDefaultChainSelector(),
-    onWalletNotFound: createDefaultWalletNotFoundHandler(),
-  });
+  try {
+    registerMwa({
+      appIdentity: {
+        name: "Solana Oil Factory",
+        uri: window.location.origin,
+        icon: `${window.location.origin}/logo.png`,
+      },
+      authorizationCache: createDefaultAuthorizationCache(),
+      chains: ["solana:mainnet"],
+      chainSelector: createDefaultChainSelector(),
+      onWalletNotFound: createDefaultWalletNotFoundHandler(),
+    });
+  } catch (e) {
+    console.warn("MWA registration failed:", e);
+  }
 }
 
 const solanaClient = createClient({
