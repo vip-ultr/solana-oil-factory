@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePhantom, AddressType } from "@phantom/react-sdk";
+import { useWalletSession } from "@solana/react-hooks";
 import BarrelHeroSection from "@/components/BarrelHeroSection";
 import BagsPanel from "@/components/BagsPanel";
 
@@ -35,9 +35,8 @@ export default function WalletProfile({
   rank,
   partial,
 }: WalletProfileProps) {
-  const { addresses } = usePhantom();
-  const connectedAddress =
-    addresses.find((a) => a.addressType === AddressType.solana)?.address ?? null;
+  const session = useWalletSession();
+  const connectedAddress = session?.account.address?.toString() ?? null;
   const isOwner = connectedAddress === address;
 
   const [copied, setCopied] = useState(false);
