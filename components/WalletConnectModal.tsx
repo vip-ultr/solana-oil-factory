@@ -4,49 +4,37 @@ import { useEffect, useCallback, useState, useRef } from "react";
 import { useWalletConnection } from "@solana/react-hooks";
 
 /* ── Solana-only connector filter ────────────────────────────────────── */
-const SOLANA_WALLET_IDS = [
-  "phantom", "solflare", "backpack", "coinbase", "coin98", "trust",
-  "brave", "exodus", "glow", "slope", "torus", "math", "clover",
-  "tokenpocket", "bitget", "okx",
-];
+const NON_SOLANA = ["sui", "ethereum", "metamask", "rabby", "aptos"];
+const MWA_KEYWORD = "mobile wallet adapter";
 
 function isSolanaConnector(c: { id: string; name: string }): boolean {
   const id = c.id.toLowerCase();
   const name = c.name.toLowerCase();
-  if (["sui", "ethereum", "metamask", "rabby", "aptos"].some(
-    (x) => id.includes(x) || name.includes(x)
-  )) return false;
-  if (id.includes("mobile wallet adapter") || name.includes("mobile wallet adapter")) return true;
-  if (SOLANA_WALLET_IDS.some((w) => id.includes(w) || name.includes(w))) return true;
-  if (id.startsWith("wallet-standard:")) return true;
+  // Reject non-Solana chains
+  if (NON_SOLANA.some((x) => id.includes(x) || name.includes(x))) return false;
+  // Reject MWA — removed, not reliable on mobile web
+  if (id.includes(MWA_KEYWORD) || name.includes(MWA_KEYWORD)) return false;
   return true;
 }
 
-function isMwaConnector(c: { id: string; name: string }): boolean {
-  const id = c.id.toLowerCase();
-  const name = c.name.toLowerCase();
-  return id.includes("mobile wallet adapter") || name.includes("mobile wallet adapter");
-}
-
-/* ── Mobile detection ────────────────────────────────────────────────── */
+/* ── Environment detection ───────────────────────────────────────────── */
 function isMobile(): boolean {
   if (typeof navigator === "undefined") return false;
   return /android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent);
 }
 
-function isAndroid(): boolean {
-  if (typeof navigator === "undefined") return false;
-  return /android/i.test(navigator.userAgent);
-}
-
-/** Detect if we're inside a wallet's in-app browser (injected provider exists) */
 function isInWalletBrowser(): boolean {
   if (typeof window === "undefined") return false;
   const w = window as unknown as Record<string, unknown>;
-  return !!(w.phantom as Record<string, unknown>)?.solana || !!w.solflare || !!w.backpack || !!w.solana;
+  return (
+    !!(w.phantom as Record<string, unknown>)?.solana ||
+    !!w.solflare ||
+    !!w.backpack ||
+    !!w.solana
+  );
 }
 
-/* ── Deep-link wallets for mobile ────────────────────────────────────── */
+/* ── Deep-link wallets for mobile browsers ───────────────────────────── */
 const MOBILE_WALLETS = [
   {
     name: "Phantom",
@@ -80,25 +68,12 @@ export default function WalletConnectModal({ isOpen, onClose }: WalletConnectMod
   const [connectError, setConnectError] = useState<string | null>(null);
   const abortRef = useRef(false);
 
-  // Filter to Solana-only discovered connectors (extensions / injected)
   const solanaConnectors = connectors.filter(isSolanaConnector);
 
-  // Separate MWA from regular connectors on mobile
-  const mwaConnectors = solanaConnectors.filter(isMwaConnector);
-  const regularConnectors = solanaConnectors.filter((c) => !isMwaConnector(c));
+  const mobile = typeof window !== "undefined" && isMobile();
+  const inWalletBrowser = typeof window !== "undefined" && isInWalletBrowser();
 
-  const mobile = typeof window !== "undefined" ? isMobile() : false;
-  const android = typeof window !== "undefined" ? isAndroid() : false;
-  const inWalletBrowser = typeof window !== "undefined" ? isInWalletBrowser() : false;
-
-  // On mobile (regular browser): show deep-links as primary connect method
-  const showDeepLinks = mobile && !inWalletBrowser;
-  // Show MWA only on Android (not in wallet browser) — it uses local WebSocket association
-  const showMwa = android && !inWalletBrowser && mwaConnectors.length > 0;
-  // Show regular connectors (extensions/injected) when available
-  const showConnectors = regularConnectors.length > 0;
-
-  // Auto-close when connection succeeds
+  // Auto-close on successful connection
   useEffect(() => {
     if (connected && isOpen) {
       setConnectingId(null);
@@ -107,7 +82,7 @@ export default function WalletConnectModal({ isOpen, onClose }: WalletConnectMod
     }
   }, [connected, isOpen, onClose]);
 
-  // Reset state when modal closes
+  // Reset on modal close
   useEffect(() => {
     if (!isOpen) {
       setConnectingId(null);
@@ -116,7 +91,7 @@ export default function WalletConnectModal({ isOpen, onClose }: WalletConnectMod
     }
   }, [isOpen]);
 
-  // Close on Escape
+  // Escape to close
   useEffect(() => {
     if (!isOpen) return;
     const h = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
@@ -128,7 +103,7 @@ export default function WalletConnectModal({ isOpen, onClose }: WalletConnectMod
     (e: React.MouseEvent<HTMLDivElement>) => {
       if (e.target === e.currentTarget) onClose();
     },
-    [onClose]
+    [onClose],
   );
 
   const handleConnect = async (connector: { id: string; name: string }) => {
@@ -141,18 +116,8 @@ export default function WalletConnectModal({ isOpen, onClose }: WalletConnectMod
     } catch (err) {
       if (abortRef.current) return;
       const msg = err instanceof Error ? err.message : "Connection failed";
-      const isMwa = isMwaConnector(connector);
-
-      if (msg.includes("reject") || msg.includes("cancel") || msg.includes("denied") || msg.includes("CANCELLED")) {
-        setConnectError("Connection cancelled. Please try again.");
-      } else if (isMwa && (msg.includes("timeout") || msg.includes("SESSION_CLOSED") || msg.includes("SESSION_TIMEOUT") || msg.includes("WALLET_NOT_FOUND"))) {
-        setConnectError(
-          "Mobile Wallet Adapter couldn't connect. Try using \"Open in wallet\" below instead — it's more reliable."
-        );
-      } else if (isMwa) {
-        setConnectError(
-          `MWA connection failed. Use \"Open in wallet\" below for a more reliable connection.`
-        );
+      if (msg.includes("reject") || msg.includes("cancel") || msg.includes("denied")) {
+        setConnectError("Connection rejected. Please approve in your wallet.");
       } else {
         setConnectError(`Failed to connect to ${connector.name}. Try again.`);
       }
@@ -170,9 +135,20 @@ export default function WalletConnectModal({ isOpen, onClose }: WalletConnectMod
   if (!isOpen) return null;
 
   const isConnecting = connectingId !== null;
-  const allConnectors = [...regularConnectors, ...mwaConnectors];
-  const connectingWallet = allConnectors.find((c) => c.id === connectingId)
-    || mwaConnectors.find((c) => c.id === connectingId);
+  const connectingWallet = solanaConnectors.find((c) => c.id === connectingId);
+
+  /* ── Determine what to show ──
+     Priority:
+     1. Wallet browser (mobile or desktop) → show injected connectors
+     2. Mobile regular browser             → show deep-links
+     3. Desktop with extensions             → show discovered connectors
+     4. Desktop no extensions               → show "Get Wallet" links
+  */
+  const showInjected = inWalletBrowser && solanaConnectors.length > 0;
+  const showDeepLinks = mobile && !inWalletBrowser;
+  const showDesktopConnectors = !mobile && !inWalletBrowser && solanaConnectors.length > 0;
+  const showGetWallet =
+    !mobile && !inWalletBrowser && isReady && solanaConnectors.length === 0;
 
   return (
     <div className="wcm-backdrop" onClick={handleBackdropClick}>
@@ -184,7 +160,7 @@ export default function WalletConnectModal({ isOpen, onClose }: WalletConnectMod
           </button>
         </div>
 
-        {/* Error */}
+        {/* Error banner */}
         {connectError && (
           <div className="wcm-error">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -196,14 +172,14 @@ export default function WalletConnectModal({ isOpen, onClose }: WalletConnectMod
           </div>
         )}
 
-        {/* ── Connecting state ── */}
+        {/* Connecting spinner */}
         {isConnecting && connectingWallet && (
           <div className="wcm-connecting-state">
             {connectingWallet.icon && (
               <img src={connectingWallet.icon} alt="" className="wcm-connecting-icon" width={48} height={48} />
             )}
             <p className="wcm-connecting-text">
-              Connecting to <strong>{connectingWallet.name}</strong>...
+              Connecting to <strong>{connectingWallet.name}</strong>…
             </p>
             <p className="wcm-connecting-hint">Approve the connection in your wallet.</p>
             <div className="wcm-connecting-spinner" />
@@ -211,47 +187,20 @@ export default function WalletConnectModal({ isOpen, onClose }: WalletConnectMod
           </div>
         )}
 
-        {/* ── Detecting wallets ── */}
+        {/* Detecting wallets */}
         {!isReady && !isConnecting && !showDeepLinks && (
-          <p className="wcm-desc">Detecting wallets...</p>
+          <p className="wcm-desc">Detecting wallets…</p>
         )}
 
-        {/* ══════════════════════════════════════════════════
-           IN WALLET BROWSER — Show injected connectors directly
-           ══════════════════════════════════════════════════ */}
-        {inWalletBrowser && showConnectors && !isConnecting && (
+        {/* ─── 1. Inside wallet browser → injected connectors ─── */}
+        {showInjected && !isConnecting && (
           <>
             <p className="wcm-desc">Tap to connect your wallet.</p>
-            <div className="wcm-list">
-              {regularConnectors.map((connector) => (
-                <button
-                  key={connector.id}
-                  onClick={() => handleConnect(connector)}
-                  className="wcm-wallet-btn"
-                  disabled={connecting}
-                >
-                  {connector.icon ? (
-                    <img src={connector.icon} alt={connector.name} className="wcm-wallet-icon" width={32} height={32} />
-                  ) : (
-                    <div className="wcm-wallet-icon-placeholder" />
-                  )}
-                  <div className="wcm-wallet-info">
-                    <span className="wcm-wallet-name">{connector.name}</span>
-                    <span className="wcm-wallet-action">Connect</span>
-                  </div>
-                  <svg className="wcm-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <polyline points="9 18 15 12 9 6" />
-                  </svg>
-                </button>
-              ))}
-            </div>
+            <WalletList connectors={solanaConnectors} onConnect={handleConnect} disabled={connecting} />
           </>
         )}
 
-        {/* ══════════════════════════════════════════════════
-           MOBILE (regular browser) — Deep-links first (most reliable)
-           Opens dApp inside wallet's in-app browser.
-           ══════════════════════════════════════════════════ */}
+        {/* ─── 2. Mobile regular browser → deep-links ─── */}
         {showDeepLinks && !isConnecting && (
           <>
             <p className="wcm-desc">Choose a wallet to connect.</p>
@@ -277,73 +226,16 @@ export default function WalletConnectModal({ isOpen, onClose }: WalletConnectMod
           </>
         )}
 
-        {/* ══════════════════════════════════════════════════
-           MOBILE — MWA direct connect (Android only)
-           Uses local WebSocket association. Works with some wallets.
-           ══════════════════════════════════════════════════ */}
-        {showMwa && !isConnecting && (
-          <>
-            <div className="wcm-section-label">Or connect directly</div>
-            <div className="wcm-list">
-              {mwaConnectors.map((connector) => (
-                <button
-                  key={connector.id}
-                  onClick={() => handleConnect(connector)}
-                  className="wcm-wallet-btn"
-                  disabled={connecting}
-                >
-                  {connector.icon ? (
-                    <img src={connector.icon} alt={connector.name} className="wcm-wallet-icon" width={32} height={32} />
-                  ) : (
-                    <div className="wcm-wallet-icon-placeholder" />
-                  )}
-                  <div className="wcm-wallet-info">
-                    <span className="wcm-wallet-name">{connector.name}</span>
-                    <span className="wcm-wallet-action wcm-wallet-action-muted">Opens wallet picker</span>
-                  </div>
-                  <svg className="wcm-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <polyline points="9 18 15 12 9 6" />
-                  </svg>
-                </button>
-              ))}
-            </div>
-          </>
-        )}
-
-        {/* ══════════════════════════════════════════════════
-           DESKTOP — Extension connectors
-           ══════════════════════════════════════════════════ */}
-        {!mobile && showConnectors && !isConnecting && (
+        {/* ─── 3. Desktop → discovered extension connectors ─── */}
+        {showDesktopConnectors && !isConnecting && (
           <>
             <p className="wcm-desc">Select a wallet to connect.</p>
-            <div className="wcm-list">
-              {regularConnectors.map((connector) => (
-                <button
-                  key={connector.id}
-                  onClick={() => handleConnect(connector)}
-                  className="wcm-wallet-btn"
-                  disabled={connecting}
-                >
-                  {connector.icon ? (
-                    <img src={connector.icon} alt={connector.name} className="wcm-wallet-icon" width={32} height={32} />
-                  ) : (
-                    <div className="wcm-wallet-icon-placeholder" />
-                  )}
-                  <div className="wcm-wallet-info">
-                    <span className="wcm-wallet-name">{connector.name}</span>
-                    <span className="wcm-wallet-action">Connect</span>
-                  </div>
-                  <svg className="wcm-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <polyline points="9 18 15 12 9 6" />
-                  </svg>
-                </button>
-              ))}
-            </div>
+            <WalletList connectors={solanaConnectors} onConnect={handleConnect} disabled={connecting} />
           </>
         )}
 
-        {/* ── No wallets at all (desktop, no extensions) ── */}
-        {isReady && !showConnectors && !showDeepLinks && !inWalletBrowser && !isConnecting && (
+        {/* ─── 4. Desktop, no extensions → get wallet ─── */}
+        {showGetWallet && !isConnecting && (
           <>
             <p className="wcm-desc">
               No Solana wallets detected. Install a wallet extension to continue.
@@ -379,6 +271,43 @@ export default function WalletConnectModal({ isOpen, onClose }: WalletConnectMod
           Use the <strong>search bar</strong> to look up any Solana wallet address without connecting.
         </p>
       </div>
+    </div>
+  );
+}
+
+/* ── Reusable wallet list (eliminates duplicate markup) ──────────────── */
+function WalletList({
+  connectors,
+  onConnect,
+  disabled,
+}: {
+  connectors: { id: string; name: string; icon?: string }[];
+  onConnect: (c: { id: string; name: string }) => void;
+  disabled: boolean;
+}) {
+  return (
+    <div className="wcm-list">
+      {connectors.map((connector) => (
+        <button
+          key={connector.id}
+          onClick={() => onConnect(connector)}
+          className="wcm-wallet-btn"
+          disabled={disabled}
+        >
+          {connector.icon ? (
+            <img src={connector.icon} alt={connector.name} className="wcm-wallet-icon" width={32} height={32} />
+          ) : (
+            <div className="wcm-wallet-icon-placeholder" />
+          )}
+          <div className="wcm-wallet-info">
+            <span className="wcm-wallet-name">{connector.name}</span>
+            <span className="wcm-wallet-action">Connect</span>
+          </div>
+          <svg className="wcm-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </button>
+      ))}
     </div>
   );
 }

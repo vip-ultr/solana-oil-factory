@@ -13,7 +13,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@solana-mobile/wallet-standard-mobile": "^0.5.0",
     "@solana/client": "^1.7.0",
     "@solana/react-hooks": "^1.4.1",
     "@solana/web3.js": "^1.98.4",
