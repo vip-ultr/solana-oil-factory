@@ -1152,6 +1152,63 @@ body {
   .footer-social-link svg { width: 14px; height: 14px; }
 }
 
+/* ── Mobile footer (visible only ≤720px, above bottom nav) ── */
+.mobile-footer {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  .footer {
+    display: none;
+  }
+
+  .mobile-footer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 20px 16px;
+    padding-bottom: calc(62px + 20px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--border-subtle);
+    background: var(--bg-base);
+  }
+
+  .mobile-footer-socials {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .mobile-footer-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    color: var(--text-muted);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    transition: color 0.2s ease, background 0.2s ease, transform 0.2s ease,
+                box-shadow 0.2s ease;
+  }
+
+  .mobile-footer-link:hover,
+  .mobile-footer-link:active {
+    color: var(--text-primary);
+    background: var(--bg-surface);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .mobile-footer-copy {
+    font-size: 0.65rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    letter-spacing: 0.3px;
+  }
+}
+
 /* ═══════════════════════════════════════════════════
    LEADERBOARD
 ═══════════════════════════════════════════════════ */
@@ -2724,10 +2781,13 @@ body {
     background: var(--bg-surface);
     border-top: 1px solid var(--border-subtle);
     box-shadow: 0 -4px 24px var(--shadow-sm);
-    height: 62px;
-    align-items: stretch;
+    /* 62px for button area + safe-area for wallet browser toolbars */
+    height: calc(62px + env(safe-area-inset-bottom, 0px));
+    align-items: flex-start;         /* pin items to top of bar */
     padding: 0 4px;
-    padding-bottom: env(safe-area-inset-bottom);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    box-sizing: border-box;          /* padding included in height */
+    overflow: hidden;                 /* nothing escapes the bar */
   }
 
   .bottom-nav-item {
@@ -2736,8 +2796,10 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 4px;
-    padding: 6px 4px;
+    gap: 3px;
+    height: 62px;                    /* fixed content height, independent of safe-area */
+    min-width: 0;                    /* prevent flex blowout on tiny screens */
+    padding: 6px 2px;
     color: var(--text-muted);
     text-decoration: none;
     font-size: 0.65rem;
@@ -2750,6 +2812,8 @@ body {
     border-radius: 12px;
     transition: color 0.15s ease, background 0.15s ease;
     -webkit-tap-highlight-color: transparent;
+    overflow: hidden;                /* clip any overflow text */
+    white-space: nowrap;
   }
 
   .bottom-nav-item svg {
@@ -2772,7 +2836,7 @@ body {
 
   /* Offset page content so it doesn't hide under the bottom nav */
   .main {
-    padding-bottom: calc(62px + 24px);
+    padding-bottom: calc(62px + env(safe-area-inset-bottom, 0px) + 24px);
   }
 }
 
