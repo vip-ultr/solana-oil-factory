@@ -12,8 +12,10 @@ interface OilStatsProps {
   onConnectWallet: () => void;
   /** called after a successful refine so the parent can update its state */
   onRefined?: (oilUnits: number) => void;
-  /** triggers a fresh fetch from the blockchain to detect new transactions */
+  /** triggers a background sync to detect new transactions */
   onCheckUpdates?: () => void;
+  /** whether a background sync is in progress */
+  syncing?: boolean;
   /** content rendered between Refinery and Production Stats panels */
   middleSlot?: React.ReactNode;
 }
@@ -24,6 +26,7 @@ export default function OilStats({
   onConnectWallet,
   onRefined,
   onCheckUpdates,
+  syncing = false,
   middleSlot,
 }: OilStatsProps) {
   const { address, oilUnits, barrels, crude, title } = data;
@@ -148,12 +151,26 @@ https://solanaoilfactory.xyz`;
           {isOwner && onCheckUpdates && (
             <>
               <div className="refine-done-divider" />
-              <button onClick={onCheckUpdates} className="btn-check-updates">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <button
+                onClick={onCheckUpdates}
+                className={`btn-check-updates${syncing ? " btn-check-updates--syncing" : ""}`}
+                disabled={syncing}
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className={syncing ? "spin" : ""}
+                >
                   <polyline points="23 4 23 10 17 10" />
                   <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
                 </svg>
-                Sync Transactions
+                {syncing ? "Syncing..." : "Sync Transactions"}
               </button>
             </>
           )}

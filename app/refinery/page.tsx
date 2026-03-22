@@ -155,6 +155,7 @@ export default function RefineryPage() {
     }
   }, [connected, solanaAddress, isVerified, verifying, session?.signMessage]);
 
+  // Full fetch — clears data, shows loading skeleton (used for first load / search)
   async function fetchWalletData(address: string) {
     abortRef.current?.abort();
     const controller = new AbortController();
@@ -176,6 +177,23 @@ export default function RefineryPage() {
       setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
       if (!controller.signal.aborted) setLoading(false);
+    }
+  }
+
+  // Background sync — keeps existing data visible, updates in-place
+  const [syncing, setSyncing] = useState(false);
+  async function syncWalletData(address: string) {
+    setSyncing(true);
+    try {
+      const res = await fetch(`/api/wallet?address=${encodeURIComponent(address)}`);
+      if (!res.ok) throw new Error("Failed to sync wallet data");
+      const json = await res.json();
+      if (json.error) throw new Error(json.error);
+      setData(json);
+    } catch (err) {
+      console.error("Sync failed:", err);
+    } finally {
+      setSyncing(false);
     }
   }
 
@@ -318,7 +336,8 @@ export default function RefineryPage() {
                     prev ? { ...prev, lastRefinedOilUnits: units } : prev
                   )
                 }
-                onCheckUpdates={() => fetchWalletData(data.address)}
+                syncing={syncing}
+                onCheckUpdates={() => syncWalletData(data.address)}
                 middleSlot={
                   <BagsPanel
                     bagsActive={data.bagsActive ?? false}
