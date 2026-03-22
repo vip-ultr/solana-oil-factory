@@ -15,6 +15,7 @@ const BARREL_SIZE = 50;
 const CRUDE_RATE = 10;
 const MAX_BARRELS = 10;
 const SHOWCASE_BARRELS = 5;
+const CRUDE_CAP = 15000;
 
 export function getPrestigeTitle(crude: number): string {
   if (crude >= 5000000) return "Supreme PetroLord";
@@ -57,7 +58,7 @@ export function calculateOilData(txCount: number): OilData {
   const oilUnits = txCount;
   const barrels = Math.floor(oilUnits / BARREL_SIZE);
   const remainder = oilUnits % BARREL_SIZE;
-  const crude = Math.floor(oilUnits / CRUDE_RATE);
+  const crude = Math.min(Math.floor(oilUnits / CRUDE_RATE), CRUDE_CAP);
   const title = getPrestigeTitle(crude);
 
   // Build fill percentages array

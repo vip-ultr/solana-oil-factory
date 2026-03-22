@@ -197,11 +197,28 @@ export default function RefineryPage() {
     }
   }
 
+  // Auto-extract: when verified and stored check found nothing, auto-fetch wallet data
+  const autoExtractedRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (
+      connected &&
+      solanaAddress &&
+      isVerified &&
+      storedChecked &&
+      !data &&
+      !loading &&
+      !storedLoading &&
+      !error &&
+      autoExtractedRef.current !== solanaAddress
+    ) {
+      autoExtractedRef.current = solanaAddress;
+      fetchWalletData(solanaAddress);
+    }
+  }, [connected, solanaAddress, isVerified, storedChecked, data, loading, storedLoading, error]);
+
   // Derived states
   const isWalletReady = connected && solanaAddress;
   const showVerifyPrompt = isWalletReady && !isVerified && !data && !loading && !storedLoading && !error;
-  // Only show extract prompt for first-time users (stored check done, no data found)
-  const showExtractPrompt = isWalletReady && isVerified && !data && !loading && !storedLoading && storedChecked && !error;
 
   return (
     <div className="page">
@@ -260,26 +277,6 @@ export default function RefineryPage() {
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
               </svg>
               Try Again
-            </button>
-          </div>
-        )}
-
-        {/* Extract prompt — verified, ready to extract */}
-        {showExtractPrompt && (
-          <div className="extract-prompt">
-            <div className="extract-prompt-icon">🛢</div>
-            <h2 className="extract-prompt-title">Wallet Verified</h2>
-            <p className="extract-prompt-address">
-              {solanaAddress!.slice(0, 6)}...{solanaAddress!.slice(-4)}
-            </p>
-            <p className="extract-prompt-desc">
-              Ready to scan your on-chain activity and convert it into oil production.
-            </p>
-            <button
-              onClick={() => fetchWalletData(solanaAddress!)}
-              className="btn-extract"
-            >
-              ⛏️ Start Extracting Oil
             </button>
           </div>
         )}

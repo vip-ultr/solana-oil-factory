@@ -48,6 +48,34 @@ export async function GET(request: NextRequest) {
     const totalCrude = oilData.crude + bonusCrude;
     const title = getPrestigeTitle(totalCrude);
 
+    // Check for active (unclaimed) refine session
+    let activeRefine = null;
+    try {
+      const { data: refineRow } = await supabase
+        .from("refines")
+        .select("crude_amount, bonus_crude, oil_units, ends_at, started_at, duration_ms, is_completed")
+        .eq("wallet_address", address)
+        .eq("claimed", false)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (refineRow) {
+        const isComplete = new Date() >= new Date(refineRow.ends_at);
+        activeRefine = {
+          status: isComplete ? "completed" : "refining",
+          endsAt: refineRow.ends_at,
+          startedAt: refineRow.started_at,
+          durationMs: refineRow.duration_ms,
+          crudeAmount: refineRow.crude_amount,
+          bonusCrude: refineRow.bonus_crude,
+          oilUnits: refineRow.oil_units,
+        };
+      }
+    } catch {
+      // No active refine — that's fine
+    }
+
     return NextResponse.json({
       found: true,
       address,
@@ -59,6 +87,7 @@ export async function GET(request: NextRequest) {
       bagsActive: bags.isActive,
       partial: false,
       lastRefinedOilUnits: existing.last_refined_oil_units ?? 0,
+      activeRefine,
     });
   } catch (err) {
     console.error("[wallet/stored]", err);

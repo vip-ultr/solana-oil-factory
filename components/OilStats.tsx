@@ -1,16 +1,31 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import type React from "react";
 import type { OilData } from "@/lib/oilCalculator";
 
+interface RefineStatusData {
+  status: "idle" | "refining" | "completed";
+  endsAt?: string;
+  startedAt?: string;
+  durationMs?: number;
+  crudeAmount?: number;
+  bonusCrude?: number;
+  oilUnits?: number;
+}
+
 interface OilStatsProps {
-  data: OilData & { address: string; lastRefinedOilUnits?: number };
+  data: OilData & {
+    address: string;
+    lastRefinedOilUnits?: number;
+    /** Active refine session from stored wallet response */
+    activeRefine?: RefineStatusData | null;
+  };
   /** true only when the viewed wallet is the connected wallet */
   isOwner: boolean;
   /** opens the wallet connect modal */
   onConnectWallet: () => void;
-  /** called after a successful refine so the parent can update its state */
+  /** called after a successful claim so the parent can update its state */
   onRefined?: (oilUnits: number) => void;
   /** triggers a background sync to detect new transactions */
   onCheckUpdates?: () => void;
@@ -38,44 +53,179 @@ export default function OilStats({
   const alreadyRefined = lastRefined > 0;
   const hasNewTransactions = oilUnits > lastRefined;
 
-  // Start "revealed" if the wallet was previously refined (show $CRUDE immediately)
+  // Start "revealed" if the wallet was previously refined (grandfathered wallets)
   const [revealed, setRevealed] = useState(alreadyRefined);
-  const [refining, setRefining] = useState(false);
   const [showOwnerMsg, setShowOwnerMsg] = useState(false);
+
+  // ── Refine timer state ──
+  const [refineStatus, setRefineStatus] = useState<"idle" | "refining" | "completed" | "claimed">(
+    alreadyRefined ? "claimed" : "idle"
+  );
+  const [endsAt, setEndsAt] = useState<number | null>(null);
+  const [remaining, setRemaining] = useState("");
+  const [pendingCrude, setPendingCrude] = useState<{ crude: number; bonusCrude: number } | null>(null);
+  const [startingRefine, setStartingRefine] = useState(false);
+  const [claiming, setClaiming] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // When data changes (e.g. different wallet searched), reset local state
   useEffect(() => {
-    setRevealed(lastRefined > 0);
-    setRefining(false);
+    const wasRefined = (data.lastRefinedOilUnits ?? 0) > 0;
+    setRevealed(wasRefined);
     setShowOwnerMsg(false);
-  }, [address, lastRefined]);
+    setStartingRefine(false);
+    setClaiming(false);
 
-  const handleRefine = async () => {
+    // Initialize from activeRefine if provided (from stored wallet response)
+    if (data.activeRefine && data.activeRefine.status !== "idle") {
+      if (data.activeRefine.status === "refining") {
+        setRefineStatus("refining");
+        setEndsAt(new Date(data.activeRefine.endsAt!).getTime());
+        setPendingCrude({
+          crude: data.activeRefine.crudeAmount ?? 0,
+          bonusCrude: data.activeRefine.bonusCrude ?? 0,
+        });
+      } else if (data.activeRefine.status === "completed") {
+        setRefineStatus("completed");
+        setPendingCrude({
+          crude: data.activeRefine.crudeAmount ?? 0,
+          bonusCrude: data.activeRefine.bonusCrude ?? 0,
+        });
+      }
+    } else if (wasRefined) {
+      setRefineStatus("claimed");
+    } else {
+      setRefineStatus("idle");
+    }
+  }, [address, data.lastRefinedOilUnits, data.activeRefine]);
+
+  // Fetch refine status on mount (if not provided via activeRefine)
+  useEffect(() => {
+    if (!address || data.activeRefine) return;
+    // Only fetch if not already determined
+    if (refineStatus === "claimed") return;
+
+    fetch(`/api/refine-status?wallet=${encodeURIComponent(address)}`)
+      .then((r) => r.json())
+      .then((res: RefineStatusData) => {
+        if (res.status === "refining") {
+          setRefineStatus("refining");
+          setEndsAt(new Date(res.endsAt!).getTime());
+          setPendingCrude({
+            crude: res.crudeAmount ?? 0,
+            bonusCrude: res.bonusCrude ?? 0,
+          });
+        } else if (res.status === "completed") {
+          setRefineStatus("completed");
+          setPendingCrude({
+            crude: res.crudeAmount ?? 0,
+            bonusCrude: res.bonusCrude ?? 0,
+          });
+        }
+      })
+      .catch(() => {});
+  }, [address]);
+
+  // ── Countdown timer ──
+  useEffect(() => {
+    if (refineStatus !== "refining" || !endsAt) {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      return;
+    }
+
+    const tick = () => {
+      const diff = endsAt - Date.now();
+      if (diff <= 0) {
+        setRefineStatus("completed");
+        setRemaining("00:00:00");
+        // Re-fetch to get confirmed crude amounts
+        fetch(`/api/refine-status?wallet=${encodeURIComponent(address)}`)
+          .then((r) => r.json())
+          .then((res: RefineStatusData) => {
+            if (res.status === "completed") {
+              setPendingCrude({
+                crude: res.crudeAmount ?? 0,
+                bonusCrude: res.bonusCrude ?? 0,
+              });
+            }
+          })
+          .catch(() => {});
+        return;
+      }
+      const h = String(Math.floor(diff / 3600000)).padStart(2, "0");
+      const m = String(Math.floor((diff % 3600000) / 60000)).padStart(2, "0");
+      const s = String(Math.floor((diff % 60000) / 1000)).padStart(2, "0");
+      setRemaining(`${h}:${m}:${s}`);
+    };
+
+    tick(); // immediate first tick
+    timerRef.current = setInterval(tick, 1000);
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [refineStatus, endsAt, address]);
+
+  // ── Start refine ──
+  const handleRefine = useCallback(async () => {
     if (!isOwner) {
       setShowOwnerMsg(true);
       return;
     }
 
-    setRefining(true);
+    setStartingRefine(true);
+    try {
+      const res = await fetch("/api/refine", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ address, oilUnits, bonusCrude }),
+      });
+      const json = await res.json();
 
-    // Start the animation, then persist the refine
-    setTimeout(async () => {
-      // Save refine state to Supabase
-      try {
-        await fetch("/api/refine", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ address, oilUnits, bonusCrude }),
+      if (json.success) {
+        setRefineStatus("refining");
+        setEndsAt(new Date(json.endsAt).getTime());
+        setPendingCrude({
+          crude: json.crudeAmount ?? 0,
+          bonusCrude: json.bonusCrude ?? 0,
         });
-      } catch (err) {
-        console.error("Failed to persist refine:", err);
+      } else if (json.error) {
+        console.error("Refine error:", json.error);
       }
+    } catch (err) {
+      console.error("Failed to start refine:", err);
+    } finally {
+      setStartingRefine(false);
+    }
+  }, [isOwner, address, oilUnits, bonusCrude]);
 
-      setRefining(false);
-      setRevealed(true);
-      onRefined?.(oilUnits);
-    }, 5000);
-  };
+  // ── Claim CRUDE ──
+  const handleClaim = useCallback(async () => {
+    setClaiming(true);
+    try {
+      const res = await fetch("/api/refine/claim", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ address }),
+      });
+      const json = await res.json();
+
+      if (json.success) {
+        setRefineStatus("claimed");
+        setRevealed(true);
+        setPendingCrude(null);
+        onRefined?.(oilUnits);
+      } else {
+        console.error("Claim error:", json.error);
+      }
+    } catch (err) {
+      console.error("Failed to claim:", err);
+    } finally {
+      setClaiming(false);
+    }
+  }, [address, oilUnits, onRefined]);
 
   const shortAddress = `${address.slice(0, 6)}...${address.slice(-4)}`;
 
@@ -98,9 +248,9 @@ https://solanaoilfactory.xyz`;
 
   // Determine what the refinery panel should show
   const renderRefineryAction = () => {
-    // Currently refining
-    if (refining) {
-      return <div className="loading-msg">⚙️ Refining your oil...</div>;
+    // Starting refine (brief loading)
+    if (startingRefine) {
+      return <div className="loading-msg">Starting refine...</div>;
     }
 
     // Not the owner — show connect message
@@ -121,7 +271,49 @@ https://solanaoilfactory.xyz`;
       );
     }
 
-    // Already refined and has NEW transactions → can re-refine
+    // ── Timer active — refining in progress ──
+    if (refineStatus === "refining") {
+      const pendingTotal = pendingCrude
+        ? pendingCrude.crude + pendingCrude.bonusCrude
+        : 0;
+      return (
+        <div className="refine-timer-container">
+          <p className="refine-timer-label">Refining your oil...</p>
+          <div className="refine-timer">{remaining || "--:--:--"}</div>
+          {pendingTotal > 0 && (
+            <p className="refine-pending-amount">
+              {pendingTotal.toLocaleString()} $CRUDE pending
+            </p>
+          )}
+        </div>
+      );
+    }
+
+    // ── Completed — ready to claim ──
+    if (refineStatus === "completed") {
+      const pendingTotal = pendingCrude
+        ? pendingCrude.crude + pendingCrude.bonusCrude
+        : 0;
+      return (
+        <div className="refine-claim-container">
+          <p className="refine-claim-label">Refinement complete!</p>
+          {pendingTotal > 0 && (
+            <p className="refine-claim-amount">
+              {pendingTotal.toLocaleString()} $CRUDE ready
+            </p>
+          )}
+          <button
+            onClick={handleClaim}
+            className="btn-refine btn-refine--claim"
+            disabled={claiming}
+          >
+            {claiming ? "Claiming..." : "Claim $CRUDE"}
+          </button>
+        </div>
+      );
+    }
+
+    // ── Already claimed + has NEW transactions → can re-refine ──
     if (revealed && hasNewTransactions && isOwner) {
       const newTxCount = oilUnits - lastRefined;
       return (
@@ -137,7 +329,7 @@ https://solanaoilfactory.xyz`;
       );
     }
 
-    // Already refined, no new transactions
+    // ── Already claimed, no new transactions ──
     if (revealed && !hasNewTransactions) {
       return (
         <div className="refine-done-msg">
@@ -178,7 +370,7 @@ https://solanaoilfactory.xyz`;
       );
     }
 
-    // Never refined — show refine button
+    // ── Never refined — show refine button ──
     return (
       <button onClick={handleRefine} className="btn-refine">
         🛢 Refine Oil
@@ -245,6 +437,8 @@ https://solanaoilfactory.xyz`;
                   Total: <span className="stat-card-value accent">{totalCrude.toLocaleString()}</span>
                 </p>
               </div>
+            ) : refineStatus === "refining" || refineStatus === "completed" ? (
+              <p className="stat-card-value dim">Pending...</p>
             ) : (
               <p className="stat-card-value dim">—</p>
             )}
@@ -259,7 +453,7 @@ https://solanaoilfactory.xyz`;
         )}
       </div>
 
-      {/* ── Share Panel (only after refining) ── */}
+      {/* ── Share Panel (only after claiming) ── */}
       {revealed && (
         <div className="panel share-panel oil-stats-share">
           <p className="panel-label">Share</p>
