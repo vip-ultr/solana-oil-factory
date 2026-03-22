@@ -1,315 +1,193 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
-import { useWalletConnection, useWalletSession } from "@solana/react-hooks";
-import WalletSearch from "@/components/WalletSearch";
-import BarrelHeroSection from "@/components/BarrelHeroSection";
-import OilStats from "@/components/OilStats";
-import BagsPanel from "@/components/BagsPanel";
+import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useWalletConnection } from "@solana/react-hooks";
 import WalletConnectModal from "@/components/WalletConnectModal";
-import type { OilData } from "@/lib/oilCalculator";
 
-type WalletData = OilData & {
-  address: string;
-  partial?: boolean;
-  lastRefinedOilUnits?: number;
-  totalFeesSol?: number;
-  bagsActive?: boolean;
-};
+interface LeaderboardEntry {
+  wallet_address: string;
+  total_crude: number;
+}
 
-export default function Home() {
-  const { connected, disconnect, wallet } = useWalletConnection();
-  const session = useWalletSession();
+const MEDALS = ["🥇", "🥈", "🥉"];
+
+export default function HomePage() {
+  const router = useRouter();
+  const { connected, wallet } = useWalletConnection();
+  const solanaAddress = wallet?.account?.address?.toString() ?? null;
+
   const [showConnectModal, setShowConnectModal] = useState(false);
   const openConnectModal = useCallback(() => setShowConnectModal(true), []);
   const closeConnectModal = useCallback(() => setShowConnectModal(false), []);
-  const solanaAddress = session?.account?.address?.toString() ?? null;
-  const [data, setData] = useState<WalletData | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const abortRef = useRef<AbortController | null>(null);
 
-  // Verification state — persisted in sessionStorage per wallet address
-  const [isVerified, setIsVerified] = useState(false);
-  const [verifying, setVerifying] = useState(false);
-  const [verifyError, setVerifyError] = useState<string | null>(null);
-  // Track whether we've checked stored data for this wallet
-  const [storedChecked, setStoredChecked] = useState(false);
-  const [storedLoading, setStoredLoading] = useState(false);
-
-  // Helper: sessionStorage key scoped to the wallet address
-  const verifiedKey = solanaAddress ? `sof_verified_${solanaAddress}` : null;
-
-  // On mount or wallet change: restore verification from sessionStorage
-  useEffect(() => {
-    setStoredChecked(false);
-    if (verifiedKey && typeof sessionStorage !== "undefined") {
-      const stored = sessionStorage.getItem(verifiedKey);
-      if (stored === "true") {
-        setIsVerified(true);
-        setVerifyError(null);
-        return;
-      }
-    }
-    setIsVerified(false);
-    setVerifyError(null);
-    setData(null);
-  }, [solanaAddress]);
-
-  // After verification, auto-load stored data from Supabase (cheap, no Helius call)
-  useEffect(() => {
-    if (!isVerified || !solanaAddress || storedChecked || data || loading) return;
-
-    let cancelled = false;
-    async function loadStored() {
-      setStoredLoading(true);
-      try {
-        const res = await fetch(`/api/wallet/stored?address=${encodeURIComponent(solanaAddress!)}`);
-        if (!res.ok) throw new Error("Failed to check stored data");
-        const json = await res.json();
-        if (!cancelled && json.found) {
-          setData(json);
-        }
-      } catch (err) {
-        console.error("Failed to load stored data:", err);
-      } finally {
-        if (!cancelled) {
-          setStoredChecked(true);
-          setStoredLoading(false);
-        }
-      }
-    }
-    loadStored();
-
-    return () => { cancelled = true; };
-  }, [isVerified, solanaAddress, storedChecked, data, loading]);
+  const [topWallets, setTopWallets] = useState<LeaderboardEntry[]>([]);
 
   // Close connect modal when wallet connects
   useEffect(() => {
     if (connected) setShowConnectModal(false);
   }, [connected]);
 
-  // Reset everything when wallet disconnects (not on initial mount)
-  const wasConnectedRef = useRef(false);
+  // Fetch top 3 leaderboard entries
   useEffect(() => {
+    fetch("/api/leaderboard?limit=3")
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.leaderboard) setTopWallets(json.leaderboard);
+      })
+      .catch(() => {});
+  }, []);
+
+  function handleEnterRefinery() {
     if (connected) {
-      wasConnectedRef.current = true;
-    } else if (wasConnectedRef.current) {
-      // User explicitly disconnected (was connected, now isn't)
-      wasConnectedRef.current = false;
-      setData(null);
-      setError(null);
-      setIsVerified(false);
-      setVerifyError(null);
-      // Clear all verification keys from sessionStorage
-      if (typeof sessionStorage !== "undefined") {
-        Object.keys(sessionStorage)
-          .filter((k) => k.startsWith("sof_verified_"))
-          .forEach((k) => sessionStorage.removeItem(k));
-      }
-    }
-  }, [connected]);
-
-  async function handleVerify() {
-    if (!session?.signMessage || !solanaAddress) return;
-
-    setVerifying(true);
-    setVerifyError(null);
-
-    try {
-      const message = `Solana Oil Factory\n\nVerify wallet ownership\n\nWallet: ${solanaAddress}\nTimestamp: ${Date.now()}`;
-      await session.signMessage(new TextEncoder().encode(message));
-      setIsVerified(true);
-      if (verifiedKey) sessionStorage.setItem(verifiedKey, "true");
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Unknown error";
-      // User rejected the signature request
-      if (msg.includes("reject") || msg.includes("cancel") || msg.includes("denied")) {
-        setVerifyError("Signature rejected. Please sign the message to verify ownership.");
-      } else {
-        setVerifyError("Verification failed. Please try again.");
-      }
-    } finally {
-      setVerifying(false);
+      router.push("/refinery");
+    } else {
+      openConnectModal();
     }
   }
-
-  async function fetchWalletData(address: string) {
-    abortRef.current?.abort();
-    const controller = new AbortController();
-    abortRef.current = controller;
-
-    setLoading(true);
-    setError(null);
-    setData(null);
-    try {
-      const res = await fetch(`/api/wallet?address=${encodeURIComponent(address)}`, {
-        signal: controller.signal,
-      });
-      if (!res.ok) throw new Error("Failed to fetch wallet data");
-      const json = await res.json();
-      if (json.error) throw new Error(json.error);
-      setData(json);
-    } catch (err) {
-      if ((err as Error).name === "AbortError") return;
-      setError(err instanceof Error ? err.message : "Unknown error");
-    } finally {
-      if (!controller.signal.aborted) setLoading(false);
-    }
-  }
-
-  // Derived states
-  const isWalletReady = connected && solanaAddress;
-  const showVerifyPrompt = isWalletReady && !isVerified && !data && !loading && !storedLoading && !error;
-  // Only show extract prompt for first-time users (stored check done, no data found)
-  const showExtractPrompt = isWalletReady && isVerified && !data && !loading && !storedLoading && storedChecked && !error;
 
   return (
     <div className="page">
-      <main className="main">
+      <main className="home-main">
 
-        {/* Search */}
-        <section className="search-section">
-          <WalletSearch onSearch={fetchWalletData} loading={loading} />
+        {/* ── 1. HERO ── */}
+        <section className="home-hero">
+          <h1 className="home-hero-title">Solana Oil Factory</h1>
+          <p className="home-hero-subtitle">Turn your wallet into an oil empire</p>
+          <p className="home-hero-desc">
+            Convert on-chain activity into oil, refine it into $CRUDE, and compete on the leaderboard.
+          </p>
         </section>
 
-        {/* Empty state — no wallet connected, no search, not loading */}
-        {!connected && !data && !loading && !error && (
-          <div className="empty-state">
-            <p className="empty-state-text">Connect or Search Wallet to Enter the Refinery</p>
-            <button onClick={openConnectModal} className="btn-connect btn-connect--large">
-              Connect Wallet
-            </button>
-          </div>
-        )}
-
-        {/* Verify ownership — wallet connected but not yet signed */}
-        {showVerifyPrompt && (
-          <div className="verify-prompt">
-            <div className="verify-prompt-icon">
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                <path d="M9 12l2 2 4-4" />
-              </svg>
-            </div>
-            <h2 className="verify-prompt-title">Verify Wallet Ownership</h2>
-            <p className="verify-prompt-address">
-              {solanaAddress!.slice(0, 6)}...{solanaAddress!.slice(-4)}
-            </p>
-            <p className="verify-prompt-desc">
-              Sign a message to prove you own this wallet.
-              This is free and does not send any transaction.
-            </p>
-            {verifyError && (
-              <p className="verify-prompt-error">{verifyError}</p>
-            )}
-            <button
-              onClick={handleVerify}
-              className="btn-verify"
-              disabled={verifying}
-            >
-              {verifying ? (
-                <>Waiting for signature...</>
-              ) : (
-                <>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                  </svg>
-                  Sign Message
-                </>
-              )}
-            </button>
-          </div>
-        )}
-
-        {/* Extract prompt — verified, ready to extract */}
-        {showExtractPrompt && (
-          <div className="extract-prompt">
-            <div className="extract-prompt-icon">🛢</div>
-            <h2 className="extract-prompt-title">Wallet Verified</h2>
-            <p className="extract-prompt-address">
-              {solanaAddress!.slice(0, 6)}...{solanaAddress!.slice(-4)}
-            </p>
-            <p className="extract-prompt-desc">
-              Ready to scan your on-chain activity and convert it into oil production.
-            </p>
-            <button
-              onClick={() => fetchWalletData(solanaAddress!)}
-              className="btn-extract"
-            >
-              ⛏️ Start Extracting Oil
-            </button>
-          </div>
-        )}
-
-        {/* Error */}
-        {error && (
-          <div className="error-msg">⚠️ {error}</div>
-        )}
-
-        {/* Loading — stored data check */}
-        {storedLoading && !loading && (
-          <div className="loading-msg">
-            Loading your refinery data...
-          </div>
-        )}
-
-        {/* Loading — full extraction */}
-        {loading && (
-          <div className="loading-msg">
-            Extracting oil from the blockchain...
-          </div>
-        )}
-
-        {/* Results — Barrels first, then Stats */}
-        {data && !loading && (
-          <>
-            {/* Partial data notice */}
-            {data.partial && (
-              <div className="partial-banner">
-                <span className="partial-banner-icon">⚡</span>
-                <div className="partial-banner-text">
-                  <strong>Whale wallet detected!</strong> This wallet has more transactions than we
-                  could count in time. The stats below show at least{" "}
-                  <strong>{data.oilUnits.toLocaleString()}</strong> transactions — actual numbers
-                  may be higher.
-                </div>
+        {/* ── 2. ACTIVE REFINERIES ── */}
+        <section className="home-section">
+          <h2 className="home-section-title">Active Refineries</h2>
+          <div className="home-section-rule" />
+          <div className="home-refineries-grid">
+            {/* Transactions Refinery */}
+            <div className="home-refinery-card">
+              <div className="home-refinery-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2C8 7 6 10 6 13a6 6 0 0 0 12 0c0-3-2-6-6-11z" />
+                  <path d="M12 12c-1 2-0.5 4 1 4s2.5-2 1-4" />
+                </svg>
               </div>
-            )}
+              <h3 className="home-refinery-name">Transactions Refinery</h3>
+              <p className="home-refinery-desc">Convert wallet activity into oil</p>
+              <Link href="/refinery" className="home-refinery-btn">Enter</Link>
+            </div>
 
-            {/* Hero: Barrel Grid */}
-            <BarrelHeroSection
-              fillPercentages={data.fillPercentages}
-              totalBarrels={data.barrels}
-            />
+            {/* Bags Refinery */}
+            <div className="home-refinery-card">
+              <div className="home-refinery-icon">
+                <img src="/bags-icon.png" alt="Bags" className="home-refinery-logo" />
+              </div>
+              <h3 className="home-refinery-name">Bags Refinery</h3>
+              <p className="home-refinery-desc">Convert fee earnings into bonus $CRUDE</p>
+              <Link href="/refinery" className="home-refinery-btn">Enter</Link>
+            </div>
 
-            {/* Refinery → Bags Refinery Data → Production Stats */}
-            <section className="stats-section">
-              <OilStats
-                data={data}
-                isOwner={isVerified && connected && solanaAddress === data.address}
-                onConnectWallet={openConnectModal}
-                onRefined={(units) =>
-                  setData((prev) =>
-                    prev ? { ...prev, lastRefinedOilUnits: units } : prev
-                  )
-                }
-                onCheckUpdates={() => fetchWalletData(data.address)}
-                middleSlot={
-                  <BagsPanel
-                    bagsActive={data.bagsActive ?? false}
-                    totalFeesSol={data.totalFeesSol ?? 0}
-                    bonusCrude={data.bonusCrude ?? 0}
-                  />
-                }
-              />
-            </section>
-          </>
-        )}
+            {/* Pump.fun — Coming Soon */}
+            <div className="home-refinery-card home-refinery-card--disabled">
+              <div className="home-refinery-icon">
+                <img src="/pumpfun-icon.png" alt="Pump.fun" className="home-refinery-logo" />
+              </div>
+              <h3 className="home-refinery-name">Pump.fun</h3>
+              <p className="home-refinery-desc">Coming Soon</p>
+              <span className="home-refinery-btn home-refinery-btn--disabled">Coming Soon</span>
+            </div>
+
+            {/* Bonk.fun — Coming Soon */}
+            <div className="home-refinery-card home-refinery-card--disabled">
+              <div className="home-refinery-icon">
+                <img src="/bonkfun-icon.png" alt="Bonk.fun" className="home-refinery-logo" />
+              </div>
+              <h3 className="home-refinery-name">Bonk.fun</h3>
+              <p className="home-refinery-desc">Coming Soon</p>
+              <span className="home-refinery-btn home-refinery-btn--disabled">Coming Soon</span>
+            </div>
+          </div>
+        </section>
+
+        {/* ── 3. ENTER REFINERY CTA ── */}
+        <div className="home-cta-divider">
+          <button onClick={handleEnterRefinery} className="home-hero-cta">
+            Enter Refinery
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 12h14" />
+              <path d="M12 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+
+        {/* ── 4. HOW IT WORKS ── */}
+        <section className="home-section">
+          <h2 className="home-section-title">How It Works</h2>
+          <div className="home-section-rule" />
+          <div className="home-steps">
+            <div className="home-step">
+              <div className="home-step-num">1</div>
+              <p className="home-step-label">Activity</p>
+              <svg className="home-step-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12h14" />
+                <path d="M12 5l7 7-7 7" />
+              </svg>
+              <p className="home-step-result">Oil</p>
+            </div>
+            <div className="home-step">
+              <div className="home-step-num">2</div>
+              <p className="home-step-label">Refine</p>
+              <svg className="home-step-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12h14" />
+                <path d="M12 5l7 7-7 7" />
+              </svg>
+              <p className="home-step-result">$CRUDE</p>
+            </div>
+            <div className="home-step">
+              <div className="home-step-num">3</div>
+              <p className="home-step-label">Compete</p>
+              <svg className="home-step-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12h14" />
+                <path d="M12 5l7 7-7 7" />
+              </svg>
+              <p className="home-step-result">Leaderboard</p>
+            </div>
+          </div>
+        </section>
+
+        {/* ── 5. LEADERBOARD PREVIEW ── */}
+        <section className="home-section">
+          <h2 className="home-section-title">Top Refiners</h2>
+          <div className="home-section-rule" />
+          {topWallets.length > 0 ? (
+            <div className="home-lb-list">
+              {topWallets.map((entry, i) => (
+                <div key={entry.wallet_address} className={`home-lb-row home-lb-row--${i + 1}`}>
+                  <span className="home-lb-medal">{MEDALS[i]}</span>
+                  <span className="home-lb-addr">
+                    {entry.wallet_address.slice(0, 4)}...{entry.wallet_address.slice(-4)}
+                  </span>
+                  <span className="home-lb-crude">
+                    {entry.total_crude.toLocaleString()} $CRUDE
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="home-lb-empty">Loading leaderboard...</p>
+          )}
+          <Link href="/leaderboard" className="home-lb-cta">
+            View Full Leaderboard
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 12h14" />
+              <path d="M12 5l7 7-7 7" />
+            </svg>
+          </Link>
+        </section>
 
       </main>
 
-      {/* Wallet Connect Modal — shows wallet options even if extensions aren't installed */}
       <WalletConnectModal isOpen={showConnectModal} onClose={closeConnectModal} />
     </div>
   );

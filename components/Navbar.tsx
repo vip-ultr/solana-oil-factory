@@ -30,7 +30,8 @@ export default function Navbar() {
   };
 
   const navLinks = [
-    { label: "Refinery", href: "/" },
+    { label: "Home", href: "/" },
+    { label: "Refinery", href: "/refinery" },
     { label: "Leaderboard", href: "/leaderboard" },
   ];
 
@@ -129,6 +130,18 @@ export default function Navbar() {
         <Link
           href="/"
           className={`bottom-nav-item${pathname === "/" ? " bottom-nav-item--active" : ""}`}
+        >
+          {/* Home / house icon */}
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z" />
+            <path d="M9 21V12h6v9" />
+          </svg>
+          <span>Home</span>
+        </Link>
+
+        <Link
+          href="/refinery"
+          className={`bottom-nav-item${pathname === "/refinery" ? " bottom-nav-item--active" : ""}`}
         >
           {/* Refinery / flame icon */}
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
