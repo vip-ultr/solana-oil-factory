@@ -137,6 +137,28 @@ export default function WalletConnectModal({ isOpen, onClose }: WalletConnectMod
   const isConnecting = connectingId !== null;
   const connectingWallet = solanaConnectors.find((c) => c.id === connectingId);
 
+  // Auto-connect in wallet browser: if we detect we're inside a wallet browser,
+  // try to connect to the first available connector automatically
+  const autoConnectAttemptedRef = useRef(false);
+  useEffect(() => {
+    if (
+      isOpen &&
+      inWalletBrowser &&
+      solanaConnectors.length > 0 &&
+      !isConnecting &&
+      !connected &&
+      !autoConnectAttemptedRef.current
+    ) {
+      autoConnectAttemptedRef.current = true;
+      handleConnect(solanaConnectors[0]);
+    }
+  }, [isOpen, inWalletBrowser, solanaConnectors.length, isConnecting, connected]);
+
+  // Reset auto-connect flag when modal closes
+  useEffect(() => {
+    if (!isOpen) autoConnectAttemptedRef.current = false;
+  }, [isOpen]);
+
   /* ── Determine what to show ──
      Priority:
      1. Wallet browser (mobile or desktop) → show injected connectors
@@ -145,6 +167,7 @@ export default function WalletConnectModal({ isOpen, onClose }: WalletConnectMod
      4. Desktop no extensions               → show "Get Wallet" links
   */
   const showInjected = inWalletBrowser && solanaConnectors.length > 0;
+  const showWalletBrowserLoading = inWalletBrowser && solanaConnectors.length === 0;
   const showDeepLinks = mobile && !inWalletBrowser;
   const showDesktopConnectors = !mobile && !inWalletBrowser && solanaConnectors.length > 0;
   const showGetWallet =
@@ -192,11 +215,19 @@ export default function WalletConnectModal({ isOpen, onClose }: WalletConnectMod
           <p className="wcm-desc">Detecting wallets…</p>
         )}
 
-        {/* ─── 1. Inside wallet browser → injected connectors ─── */}
+        {/* ─── 1a. Inside wallet browser → injected connectors ─── */}
         {showInjected && !isConnecting && (
           <>
             <p className="wcm-desc">Tap to connect your wallet.</p>
             <WalletList connectors={solanaConnectors} onConnect={handleConnect} disabled={connecting} />
+          </>
+        )}
+
+        {/* ─── 1b. Inside wallet browser but connectors not yet discovered ─── */}
+        {showWalletBrowserLoading && !isConnecting && (
+          <>
+            <p className="wcm-desc">Detecting wallet…</p>
+            <div className="wcm-connecting-spinner" />
           </>
         )}
 
