@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useWalletConnection, useWalletSession } from "@solana/react-hooks";
+import { useWalletConnection, useWalletSession, useSolTransfer } from "@solana/react-hooks";
 import WalletSearch from "@/components/WalletSearch";
 import BarrelHeroSection from "@/components/BarrelHeroSection";
 import OilStats from "@/components/OilStats";
@@ -20,6 +20,7 @@ type WalletData = OilData & {
 export default function RefineryPage() {
   const { connected, disconnect, wallet } = useWalletConnection();
   const session = useWalletSession();
+  const solTransfer = useSolTransfer();
   const [showConnectModal, setShowConnectModal] = useState(false);
   const openConnectModal = useCallback(() => setShowConnectModal(true), []);
   const closeConnectModal = useCallback(() => setShowConnectModal(false), []);
@@ -217,6 +218,26 @@ export default function RefineryPage() {
   }, [connected, solanaAddress, isVerified, storedChecked, data, loading, storedLoading, error]);
 
   // Derived states
+  // Speed Up handler — sends 0.002 SOL and verifies on backend
+  const handleSpeedUp = useCallback(async (): Promise<boolean> => {
+    if (!solanaAddress) return false;
+
+    // Send SOL transfer
+    const sig = await solTransfer.send({
+      destination: "DfUAhLYZ2n8XNv2rPZHtyQde6wf8A99KMiqsbSjqF3b4" as `${string}`,
+      amount: BigInt(2_000_000), // 0.002 SOL in lamports
+    });
+
+    // Verify on backend
+    const res = await fetch("/api/verify-speedup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ wallet: solanaAddress, signature: String(sig) }),
+    });
+    const json = await res.json();
+    return json.success === true;
+  }, [solanaAddress, solTransfer]);
+
   const isWalletReady = connected && solanaAddress;
   const showVerifyPrompt = isWalletReady && !isVerified && !data && !loading && !storedLoading && !error;
 
@@ -342,6 +363,7 @@ export default function RefineryPage() {
                     bonusCrude={data.bonusCrude ?? 0}
                   />
                 }
+                onSpeedUp={isVerified && connected && solanaAddress === data.address ? handleSpeedUp : undefined}
               />
             </section>
           </>

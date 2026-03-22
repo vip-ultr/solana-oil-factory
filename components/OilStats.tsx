@@ -33,6 +33,8 @@ interface OilStatsProps {
   syncing?: boolean;
   /** content rendered between Refinery and Production Stats panels */
   middleSlot?: React.ReactNode;
+  /** called when user clicks Speed Up — should send SOL, verify, return true on success */
+  onSpeedUp?: () => Promise<boolean>;
 }
 
 export default function OilStats({
@@ -43,6 +45,7 @@ export default function OilStats({
   onCheckUpdates,
   syncing = false,
   middleSlot,
+  onSpeedUp,
 }: OilStatsProps) {
   const { address, oilUnits, barrels, crude, title } = data;
   const bonusCrude = data.bonusCrude ?? 0;
@@ -66,6 +69,8 @@ export default function OilStats({
   const [pendingCrude, setPendingCrude] = useState<{ crude: number; bonusCrude: number } | null>(null);
   const [startingRefine, setStartingRefine] = useState(false);
   const [claiming, setClaiming] = useState(false);
+  const [speedingUp, setSpeedingUp] = useState(false);
+  const [speedUpError, setSpeedUpError] = useState<string | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // When data changes (e.g. different wallet searched), reset local state
@@ -227,6 +232,39 @@ export default function OilStats({
     }
   }, [address, oilUnits, onRefined]);
 
+  // ── Speed Up refine ──
+  const handleSpeedUp = useCallback(async () => {
+    if (!onSpeedUp) return;
+    setSpeedingUp(true);
+    setSpeedUpError(null);
+    try {
+      const success = await onSpeedUp();
+      if (success) {
+        // Re-fetch status to get crude amounts and confirm completion
+        const res = await fetch(`/api/refine-status?wallet=${encodeURIComponent(address)}`);
+        const statusData: RefineStatusData = await res.json();
+        if (statusData.status === "completed") {
+          setRefineStatus("completed");
+          setPendingCrude({
+            crude: statusData.crudeAmount ?? 0,
+            bonusCrude: statusData.bonusCrude ?? 0,
+          });
+        }
+      } else {
+        setSpeedUpError("Speed up verification failed. Please try again.");
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Unknown error";
+      if (msg.includes("reject") || msg.includes("cancel") || msg.includes("denied")) {
+        setSpeedUpError("Transaction rejected.");
+      } else {
+        setSpeedUpError("Speed up failed. Please try again.");
+      }
+    } finally {
+      setSpeedingUp(false);
+    }
+  }, [onSpeedUp, address]);
+
   const shortAddress = `${address.slice(0, 6)}...${address.slice(-4)}`;
 
   const shareText = `Solana Oil Factory \u{1F6E2}\u{FE0F}
@@ -284,6 +322,20 @@ https://solanaoilfactory.xyz`;
             <p className="refine-pending-amount">
               {pendingTotal.toLocaleString()} $CRUDE pending
             </p>
+          )}
+          {isOwner && onSpeedUp && (
+            <>
+              <button
+                onClick={handleSpeedUp}
+                className="btn-speedup"
+                disabled={speedingUp}
+              >
+                {speedingUp ? "Verifying payment..." : "⚡ Speed Up → 0.002 SOL"}
+              </button>
+              {speedUpError && (
+                <p className="speedup-error">{speedUpError}</p>
+              )}
+            </>
           )}
         </div>
       );

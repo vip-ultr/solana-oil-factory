@@ -2292,6 +2292,34 @@ body {
   cursor: not-allowed;
 }
 
+/* ─── Speed Up Button ───────────────────────────── */
+.btn-speedup {
+  margin-top: 12px;
+  background: transparent;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.btn-speedup:hover {
+  background: var(--accent);
+  color: #fff;
+}
+.btn-speedup:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.speedup-error {
+  color: var(--red, #ef4444);
+  font-size: 0.8rem;
+  margin-top: 6px;
+  text-align: center;
+}
+
 /* ─── CRUDE Breakdown ──────────────────────────── */
 .crude-breakdown {
   display: flex;
