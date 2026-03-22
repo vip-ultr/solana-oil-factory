@@ -89,8 +89,6 @@ export default async function WalletProfilePage({ params }: Props) {
         bonusCrude={bonusCrude}
         totalCrude={totalCrude}
         title={title}
-        totalFeesSol={bags.totalFeesSol}
-        bagsActive={bags.isActive}
         rank={rank}
         partial={partial}
       />

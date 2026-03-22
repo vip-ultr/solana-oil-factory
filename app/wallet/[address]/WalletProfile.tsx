@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { useWalletConnection } from "@solana/react-hooks";
 import BarrelHeroSection from "@/components/BarrelHeroSection";
-import BagsPanel from "@/components/BagsPanel";
 
 interface WalletProfileProps {
   address: string;
@@ -15,8 +14,6 @@ interface WalletProfileProps {
   bonusCrude: number;
   totalCrude: number;
   title: string;
-  totalFeesSol: number;
-  bagsActive: boolean;
   rank: number | null;
   partial: boolean;
 }
@@ -30,8 +27,6 @@ export default function WalletProfile({
   bonusCrude,
   totalCrude,
   title,
-  totalFeesSol,
-  bagsActive,
   rank,
   partial,
 }: WalletProfileProps) {
@@ -177,13 +172,6 @@ https://solanaoilfactory.xyz/wallet/${address}`;
             </div>
           </div>
         </section>
-
-        {/* Bags Panel */}
-        <BagsPanel
-          bagsActive={bagsActive}
-          totalFeesSol={totalFeesSol}
-          bonusCrude={bonusCrude}
-        />
 
         {/* Rank */}
         <section className="stats-section">
