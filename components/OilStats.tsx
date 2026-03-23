@@ -69,6 +69,7 @@ export default function OilStats({
   const [pendingCrude, setPendingCrude] = useState<{ crude: number; bonusCrude: number } | null>(null);
   const [startingRefine, setStartingRefine] = useState(false);
   const [claiming, setClaiming] = useState(false);
+  const [claimError, setClaimError] = useState(false);
   const [speedingUp, setSpeedingUp] = useState(false);
   const [speedUpError, setSpeedUpError] = useState<string | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -209,6 +210,7 @@ export default function OilStats({
   // ── Claim CRUDE ──
   const handleClaim = useCallback(async () => {
     setClaiming(true);
+    setClaimError(false);
     try {
       const res = await fetch("/api/refine/claim", {
         method: "POST",
@@ -224,13 +226,23 @@ export default function OilStats({
         onRefined?.(oilUnits);
       } else {
         console.error("Claim error:", json.error);
+        setClaimError(true);
       }
     } catch (err) {
       console.error("Failed to claim:", err);
+      setClaimError(true);
     } finally {
       setClaiming(false);
     }
   }, [address, oilUnits, onRefined]);
+
+  // ── Auto-claim when refinement completes ──
+  // Fires for all "completed" transitions: timer expiry, speed-up, and page-load-after-completion.
+  useEffect(() => {
+    if (refineStatus !== "completed") return;
+    setClaimError(false);
+    handleClaim();
+  }, [refineStatus]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Speed Up refine ──
   const handleSpeedUp = useCallback(async () => {
@@ -281,7 +293,7 @@ I just refined ${totalCrude.toLocaleString()} CRUDE${bonusCrude > 0 ? ` (${bonus
 \u{1F4CA} Transactions: ${oilUnits.toLocaleString()}
 \u{1F3F7}\u{FE0F} Title: ${title}
 
-Check your barrel:
+Check your barrels:
 https://solanaoilfactory.xyz`;
 
   const handleShare = () => {
@@ -348,26 +360,39 @@ https://solanaoilfactory.xyz`;
       );
     }
 
-    // ── Completed — ready to claim ──
+    // ── Completed — auto-claiming ──
     if (refineStatus === "completed") {
       const pendingTotal = pendingCrude
         ? pendingCrude.crude + pendingCrude.bonusCrude
         : 0;
       return (
         <div className="refine-claim-container">
-          <p className="refine-claim-label">Refinement complete!</p>
-          {pendingTotal > 0 && (
-            <p className="refine-claim-amount">
-              {pendingTotal.toLocaleString()} $CRUDE ready
-            </p>
+          {claimError ? (
+            <>
+              <p className="refine-claim-label">Refinement complete!</p>
+              {pendingTotal > 0 && (
+                <p className="refine-claim-amount">
+                  {pendingTotal.toLocaleString()} $CRUDE ready
+                </p>
+              )}
+              <button
+                onClick={handleClaim}
+                className="btn-refine btn-refine--claim"
+                disabled={claiming}
+              >
+                {claiming ? "Claiming..." : "Retry Claim"}
+              </button>
+            </>
+          ) : (
+            <>
+              <p className="refine-claim-label">Claiming your $CRUDE...</p>
+              {pendingTotal > 0 && (
+                <p className="refine-claim-amount">
+                  {pendingTotal.toLocaleString()} $CRUDE
+                </p>
+              )}
+            </>
           )}
-          <button
-            onClick={handleClaim}
-            className="btn-refine btn-refine--claim"
-            disabled={claiming}
-          >
-            {claiming ? "Claiming..." : "Claim $CRUDE"}
-          </button>
         </div>
       );
     }
