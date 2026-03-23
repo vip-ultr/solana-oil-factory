@@ -2,6 +2,7 @@
 
 import { useEffect, useCallback, useState, useRef } from "react";
 import { useWalletConnection } from "@solana/react-hooks";
+import { getWallets } from "@wallet-standard/app";
 
 /* ── Solana-only connector filter ────────────────────────────────────── */
 const NON_SOLANA = ["sui", "ethereum", "metamask", "rabby", "aptos"];
@@ -23,14 +24,9 @@ function isMobile(): boolean {
 
 function isInWalletBrowser(): boolean {
   if (typeof window === "undefined") return false;
-  const w = window as unknown as Record<string, unknown>;
-  return (
-    !!(w.phantom as Record<string, unknown>)?.solana ||
-    !!w.solflare ||
-    !!w.backpack ||
-    !!w.jupiter ||
-    !!w.solana
-  );
+  // Use Wallet Standard: any registered wallet means we're in a wallet browser
+  const { get } = getWallets();
+  return get().length > 0;
 }
 
 /* ── Deep-link wallets for mobile browsers ───────────────────────────── */

@@ -220,13 +220,12 @@ export default function RefineryPage() {
   // Derived states
   // Speed Up handler — sends 0.002 SOL and verifies on backend
   const handleSpeedUp = useCallback(async (): Promise<boolean> => {
-    if (!solanaAddress || !session) return false;
+    if (!solanaAddress) return false;
 
-    // Send SOL transfer
+    // Send SOL transfer using framework-kit pattern
     const sig = await solTransfer.send({
-      destination: "DfUAhLYZ2n8XNv2rPZHtyQde6wf8A99KMiqsbSjqF3b4" as `${string}`,
+      destination: "DfUAhLYZ2n8XNv2rPZHtyQde6wf8A99KMiqsbSjqF3b4",
       amount: BigInt(2_000_000), // 0.002 SOL in lamports
-      authority: session,
     });
 
     // Wait for confirmation to propagate to RPC
@@ -240,7 +239,7 @@ export default function RefineryPage() {
     });
     const json = await res.json();
     return json.success === true;
-  }, [solanaAddress, session, solTransfer]);
+  }, [solanaAddress, solTransfer]);
 
   const isWalletReady = connected && solanaAddress;
   const showVerifyPrompt = isWalletReady && !isVerified && !data && !loading && !storedLoading && !error;
