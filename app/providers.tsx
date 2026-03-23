@@ -6,7 +6,10 @@ import { SolanaProvider } from "@solana/react-hooks";
 import { createClient, autoDiscover } from "@solana/client";
 
 const endpoint =
-  process.env.NEXT_PUBLIC_SOLANA_RPC_URL ?? "https://api.mainnet-beta.solana.com";
+  process.env.NEXT_PUBLIC_SOLANA_RPC_URL ??
+  (process.env.NEXT_PUBLIC_HELIUS_API_KEY
+    ? `https://mainnet.helius-rpc.com/?api-key=${process.env.NEXT_PUBLIC_HELIUS_API_KEY}`
+    : "https://api.mainnet-beta.solana.com");
 
 const websocketEndpoint =
   process.env.NEXT_PUBLIC_SOLANA_WS_URL ??

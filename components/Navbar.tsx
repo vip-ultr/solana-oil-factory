@@ -1,15 +1,16 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useWalletConnection } from "@solana/react-hooks";
+import { useWalletConnection, useWalletSession } from "@solana/react-hooks";
 import { useTheme } from "next-themes";
 import WalletConnectModal from "./WalletConnectModal";
 
 export default function Navbar() {
   const pathname = usePathname();
   const { connected, disconnect, wallet, isReady } = useWalletConnection();
+  const session = useWalletSession();
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [showConnectModal, setShowConnectModal] = useState(false);
@@ -24,6 +25,35 @@ export default function Navbar() {
   useEffect(() => {
     if (connected) setShowConnectModal(false);
   }, [connected]);
+
+  // Auto-verify: trigger sign message when wallet connects (on any page)
+  const autoVerifyAttemptedRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (
+      connected &&
+      solanaAddress &&
+      session?.signMessage &&
+      autoVerifyAttemptedRef.current !== solanaAddress
+    ) {
+      const verifiedKey = `sof_verified_${solanaAddress}`;
+      if (typeof sessionStorage !== "undefined") {
+        const stored = sessionStorage.getItem(verifiedKey);
+        if (stored === "true") return;
+      }
+      autoVerifyAttemptedRef.current = solanaAddress;
+
+      const message = `Solana Oil Factory\n\nVerify wallet ownership\n\nWallet: ${solanaAddress}\nTimestamp: ${Date.now()}`;
+      session.signMessage(new TextEncoder().encode(message))
+        .then(() => {
+          if (typeof sessionStorage !== "undefined") {
+            sessionStorage.setItem(verifiedKey, "true");
+          }
+        })
+        .catch(() => {
+          // User rejected — they can retry by reconnecting
+        });
+    }
+  }, [connected, solanaAddress, session?.signMessage]);
 
   const toggleTheme = () => {
     setTheme(resolvedTheme === "dark" ? "light" : "dark");

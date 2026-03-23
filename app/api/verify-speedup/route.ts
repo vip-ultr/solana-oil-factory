@@ -86,7 +86,8 @@ export async function POST(request: NextRequest) {
     };
     transaction: {
       message: {
-        accountKeys: string[];
+        // Legacy txs: string[].  V0 txs with encoding:"json": {pubkey,signer,writable}[]
+        accountKeys: (string | { pubkey: string })[];
       };
     };
   };
@@ -137,8 +138,12 @@ export async function POST(request: NextRequest) {
   }
 
   // 5. Verify sender === user wallet
-  const accountKeys = txData.transaction.message.accountKeys;
-  const sender = accountKeys[0]; // First signer is the fee payer / sender
+  // accountKeys can be string[] (legacy tx) or {pubkey:string}[] (v0 tx with encoding:"json")
+  const rawKeys = txData.transaction.message.accountKeys as (string | { pubkey: string })[];
+  const toKeyStr = (k: string | { pubkey: string }): string =>
+    typeof k === "string" ? k : k.pubkey;
+
+  const sender = toKeyStr(rawKeys[0]);
 
   if (sender !== wallet) {
     return NextResponse.json(
@@ -149,7 +154,7 @@ export async function POST(request: NextRequest) {
 
   // 6. Verify recipient and amount
   // Find the recipient index in accountKeys
-  const recipientIndex = accountKeys.indexOf(SPEEDUP_RECIPIENT);
+  const recipientIndex = rawKeys.findIndex((k) => toKeyStr(k) === SPEEDUP_RECIPIENT);
 
   if (recipientIndex === -1) {
     return NextResponse.json(

@@ -135,27 +135,6 @@ export default function RefineryPage() {
     }
   }
 
-  // Auto-verify: trigger sign message immediately when wallet connects
-  const autoVerifyAttemptedRef = useRef<string | null>(null);
-  useEffect(() => {
-    if (
-      connected &&
-      solanaAddress &&
-      !isVerified &&
-      !verifying &&
-      session?.signMessage &&
-      autoVerifyAttemptedRef.current !== solanaAddress
-    ) {
-      // Check if already verified in sessionStorage first
-      if (verifiedKey && typeof sessionStorage !== "undefined") {
-        const stored = sessionStorage.getItem(verifiedKey);
-        if (stored === "true") return; // already handled by the other effect
-      }
-      autoVerifyAttemptedRef.current = solanaAddress;
-      handleVerify();
-    }
-  }, [connected, solanaAddress, isVerified, verifying, session?.signMessage]);
-
   // Full fetch — clears data, shows loading skeleton (used for first load / search)
   async function fetchWalletData(address: string) {
     abortRef.current?.abort();
@@ -218,28 +197,74 @@ export default function RefineryPage() {
   }, [connected, solanaAddress, isVerified, storedChecked, data, loading, storedLoading, error]);
 
   // Derived states
-  // Speed Up handler — sends 0.002 SOL and verifies on backend
+  // Speed Up handler — sends 0.002 SOL via useSolTransfer and verifies on backend
   const handleSpeedUp = useCallback(async (): Promise<boolean> => {
-    if (!solanaAddress) return false;
+    if (!solanaAddress || !session) {
+      console.error("[SpeedUp] No wallet connected", { solanaAddress, session: !!session });
+      return false;
+    }
 
-    // Send SOL transfer using framework-kit pattern
+    console.log("[SpeedUp] Initiating transfer", { wallet: solanaAddress });
+
+    // Use framework-kit useSolTransfer hook — handles wallet popup, signing, and sending
     const sig = await solTransfer.send({
+      amount: BigInt(2_000_000),
       destination: "DfUAhLYZ2n8XNv2rPZHtyQde6wf8A99KMiqsbSjqF3b4",
-      amount: BigInt(2_000_000), // 0.002 SOL in lamports
+      authority: session,
     });
 
-    // Wait for confirmation to propagate to RPC
-    await new Promise((r) => setTimeout(r, 2500));
+    console.log("[SpeedUp] Transaction sent", { signature: String(sig) });
 
-    // Verify on backend
-    const res = await fetch("/api/verify-speedup", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ wallet: solanaAddress, signature: String(sig) }),
-    });
-    const json = await res.json();
-    return json.success === true;
-  }, [solanaAddress, solTransfer]);
+    // Retry verification — solTransfer.send() resolves once the tx is submitted,
+    // but Helius may need several seconds to index it at "confirmed" commitment.
+    // We retry up to MAX_RETRIES times before surfacing an error to the user.
+    const MAX_RETRIES = 5;
+    const RETRY_DELAY_MS = 3_000;
+
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
+
+      let json: { success?: boolean; error?: string };
+      try {
+        const res = await fetch("/api/verify-speedup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ wallet: solanaAddress, signature: String(sig) }),
+        });
+        // Guard against non-JSON responses (e.g. Next.js 500 HTML error page)
+        const text = await res.text();
+        try {
+          json = JSON.parse(text);
+        } catch {
+          console.error(`[SpeedUp] Non-JSON response on attempt ${attempt}:`, text.slice(0, 200));
+          if (attempt < MAX_RETRIES) continue;
+          return false;
+        }
+      } catch (fetchErr) {
+        console.error(`[SpeedUp] Fetch error on attempt ${attempt}:`, fetchErr);
+        if (attempt < MAX_RETRIES) continue;
+        return false;
+      }
+
+      console.log(`[SpeedUp] Verification attempt ${attempt}/${MAX_RETRIES}`, json);
+
+      if (json.success === true) return true;
+
+      // Only retry on "not found / not yet confirmed" — fail fast on all other errors
+      const isConfirmationDelay =
+        typeof json.error === "string" &&
+        (json.error.includes("not found") || json.error.includes("not yet confirmed"));
+
+      if (!isConfirmationDelay || attempt === MAX_RETRIES) {
+        console.error("[SpeedUp] Verification failed", json.error);
+        return false;
+      }
+
+      console.log(`[SpeedUp] Not yet confirmed, waiting before retry ${attempt + 1}/${MAX_RETRIES}...`);
+    }
+
+    return false;
+  }, [solanaAddress, session, solTransfer]);
 
   const isWalletReady = connected && solanaAddress;
   const showVerifyPrompt = isWalletReady && !isVerified && !data && !loading && !storedLoading && !error;
@@ -292,7 +317,6 @@ export default function RefineryPage() {
             <p className="verify-prompt-error">{verifyError}</p>
             <button
               onClick={() => {
-                autoVerifyAttemptedRef.current = null;
                 handleVerify();
               }}
               className="btn-verify"

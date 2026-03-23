@@ -254,8 +254,15 @@ export default function OilStats({
         setSpeedUpError("Speed up verification failed. Please try again.");
       }
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Unknown error";
-      if (msg.includes("reject") || msg.includes("cancel") || msg.includes("denied")) {
+      console.error("[SpeedUp] error:", err);
+      const msg = (err instanceof Error ? err.message : String(err)).toLowerCase();
+      const isRejection =
+        msg.includes("reject") ||
+        msg.includes("cancel") ||
+        msg.includes("denied") ||
+        msg.includes("decline") ||
+        msg.includes("user abort");
+      if (isRejection) {
         setSpeedUpError("Transaction rejected.");
       } else {
         setSpeedUpError("Speed up failed. Please try again.");

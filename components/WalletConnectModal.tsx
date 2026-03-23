@@ -96,24 +96,7 @@ export default function WalletConnectModal({ isOpen, onClose }: WalletConnectMod
     return () => window.removeEventListener("keydown", h);
   }, [isOpen, onClose]);
 
-  // Auto-connect in wallet browser: try the first discovered connector automatically
-  useEffect(() => {
-    if (
-      isOpen &&
-      inWalletBrowser &&
-      solanaConnectors.length > 0 &&
-      connectingId === null &&
-      !connected &&
-      !autoConnectAttemptedRef.current
-    ) {
-      autoConnectAttemptedRef.current = true;
-      // Use a small delay to let the UI render first
-      const timer = setTimeout(() => {
-        handleConnect(solanaConnectors[0]);
-      }, 100);
-      return () => clearTimeout(timer);
-    }
-  }, [isOpen, inWalletBrowser, solanaConnectors.length, connectingId, connected]);
+  // In wallet browsers, show injected connectors for user to select (no auto-connect)
 
   const handleBackdropClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
