@@ -10,9 +10,7 @@ const MWA_KEYWORD = "mobile wallet adapter";
 function isSolanaConnector(c: { id: string; name: string }): boolean {
   const id = c.id.toLowerCase();
   const name = c.name.toLowerCase();
-  // Reject non-Solana chains
   if (NON_SOLANA.some((x) => id.includes(x) || name.includes(x))) return false;
-  // Reject MWA — removed, not reliable on mobile web
   if (id.includes(MWA_KEYWORD) || name.includes(MWA_KEYWORD)) return false;
   return true;
 }
@@ -67,6 +65,7 @@ export default function WalletConnectModal({ isOpen, onClose }: WalletConnectMod
   const [connectingId, setConnectingId] = useState<string | null>(null);
   const [connectError, setConnectError] = useState<string | null>(null);
   const abortRef = useRef(false);
+  const autoConnectAttemptedRef = useRef(false);
 
   const solanaConnectors = connectors.filter(isSolanaConnector);
 
@@ -88,6 +87,7 @@ export default function WalletConnectModal({ isOpen, onClose }: WalletConnectMod
       setConnectingId(null);
       setConnectError(null);
       abortRef.current = false;
+      autoConnectAttemptedRef.current = false;
     }
   }, [isOpen]);
 
@@ -98,6 +98,25 @@ export default function WalletConnectModal({ isOpen, onClose }: WalletConnectMod
     window.addEventListener("keydown", h);
     return () => window.removeEventListener("keydown", h);
   }, [isOpen, onClose]);
+
+  // Auto-connect in wallet browser: try the first discovered connector automatically
+  useEffect(() => {
+    if (
+      isOpen &&
+      inWalletBrowser &&
+      solanaConnectors.length > 0 &&
+      connectingId === null &&
+      !connected &&
+      !autoConnectAttemptedRef.current
+    ) {
+      autoConnectAttemptedRef.current = true;
+      // Use a small delay to let the UI render first
+      const timer = setTimeout(() => {
+        handleConnect(solanaConnectors[0]);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, inWalletBrowser, solanaConnectors.length, connectingId, connected]);
 
   const handleBackdropClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
@@ -137,31 +156,9 @@ export default function WalletConnectModal({ isOpen, onClose }: WalletConnectMod
   const isConnecting = connectingId !== null;
   const connectingWallet = solanaConnectors.find((c) => c.id === connectingId);
 
-  // Auto-connect in wallet browser: if we detect we're inside a wallet browser,
-  // try to connect to the first available connector automatically
-  const autoConnectAttemptedRef = useRef(false);
-  useEffect(() => {
-    if (
-      isOpen &&
-      inWalletBrowser &&
-      solanaConnectors.length > 0 &&
-      !isConnecting &&
-      !connected &&
-      !autoConnectAttemptedRef.current
-    ) {
-      autoConnectAttemptedRef.current = true;
-      handleConnect(solanaConnectors[0]);
-    }
-  }, [isOpen, inWalletBrowser, solanaConnectors.length, isConnecting, connected]);
-
-  // Reset auto-connect flag when modal closes
-  useEffect(() => {
-    if (!isOpen) autoConnectAttemptedRef.current = false;
-  }, [isOpen]);
-
   /* ── Determine what to show ──
      Priority:
-     1. Wallet browser (mobile or desktop) → show injected connectors
+     1. Wallet browser (mobile or desktop) → auto-connect or show injected connectors
      2. Mobile regular browser             → show deep-links
      3. Desktop with extensions             → show discovered connectors
      4. Desktop no extensions               → show "Get Wallet" links
@@ -211,7 +208,7 @@ export default function WalletConnectModal({ isOpen, onClose }: WalletConnectMod
         )}
 
         {/* Detecting wallets */}
-        {!isReady && !isConnecting && !showDeepLinks && (
+        {!isReady && !isConnecting && !showDeepLinks && !inWalletBrowser && (
           <p className="wcm-desc">Detecting wallets…</p>
         )}
 
