@@ -28,6 +28,7 @@ function isInWalletBrowser(): boolean {
     !!(w.phantom as Record<string, unknown>)?.solana ||
     !!w.solflare ||
     !!w.backpack ||
+    !!w.jupiter ||
     !!w.solana
   );
 }
