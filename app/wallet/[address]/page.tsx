@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getTransactionCount } from "@/lib/helius";
-import { calculateOilData, getPrestigeTitle } from "@/lib/oilCalculator";
+import { calculateOilData } from "@/lib/oilCalculator";
 import { fetchBagsWalletData } from "@/lib/bags";
 import { supabase } from "@/lib/supabase";
 import WalletProfile from "./WalletProfile";
@@ -59,23 +59,32 @@ export default async function WalletProfilePage({ params }: Props) {
         ? bagsResult.value
         : { totalFeesSol: 0, bonusCrude: 0, isActive: false, positionCount: 0 };
 
-    const bonusCrude = bags.bonusCrude;
-    const totalCrude = oilData.crude + bonusCrude;
-    const title = getPrestigeTitle(totalCrude);
+    // Fetch claimed wallet record and active refine in parallel
+    const [{ data: walletRecord }, { data: activeRefineRow }] = await Promise.all([
+      supabase
+        .from("wallets")
+        .select("crude, bonus_crude, total_crude, prestige_title")
+        .eq("wallet_address", address)
+        .maybeSingle(),
+      supabase
+        .from("refines")
+        .select("id")
+        .eq("wallet_address", address)
+        .eq("claimed", false)
+        .limit(1)
+        .maybeSingle(),
+    ]);
 
-    // Get leaderboard rank (efficient COUNT query)
+    const hasClaimed = !!walletRecord;
+    const isRefining = !!activeRefineRow;
+
+    // Rank is only meaningful once the wallet has claimed (wallets table is the source of truth)
     let rank: number | null = null;
-    const { data: existing } = await supabase
-      .from("wallets")
-      .select("wallet_address")
-      .eq("wallet_address", address)
-      .single();
-
-    if (existing) {
+    if (hasClaimed) {
       const { count } = await supabase
         .from("wallets")
         .select("*", { count: "exact", head: true })
-        .gt("total_crude", totalCrude);
+        .gt("total_crude", walletRecord.total_crude);
       rank = count !== null ? count + 1 : null;
     }
 
@@ -85,10 +94,11 @@ export default async function WalletProfilePage({ params }: Props) {
         oilUnits={oilData.oilUnits}
         barrels={oilData.barrels}
         fillPercentages={oilData.fillPercentages}
-        crude={oilData.crude}
-        bonusCrude={bonusCrude}
-        totalCrude={totalCrude}
-        title={title}
+        claimedCrude={hasClaimed ? walletRecord.crude : null}
+        claimedBonusCrude={hasClaimed ? walletRecord.bonus_crude : null}
+        claimedTotalCrude={hasClaimed ? walletRecord.total_crude : null}
+        claimedTitle={hasClaimed ? walletRecord.prestige_title : null}
+        isRefining={isRefining}
         rank={rank}
         partial={partial}
       />

@@ -10,10 +10,13 @@ interface WalletProfileProps {
   oilUnits: number;
   barrels: number;
   fillPercentages: number[];
-  crude: number;
-  bonusCrude: number;
-  totalCrude: number;
-  title: string;
+  /** Null until the wallet has completed and claimed at least one refine */
+  claimedCrude: number | null;
+  claimedBonusCrude: number | null;
+  claimedTotalCrude: number | null;
+  claimedTitle: string | null;
+  /** True when a refine is currently in progress (timer running) */
+  isRefining: boolean;
   rank: number | null;
   partial: boolean;
 }
@@ -23,13 +26,15 @@ export default function WalletProfile({
   oilUnits,
   barrels,
   fillPercentages,
-  crude,
-  bonusCrude,
-  totalCrude,
-  title,
+  claimedCrude,
+  claimedBonusCrude,
+  claimedTotalCrude,
+  claimedTitle,
+  isRefining,
   rank,
   partial,
 }: WalletProfileProps) {
+  const revealed = claimedTotalCrude !== null;
   const { wallet } = useWalletConnection();
   const connectedAddress = wallet?.account?.address?.toString() ?? null;
   const isOwner = connectedAddress === address;
@@ -56,12 +61,19 @@ export default function WalletProfile({
     }
   };
 
-  const shareText = `Solana Oil Factory \u{1F6E2}\u{FE0F}
+  const shareText = revealed
+    ? `Solana Oil Factory \u{1F6E2}\u{FE0F}
 
-${totalCrude.toLocaleString()} CRUDE${bonusCrude > 0 ? ` (${bonusCrude.toLocaleString()} bonus from @BagsApp)` : ""}
+${claimedTotalCrude!.toLocaleString()} CRUDE${(claimedBonusCrude ?? 0) > 0 ? ` (${claimedBonusCrude!.toLocaleString()} bonus from @BagsApp)` : ""}
 
 \u{1F4CA} Transactions: ${oilUnits.toLocaleString()}
-\u{1F3F7}\u{FE0F} Title: ${title}
+\u{1F3F7}\u{FE0F} Title: ${claimedTitle}
+
+Check this wallet:
+https://solanaoilfactory.xyz/wallet/${address}`
+    : `Solana Oil Factory \u{1F6E2}\u{FE0F}
+
+\u{1F4CA} Transactions: ${oilUnits.toLocaleString()}
 
 Check this wallet:
 https://solanaoilfactory.xyz/wallet/${address}`;
@@ -145,31 +157,35 @@ https://solanaoilfactory.xyz/wallet/${address}`;
                 <p className="stat-card-value">{barrels.toLocaleString()}</p>
               </div>
               <div className="stat-card">
-                <p className="stat-card-label">Base CRUDE</p>
-                <p className="stat-card-value">{crude.toLocaleString()}</p>
-              </div>
-              <div className="stat-card">
                 <p className="stat-card-label">$CRUDE Balance</p>
-                <div className="crude-breakdown">
-                  <p className="crude-base">
-                    Base: <span>{crude.toLocaleString()}</span>
-                  </p>
-                  {bonusCrude > 0 && (
-                    <p className="crude-bonus">
-                      Bonus (Bags): <span>+{bonusCrude.toLocaleString()}</span>
+                {revealed ? (
+                  <div className="crude-breakdown">
+                    <p className="crude-base">
+                      Base: <span>{claimedCrude!.toLocaleString()}</span>
                     </p>
-                  )}
-                  <p className="crude-total">
-                    Total: <span className="stat-card-value accent">{totalCrude.toLocaleString()}</span>
+                    {(claimedBonusCrude ?? 0) > 0 && (
+                      <p className="crude-bonus">
+                        Bonus (Bags): <span>+{claimedBonusCrude!.toLocaleString()}</span>
+                      </p>
+                    )}
+                    <p className="crude-total">
+                      Total: <span className="stat-card-value accent">{claimedTotalCrude!.toLocaleString()}</span>
+                    </p>
+                  </div>
+                ) : (
+                  <p className="stat-card-value dim">
+                    {isRefining ? "Refining..." : "—"}
                   </p>
-                </div>
+                )}
               </div>
             </div>
 
-            <div className="title-badge">
-              <span className="title-badge-label">Prestige Title</span>
-              <span className="title-badge-value">{title}</span>
-            </div>
+            {revealed && (
+              <div className="title-badge">
+                <span className="title-badge-label">Prestige Title</span>
+                <span className="title-badge-value">{claimedTitle}</span>
+              </div>
+            )}
           </div>
         </section>
 
