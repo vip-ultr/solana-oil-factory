@@ -62,7 +62,7 @@ export default function HomePage() {
 
         {/* ── 2. ACTIVE REFINERIES ── */}
         <section className="home-section">
-          <h2 className="home-section-title">Active Refineries</h2>
+          <h2 className="home-section-title">Featured Refineries</h2>
           <div className="home-section-rule" />
           <div className="home-refineries-grid">
             {/* Solana Refinery */}
