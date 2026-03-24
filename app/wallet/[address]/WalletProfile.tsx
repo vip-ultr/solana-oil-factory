@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useWalletConnection } from "@solana/react-hooks";
+import { SiSolana } from "react-icons/si";
 import BarrelHeroSection from "@/components/BarrelHeroSection";
 
 interface WalletProfileProps {
@@ -147,7 +148,9 @@ https://solanaoilfactory.xyz/wallet/${address}`;
         <section className="stats-section">
           <div className="panel">
             <p className="panel-label">Production Stats</p>
-            <div className="stats-grid">
+
+            {/* Activity metrics */}
+            <div className="stats-grid stats-grid--two">
               <div className="stat-card">
                 <p className="stat-card-label">Oil Units</p>
                 <p className="stat-card-value">{oilUnits.toLocaleString()}</p>
@@ -156,27 +159,67 @@ https://solanaoilfactory.xyz/wallet/${address}`;
                 <p className="stat-card-label">Barrels Produced</p>
                 <p className="stat-card-value">{barrels.toLocaleString()}</p>
               </div>
-              <div className="stat-card">
-                <p className="stat-card-label">$CRUDE Balance</p>
-                {revealed ? (
-                  <div className="crude-breakdown">
-                    <p className="crude-base">
-                      Base: <span>{claimedCrude!.toLocaleString()}</span>
-                    </p>
-                    {(claimedBonusCrude ?? 0) > 0 && (
-                      <p className="crude-bonus">
-                        Bonus (Bags): <span>+{claimedBonusCrude!.toLocaleString()}</span>
-                      </p>
-                    )}
-                    <p className="crude-total">
-                      Total: <span className="stat-card-value accent">{claimedTotalCrude!.toLocaleString()}</span>
-                    </p>
+            </div>
+
+            {/* $CRUDE Production Breakdown */}
+            <div className="prod-breakdown">
+              <p className="prod-breakdown-heading">$CRUDE Production</p>
+
+              <div className="prod-breakdown-list">
+                {/* Solana Refinery */}
+                <div className="prod-breakdown-row">
+                  <div className="prod-breakdown-source">
+                    <span className="prod-breakdown-icon prod-breakdown-icon--solana">
+                      <SiSolana size={13} />
+                    </span>
+                    <span className="prod-breakdown-name">Solana Refinery</span>
+                    <span className="prod-breakdown-badge prod-breakdown-badge--active">Active</span>
                   </div>
-                ) : (
-                  <p className="stat-card-value dim">
-                    {isRefining ? "Refining..." : "—"}
-                  </p>
-                )}
+                  <span className="prod-breakdown-value">
+                    {revealed ? claimedCrude!.toLocaleString() : (isRefining ? "Refining…" : "—")}
+                  </span>
+                </div>
+
+                {/* Bags Refinery */}
+                <div className="prod-breakdown-row">
+                  <div className="prod-breakdown-source">
+                    <span className="prod-breakdown-icon">
+                      <img src="/bags-icon.png" alt="Bags" />
+                    </span>
+                    <span className="prod-breakdown-name">Bags Refinery</span>
+                    <span className="prod-breakdown-badge prod-breakdown-badge--active">Active</span>
+                  </div>
+                  <span className="prod-breakdown-value">
+                    {revealed ? (claimedBonusCrude ?? 0).toLocaleString() : "—"}
+                  </span>
+                </div>
+
+                {/* Coming soon refineries */}
+                {[
+                  { name: "Pump.fun", icon: "/pumpfun-icon.png" },
+                  { name: "Bonk.fun", icon: "/bonkfun-icon.png" },
+                  { name: "Candle",   icon: "/candle-icon.png" },
+                  { name: "Believe",  icon: "/believe-icon.png" },
+                ].map((r) => (
+                  <div key={r.name} className="prod-breakdown-row prod-breakdown-row--inactive">
+                    <div className="prod-breakdown-source">
+                      <span className="prod-breakdown-icon">
+                        <img src={r.icon} alt={r.name} />
+                      </span>
+                      <span className="prod-breakdown-name">{r.name} Refinery</span>
+                      <span className="prod-breakdown-badge prod-breakdown-badge--soon">Soon</span>
+                    </div>
+                    <span className="prod-breakdown-value prod-breakdown-value--dim">—</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Total */}
+              <div className="prod-breakdown-total">
+                <span className="prod-breakdown-total-label">Total $CRUDE</span>
+                <span className={`prod-breakdown-total-value${revealed ? " prod-breakdown-total-value--revealed" : ""}`}>
+                  {revealed ? claimedTotalCrude!.toLocaleString() : (isRefining ? "Refining…" : "—")}
+                </span>
               </div>
             </div>
 

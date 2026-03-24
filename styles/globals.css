@@ -2352,6 +2352,147 @@ body {
   font-size: 1.1rem;
 }
 
+/* ─── Production Breakdown (Profile) ──────────── */
+.stats-grid--two {
+  grid-template-columns: 1fr 1fr;
+}
+
+.prod-breakdown {
+  margin-top: 20px;
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 18px;
+}
+
+.prod-breakdown-heading {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin: 0 0 12px;
+}
+
+.prod-breakdown-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.prod-breakdown-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 12px;
+  border-radius: 8px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  transition: border-color 0.2s ease;
+}
+.prod-breakdown-row:hover {
+  border-color: var(--border-mid);
+}
+.prod-breakdown-row--inactive {
+  opacity: 0.45;
+}
+
+.prod-breakdown-source {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+.prod-breakdown-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: var(--bg-base);
+  border: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+  color: var(--text-secondary);
+}
+.prod-breakdown-icon--solana {
+  color: var(--accent);
+}
+.prod-breakdown-icon img {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+}
+
+.prod-breakdown-name {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.prod-breakdown-badge {
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.prod-breakdown-badge--active {
+  background: var(--green-dim);
+  color: var(--green);
+  border: 1px solid var(--green-border);
+}
+.prod-breakdown-badge--soon {
+  background: var(--bg-base);
+  color: var(--text-muted);
+  border: 1px solid var(--border-subtle);
+}
+
+.prod-breakdown-value {
+  font-size: 0.88rem;
+  font-weight: 700;
+  font-family: ui-monospace, "Cascadia Code", "Fira Code", monospace;
+  color: var(--text-primary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.prod-breakdown-value--dim {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.prod-breakdown-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: var(--accent-dim);
+  border: 1px solid var(--accent-glow);
+}
+
+.prod-breakdown-total-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.prod-breakdown-total-value {
+  font-size: 1rem;
+  font-weight: 700;
+  font-family: ui-monospace, "Cascadia Code", "Fira Code", monospace;
+  color: var(--text-muted);
+}
+.prod-breakdown-total-value--revealed {
+  font-size: 1.2rem;
+  color: var(--accent);
+}
+
 /* ─── Bags Panel ───────────────────────────────── */
 .bags-section {
   margin-bottom: 18px;
@@ -2870,6 +3011,10 @@ body {
   .title-badge-value { font-size: 0.74rem; }
   .search-input { padding: 10px 12px; font-size: 0.74rem; }
   .search-btn { padding: 10px 16px; font-size: 0.74rem; }
+  .prod-breakdown-row { padding: 7px 10px; }
+  .prod-breakdown-name { font-size: 0.75rem; }
+  .prod-breakdown-value { font-size: 0.8rem; }
+  .prod-breakdown-total-value--revealed { font-size: 1.05rem; }
   .bags-panel { padding: 10px 12px; }
   .bags-status { font-size: 0.72rem; }
   .bags-output-line { font-size: 0.72rem; }
