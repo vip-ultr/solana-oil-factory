@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useWalletConnection } from "@solana/react-hooks";
+import { SiSolana } from "react-icons/si";
 import WalletConnectModal from "@/components/WalletConnectModal";
 
 interface LeaderboardEntry {
@@ -15,8 +16,7 @@ const MEDALS = ["🥇", "🥈", "🥉"];
 
 export default function HomePage() {
   const router = useRouter();
-  const { connected, wallet } = useWalletConnection();
-  const solanaAddress = wallet?.account?.address?.toString() ?? null;
+  const { connected } = useWalletConnection();
 
   const [showConnectModal, setShowConnectModal] = useState(false);
   const openConnectModal = useCallback(() => setShowConnectModal(true), []);
@@ -65,15 +65,12 @@ export default function HomePage() {
           <h2 className="home-section-title">Active Refineries</h2>
           <div className="home-section-rule" />
           <div className="home-refineries-grid">
-            {/* Transactions Refinery */}
+            {/* Solana Refinery */}
             <div className="home-refinery-card">
               <div className="home-refinery-icon">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 2C8 7 6 10 6 13a6 6 0 0 0 12 0c0-3-2-6-6-11z" />
-                  <path d="M12 12c-1 2-0.5 4 1 4s2.5-2 1-4" />
-                </svg>
+                <SiSolana size={28} style={{ color: "var(--accent)" }} />
               </div>
-              <h3 className="home-refinery-name">Transactions Refinery</h3>
+              <h3 className="home-refinery-name">Solana Refinery</h3>
               <p className="home-refinery-desc">Convert wallet activity into oil</p>
               <Link href="/refinery" className="home-refinery-btn">Enter</Link>
             </div>
@@ -93,8 +90,7 @@ export default function HomePage() {
               <div className="home-refinery-icon">
                 <img src="/pumpfun-icon.png" alt="Pump.fun" className="home-refinery-logo" />
               </div>
-              <h3 className="home-refinery-name">Pump.fun</h3>
-              <p className="home-refinery-desc">Coming Soon</p>
+              <h3 className="home-refinery-name">Pump.fun Refinery</h3>
               <span className="home-refinery-btn home-refinery-btn--disabled">Coming Soon</span>
             </div>
 
@@ -103,8 +99,25 @@ export default function HomePage() {
               <div className="home-refinery-icon">
                 <img src="/bonkfun-icon.png" alt="Bonk.fun" className="home-refinery-logo" />
               </div>
-              <h3 className="home-refinery-name">Bonk.fun</h3>
-              <p className="home-refinery-desc">Coming Soon</p>
+              <h3 className="home-refinery-name">Bonk.fun Refinery</h3>
+              <span className="home-refinery-btn home-refinery-btn--disabled">Coming Soon</span>
+            </div>
+
+            {/* Candle — Coming Soon */}
+            <div className="home-refinery-card home-refinery-card--disabled">
+              <div className="home-refinery-icon">
+                <img src="/candle-icon.png" alt="Candle" className="home-refinery-logo" />
+              </div>
+              <h3 className="home-refinery-name">Candle Refinery</h3>
+              <span className="home-refinery-btn home-refinery-btn--disabled">Coming Soon</span>
+            </div>
+
+            {/* Believe — Coming Soon */}
+            <div className="home-refinery-card home-refinery-card--disabled">
+              <div className="home-refinery-icon">
+                <img src="/believe-icon.png" alt="Believe" className="home-refinery-logo" />
+              </div>
+              <h3 className="home-refinery-name">Believe Refinery</h3>
               <span className="home-refinery-btn home-refinery-btn--disabled">Coming Soon</span>
             </div>
           </div>

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import type React from "react";
 import type { OilData } from "@/lib/oilCalculator";
 
 interface RefineStatusData {
@@ -31,8 +30,6 @@ interface OilStatsProps {
   onCheckUpdates?: () => void;
   /** whether a background sync is in progress */
   syncing?: boolean;
-  /** content rendered between Refinery and Production Stats panels */
-  middleSlot?: React.ReactNode;
   /** called when user clicks Speed Up — should send SOL, verify, return true on success */
   onSpeedUp?: () => Promise<boolean>;
 }
@@ -44,7 +41,6 @@ export default function OilStats({
   onRefined,
   onCheckUpdates,
   syncing = false,
-  middleSlot,
   onSpeedUp,
 }: OilStatsProps) {
   const { address, oilUnits, barrels, crude, title } = data;
@@ -288,7 +284,7 @@ export default function OilStats({
 
   const shareText = `Solana Oil Factory \u{1F6E2}\u{FE0F}
 
-I just refined ${totalCrude.toLocaleString()} CRUDE${bonusCrude > 0 ? ` (${bonusCrude.toLocaleString()} bonus from @BagsApp)` : ""}
+I just refined ${totalCrude.toLocaleString()} $CRUDE
 
 \u{1F4CA} Transactions: ${oilUnits.toLocaleString()}
 \u{1F3F7}\u{FE0F} Title: ${title}
@@ -464,12 +460,9 @@ https://solanaoilfactory.xyz`;
 
   return (
     <div className="oil-stats-grid">
-      {/* ── Bags slot (full-width on desktop, between refinery+stats on mobile) ── */}
-      <div className="oil-stats-bags">{middleSlot}</div>
-
       {/* ── Refinery Panel ── */}
       <div className="panel refinery-panel oil-stats-refinery">
-        <p className="panel-label"> CRUDE OIL Refinery</p>
+        <p className="panel-label">CRUDE OIL Refinery</p>
         <p className="refinery-desc">
           <h2>Refine to unlock your prestige title.</h2>
           <h1>How it works?</h1>
@@ -506,21 +499,9 @@ https://solanaoilfactory.xyz`;
             <p className="stat-card-value">{barrels.toLocaleString()}</p>
           </div>
           <div className="stat-card">
-            <p className="stat-card-label">$CRUDE Balance</p>
+            <p className="stat-card-label">Solana $CRUDE</p>
             {revealed ? (
-              <div className="crude-breakdown">
-                <p className="crude-base">
-                  Base: <span>{crude.toLocaleString()}</span>
-                </p>
-                {bonusCrude > 0 && (
-                  <p className="crude-bonus">
-                    Bonus (Bags): <span>+{bonusCrude.toLocaleString()}</span>
-                  </p>
-                )}
-                <p className="crude-total">
-                  Total: <span className="stat-card-value accent">{totalCrude.toLocaleString()}</span>
-                </p>
-              </div>
+              <p className="stat-card-value accent">{crude.toLocaleString()}</p>
             ) : refineStatus === "refining" || refineStatus === "completed" ? (
               <p className="stat-card-value dim">Pending...</p>
             ) : (

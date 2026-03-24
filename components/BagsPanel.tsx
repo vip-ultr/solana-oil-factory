@@ -12,10 +12,10 @@ interface BagsFeedToken {
 interface BagsPanelProps {
   bagsActive: boolean;
   totalFeesSol: number;
-  bonusCrude: number;
+  bagsCrude: number;
 }
 
-export default function BagsPanel({ bagsActive, totalFeesSol, bonusCrude }: BagsPanelProps) {
+export default function BagsPanel({ bagsActive, totalFeesSol, bagsCrude }: BagsPanelProps) {
   const [expanded, setExpanded] = useState(false);
   const [feed, setFeed] = useState<BagsFeedToken[]>([]);
   const [feedLoading, setFeedLoading] = useState(false);
@@ -46,7 +46,7 @@ export default function BagsPanel({ bagsActive, totalFeesSol, bonusCrude }: Bags
       <div className="panel bags-panel">
         <div className="bags-panel-header">
           <img src="/bags-icon.png" alt="Bags" className="bags-panel-icon" />
-          <p className="panel-label bags-panel-label">Bags Refinery Data</p>
+          <p className="panel-label bags-panel-label">Bags Refinery</p>
         </div>
 
         {bagsActive ? (
@@ -70,7 +70,7 @@ export default function BagsPanel({ bagsActive, totalFeesSol, bonusCrude }: Bags
           <div className="bags-status bags-status-inactive">
             <p className="bags-inactive-title">No refinery activity detected.</p>
             <p className="bags-inactive-hint">
-              Trade on <a href="https://bags.fm" target="_blank" rel="noopener noreferrer" className="bags-inline-link">Bags</a> to earn fee rewards and unlock bonus CRUDE.
+              Trade on <a href="https://bags.fm" target="_blank" rel="noopener noreferrer" className="bags-inline-link">Bags</a> to earn fee rewards and generate refinery output.
             </p>
           </div>
         )}
@@ -78,15 +78,15 @@ export default function BagsPanel({ bagsActive, totalFeesSol, bonusCrude }: Bags
         {bagsActive && (
           <div className="bags-output">
             <p className="bags-output-line">
-              Refinery Output:{" "}
+              SOL Fees Earned:{" "}
               <span className="bags-output-value">
                 {totalFeesSol.toFixed(totalFeesSol < 0.01 ? 6 : 2)} SOL
               </span>
             </p>
-            {bonusCrude > 0 && (
+            {bagsCrude > 0 && (
               <p className="bags-output-line bags-output-bonus">
-                Bonus CRUDE:{" "}
-                <span className="bags-output-value">+{bonusCrude.toLocaleString()}</span>
+                Refinery Output:{" "}
+                <span className="bags-output-value">+{bagsCrude.toLocaleString()} $CRUDE</span>
               </p>
             )}
           </div>

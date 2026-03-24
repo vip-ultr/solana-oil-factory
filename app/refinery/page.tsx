@@ -8,6 +8,7 @@ import OilStats from "@/components/OilStats";
 import BagsPanel from "@/components/BagsPanel";
 import WalletConnectModal from "@/components/WalletConnectModal";
 import type { OilData } from "@/lib/oilCalculator";
+import { SiSolana } from "react-icons/si";
 
 type WalletData = OilData & {
   address: string;
@@ -16,6 +17,15 @@ type WalletData = OilData & {
   totalFeesSol?: number;
   bagsActive?: boolean;
 };
+
+const CRUDE_CAP = 15_000;
+
+const comingSoonRefineries = [
+  { name: "Pump.fun", icon: "/pumpfun-icon.png", teaser: "Pump.fun trading activity will generate refinery output." },
+  { name: "Bonk.fun", icon: "/bonkfun-icon.png", teaser: "Bonk.fun activity will be convertible to $CRUDE." },
+  { name: "Candle",   icon: "/candle-icon.png",   teaser: "Candle refinery integration is on the way." },
+  { name: "Believe",  icon: "/believe-icon.png",  teaser: "Believe protocol activity will fuel your refinery." },
+];
 
 export default function RefineryPage() {
   const { connected, disconnect, wallet } = useWalletConnection();
@@ -196,7 +206,6 @@ export default function RefineryPage() {
     }
   }, [connected, solanaAddress, isVerified, storedChecked, data, loading, storedLoading, error]);
 
-  // Derived states
   // Speed Up handler — sends 0.002 SOL via useSolTransfer and verifies on backend
   const handleSpeedUp = useCallback(async (): Promise<boolean> => {
     if (!solanaAddress || !session) {
@@ -217,7 +226,6 @@ export default function RefineryPage() {
 
     // Retry verification — solTransfer.send() resolves once the tx is submitted,
     // but Helius may need several seconds to index it at "confirmed" commitment.
-    // We retry up to MAX_RETRIES times before surfacing an error to the user.
     const MAX_RETRIES = 5;
     const RETRY_DELAY_MS = 3_000;
 
@@ -269,9 +277,20 @@ export default function RefineryPage() {
   const isWalletReady = connected && solanaAddress;
   const showVerifyPrompt = isWalletReady && !isVerified && !data && !loading && !storedLoading && !error;
 
+  // Derived CRUDE values for display
+  const solanaCrude = data?.crude ?? 0;
+  const bagsCrude = data?.bonusCrude ?? 0;
+  const totalCrude = data?.totalCrude ?? (solanaCrude + bagsCrude);
+
   return (
     <div className="page">
       <main className="main">
+
+        {/* ── Page Header ── */}
+        <div className="refinery-page-header">
+          <h1 className="refinery-page-title">Refinery</h1>
+          <p className="refinery-page-subtitle">Multi-source production system</p>
+        </div>
 
         {/* Search */}
         <section className="search-section">
@@ -348,7 +367,7 @@ export default function RefineryPage() {
           </div>
         )}
 
-        {/* Results — Barrels first, then Stats */}
+        {/* Results */}
         {data && !loading && (
           <>
             {/* Partial data notice */}
@@ -364,35 +383,101 @@ export default function RefineryPage() {
               </div>
             )}
 
-            {/* Hero: Barrel Grid */}
-            <BarrelHeroSection
-              fillPercentages={data.fillPercentages}
-              totalBarrels={data.barrels}
-            />
+            {/* ── Global Summary ── */}
+            <div className="panel refinery-global-summary">
+              <p className="global-summary-label">Total Refined</p>
+              <p className="global-summary-value">{totalCrude.toLocaleString()} $CRUDE</p>
+              <div className="crude-progress-bar">
+                <div
+                  className="crude-progress-fill"
+                  style={{ width: `${Math.min((totalCrude / CRUDE_CAP) * 100, 100)}%` }}
+                />
+              </div>
+              <p className="crude-progress-label">
+                {totalCrude.toLocaleString()} / {CRUDE_CAP.toLocaleString()} cap
+              </p>
+            </div>
 
-            {/* Refinery → Bags Refinery Data → Production Stats */}
-            <section className="stats-section">
-              <OilStats
-                data={data}
-                isOwner={isVerified && connected && solanaAddress === data.address}
-                onConnectWallet={openConnectModal}
-                onRefined={(units) =>
-                  setData((prev) =>
-                    prev ? { ...prev, lastRefinedOilUnits: units } : prev
-                  )
-                }
-                syncing={syncing}
-                onCheckUpdates={() => syncWalletData(data.address)}
-                middleSlot={
-                  <BagsPanel
-                    bagsActive={data.bagsActive ?? false}
-                    totalFeesSol={data.totalFeesSol ?? 0}
-                    bonusCrude={data.bonusCrude ?? 0}
-                  />
-                }
-                onSpeedUp={isVerified && connected && solanaAddress === data.address ? handleSpeedUp : undefined}
+            {/* ── Solana Refinery Section ── */}
+            <div className="refinery-section">
+              <div className="refinery-section-header">
+                <SiSolana size={22} className="refinery-section-icon" />
+                <h2 className="refinery-section-title">Solana Refinery</h2>
+                <span className="refinery-section-badge refinery-section-badge--primary">Primary Source</span>
+              </div>
+              <BarrelHeroSection
+                fillPercentages={data.fillPercentages}
+                totalBarrels={data.barrels}
               />
-            </section>
+              <section className="stats-section">
+                <OilStats
+                  data={data}
+                  isOwner={isVerified && connected && solanaAddress === data.address}
+                  onConnectWallet={openConnectModal}
+                  onRefined={(units) =>
+                    setData((prev) =>
+                      prev ? { ...prev, lastRefinedOilUnits: units } : prev
+                    )
+                  }
+                  syncing={syncing}
+                  onCheckUpdates={() => syncWalletData(data.address)}
+                  onSpeedUp={isVerified && connected && solanaAddress === data.address ? handleSpeedUp : undefined}
+                />
+              </section>
+            </div>
+
+            {/* ── Bags Refinery Section ── */}
+            <div className="refinery-section">
+              <div className="refinery-section-header">
+                <img src="/bags-icon.png" alt="Bags" className="refinery-section-icon-img" />
+                <h2 className="refinery-section-title">Bags Refinery</h2>
+              </div>
+              <p className="bags-refinery-desc">
+                Convert your Bags activity into refinery output
+              </p>
+              <BagsPanel
+                bagsActive={data.bagsActive ?? false}
+                totalFeesSol={data.totalFeesSol ?? 0}
+                bagsCrude={data.bonusCrude ?? 0}
+              />
+            </div>
+
+            {/* ── Coming Soon Refinery Sections ── */}
+            {comingSoonRefineries.map((r) => (
+              <div key={r.name} className="refinery-section refinery-section--coming-soon">
+                <div className="refinery-section-header">
+                  <img src={r.icon} alt={r.name} className="refinery-section-icon-img" />
+                  <h2 className="refinery-section-title">{r.name} Refinery</h2>
+                  <span className="coming-soon-badge">Coming Soon</span>
+                </div>
+                <p className="coming-soon-teaser">{r.teaser}</p>
+              </div>
+            ))}
+
+            {/* ── Production Breakdown ── */}
+            <div className="panel production-breakdown">
+              <p className="panel-label">Production Breakdown</p>
+              <div className="breakdown-list">
+                <div className="breakdown-item">
+                  <span className="breakdown-item-source">Solana Refinery</span>
+                  <span className="breakdown-item-value">
+                    {solanaCrude > 0 ? `${solanaCrude.toLocaleString()} $CRUDE` : "—"}
+                  </span>
+                </div>
+                <div className="breakdown-item">
+                  <span className="breakdown-item-source">Bags Refinery</span>
+                  <span className="breakdown-item-value">
+                    {bagsCrude > 0 ? `${bagsCrude.toLocaleString()} $CRUDE` : "—"}
+                  </span>
+                </div>
+                {comingSoonRefineries.map((r) => (
+                  <div key={r.name} className="breakdown-item breakdown-item--inactive">
+                    <span className="breakdown-item-source">{r.name}</span>
+                    <span className="breakdown-item-value">Coming Soon</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </>
         )}
 
