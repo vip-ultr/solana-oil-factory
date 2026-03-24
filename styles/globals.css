@@ -76,7 +76,7 @@ html { scroll-behavior: smooth; }
 body {
   background-color: var(--bg-base);
   color: var(--text-primary);
-  font-family: var(--font-body), "Space Grotesk", sans-serif;
+  font-family: var(--font-body), "Inter", sans-serif;
   display: flex;
   flex-direction: column;
   min-height: 100vh;
@@ -113,6 +113,7 @@ body {
 }
 
 .site-title {
+  font-family: var(--font-display), "Space Grotesk", sans-serif;
   font-size: 1.15rem;
   font-weight: 800;
   color: var(--accent);
@@ -202,7 +203,7 @@ body {
 .wallet-chip-addr {
   font-size: 0.78rem;
   color: var(--text-secondary);
-  font-family: ui-monospace, "Cascadia Code", monospace;
+  font-family: var(--font-mono), "JetBrains Mono", monospace;
   letter-spacing: 0.4px;
   line-height: 1;
 }
@@ -316,7 +317,7 @@ body {
   border-radius: 10px;
   color: var(--text-primary);
   font-size: 0.9rem;
-  font-family: ui-monospace, "Cascadia Code", monospace;
+  font-family: var(--font-mono), "JetBrains Mono", monospace;
   outline: none;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
   letter-spacing: 0.3px;
@@ -404,6 +405,7 @@ body {
 }
 
 .barrel-hero-title {
+  font-family: var(--font-display), "Space Grotesk", sans-serif;
   font-size: 0.88rem;
   font-weight: 700;
   color: var(--heading-color);
@@ -611,7 +613,7 @@ body {
   font-size: 0.68rem;
   font-weight: 600;
   color: var(--text-muted);
-  font-family: ui-monospace, "Cascadia Code", "SF Mono", monospace;
+  font-family: var(--font-mono), "JetBrains Mono", monospace;
   letter-spacing: 1.6px;
   text-transform: uppercase;
   padding: 5px 12px;
@@ -672,7 +674,7 @@ body {
   font-size: clamp(1.3rem, 3.5vw, 1.9rem);
   font-weight: 800;
   color: var(--accent);
-  font-family: ui-monospace, "Cascadia Code", "SF Mono", monospace;
+  font-family: var(--font-mono), "JetBrains Mono", monospace;
   letter-spacing: 0.5px;
   line-height: 1;
 }
@@ -720,6 +722,7 @@ body {
 }
 
 .panel-label {
+  font-family: var(--font-display), "Space Grotesk", sans-serif;
   font-size: 0.88rem;
   font-weight: 700;
   color: var(--heading-color);
@@ -810,7 +813,7 @@ body {
   font-size: 1rem;
   font-weight: 700;
   color: var(--text-primary);
-  font-family: ui-monospace, "Cascadia Code", monospace;
+  font-family: var(--font-mono), "JetBrains Mono", monospace;
   word-break: break-all;
 }
 .stat-card-value.accent {
@@ -839,12 +842,12 @@ body {
   margin-bottom: 5px;
 }
 .title-badge-value {
+  font-family: var(--font-display), "Space Grotesk", sans-serif;
   font-size: 1rem;
   font-weight: 800;
   color: var(--accent);
   text-transform: uppercase;
   letter-spacing: 2.5px;
-
 }
 
 /* ═══════════════════════════════════════════════════
@@ -960,7 +963,7 @@ body {
   color: var(--text-muted);
   font-size: 0.77rem;
   line-height: 1.75;
-  font-family: ui-monospace, "Cascadia Code", monospace;
+  font-family: var(--font-mono), "JetBrains Mono", monospace;
   white-space: pre-line;
   overflow-wrap: break-word;
   word-break: break-all;
@@ -1467,12 +1470,12 @@ body {
   border-radius: 6px;
   border: 1px solid;
   background: transparent;
-  font-family: ui-monospace, "Cascadia Code", monospace;
+  font-family: var(--font-mono), "JetBrains Mono", monospace;
   text-transform: uppercase;
 }
 .lb-medal-mobile { display: none; }
 .lb-rank-num {
-  font-family: ui-monospace, "Cascadia Code", monospace;
+  font-family: var(--font-mono), "JetBrains Mono", monospace;
   font-size: 0.82rem;
   color: var(--text-dim);
   font-weight: 600;
@@ -1481,7 +1484,7 @@ body {
 /* ── Wallet ── */
 .lb-td-wallet { min-width: 140px; }
 .lb-wallet-link {
-  font-family: ui-monospace, "Cascadia Code", monospace;
+  font-family: var(--font-mono), "JetBrains Mono", monospace;
   font-size: 0.82rem;
   color: var(--text-secondary);
   text-decoration: none;
@@ -1526,7 +1529,7 @@ body {
   gap: 5px;
 }
 .lb-crude-num {
-  font-family: ui-monospace, "Cascadia Code", monospace;
+  font-family: var(--font-mono), "JetBrains Mono", monospace;
   font-weight: 700;
   font-size: 0.88rem;
   color: var(--accent);
@@ -1570,7 +1573,7 @@ body {
 
 /* ── Transactions ── */
 .lb-td-txns {
-  font-family: ui-monospace, "Cascadia Code", monospace;
+  font-family: var(--font-mono), "JetBrains Mono", monospace;
   font-size: 0.82rem;
   text-align: right;
   color: var(--text-muted);
@@ -1956,7 +1959,7 @@ body {
 
 .verify-prompt-address {
   font-size: 0.82rem;
-  font-family: ui-monospace, "Cascadia Code", monospace;
+  font-family: var(--font-mono), "JetBrains Mono", monospace;
   color: var(--text-muted);
   letter-spacing: 0.4px;
   margin-bottom: 14px;
@@ -2041,7 +2044,7 @@ body {
 
 .extract-prompt-address {
   font-size: 0.82rem;
-  font-family: ui-monospace, "Cascadia Code", monospace;
+  font-family: var(--font-mono), "JetBrains Mono", monospace;
   color: var(--text-muted);
   letter-spacing: 0.4px;
   margin-bottom: 14px;
@@ -2234,7 +2237,7 @@ body {
   letter-spacing: 0.02em;
 }
 .refine-timer {
-  font-family: ui-monospace, "Cascadia Code", "Fira Code", monospace;
+  font-family: var(--font-mono), "JetBrains Mono", monospace;
   font-size: 2rem;
   font-weight: 700;
   color: var(--accent);
@@ -2267,7 +2270,7 @@ body {
   font-weight: 700;
   color: var(--accent);
   margin: 0;
-  font-family: ui-monospace, "Cascadia Code", "Fira Code", monospace;
+  font-family: var(--font-mono), "JetBrains Mono", monospace;
 }
 .btn-refine--claim {
   background: var(--green);
@@ -2330,7 +2333,7 @@ body {
   margin: 0;
 }
 .crude-base span {
-  font-family: ui-monospace, "Cascadia Code", "Fira Code", monospace;
+  font-family: var(--font-mono), "JetBrains Mono", monospace;
 }
 .crude-bonus {
   font-size: 0.78rem;
@@ -2338,7 +2341,7 @@ body {
   margin: 0;
 }
 .crude-bonus span {
-  font-family: ui-monospace, "Cascadia Code", "Fira Code", monospace;
+  font-family: var(--font-mono), "JetBrains Mono", monospace;
   font-weight: 600;
 }
 .crude-total {
@@ -2453,7 +2456,7 @@ body {
 .prod-breakdown-value {
   font-size: 0.88rem;
   font-weight: 700;
-  font-family: ui-monospace, "Cascadia Code", "Fira Code", monospace;
+  font-family: var(--font-mono), "JetBrains Mono", monospace;
   color: var(--text-primary);
   white-space: nowrap;
   flex-shrink: 0;
@@ -2485,7 +2488,7 @@ body {
 .prod-breakdown-total-value {
   font-size: 1rem;
   font-weight: 700;
-  font-family: ui-monospace, "Cascadia Code", "Fira Code", monospace;
+  font-family: var(--font-mono), "JetBrains Mono", monospace;
   color: var(--text-muted);
 }
 .prod-breakdown-total-value--revealed {
@@ -2577,7 +2580,7 @@ body {
 .bags-output-value {
   font-weight: 600;
   color: var(--text-primary);
-  font-family: ui-monospace, "Cascadia Code", "Fira Code", monospace;
+  font-family: var(--font-mono), "JetBrains Mono", monospace;
 }
 .bags-output-bonus .bags-output-value {
   color: var(--green);
@@ -2661,6 +2664,7 @@ body {
   text-align: center;
 }
 .refinery-page-title {
+  font-family: var(--font-display), "Space Grotesk", sans-serif;
   font-size: 2.2rem;
   font-weight: 800;
   color: var(--heading-color);
@@ -2706,6 +2710,7 @@ body {
   object-fit: contain;
 }
 .refinery-section-title {
+  font-family: var(--font-display), "Space Grotesk", sans-serif;
   font-size: 1.1rem;
   font-weight: 700;
   color: var(--text-primary);
@@ -3081,7 +3086,7 @@ body {
 }
 
 .profile-address {
-  font-family: var(--font-body);
+  font-family: var(--font-mono), "JetBrains Mono", monospace;
   font-size: 1.1rem;
   font-weight: 600;
   color: var(--text-primary);
@@ -3151,6 +3156,7 @@ body {
   gap: 4px;
 }
 .profile-rank-value {
+  font-family: var(--font-display), "Space Grotesk", sans-serif;
   font-size: 2rem;
   font-weight: 800;
   color: var(--accent);
@@ -3380,7 +3386,7 @@ body {
 .navbar-wallet-addr {
   font-size: 0.78rem;
   color: var(--text-secondary);
-  font-family: ui-monospace, "Cascadia Code", monospace;
+  font-family: var(--font-mono), "JetBrains Mono", monospace;
   letter-spacing: 0.4px;
   line-height: 1;
 }
@@ -3567,6 +3573,7 @@ body {
   padding: 56px 0 32px;
 }
 .home-hero-title {
+  font-family: var(--font-display), "Space Grotesk", sans-serif;
   font-size: 2.4rem;
   font-weight: 800;
   color: var(--text-primary);
@@ -3620,6 +3627,7 @@ body {
   align-items: center;
 }
 .home-section-title {
+  font-family: var(--font-display), "Space Grotesk", sans-serif;
   font-size: 1.2rem;
   font-weight: 700;
   color: var(--text-primary);
@@ -3805,7 +3813,7 @@ body {
   text-align: center;
 }
 .home-lb-addr {
-  font-family: "Cascadia Code", monospace;
+  font-family: var(--font-mono), "JetBrains Mono", monospace;
   font-size: 0.82rem;
   color: var(--text-secondary);
 }
