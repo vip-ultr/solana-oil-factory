@@ -3,7 +3,7 @@
 export interface LeaderboardEntry {
   wallet_address: string;
   crude: number;
-  bonus_crude: number;
+  bags_crude: number;
   total_crude: number;
   oil_units: number;
   barrels: number;

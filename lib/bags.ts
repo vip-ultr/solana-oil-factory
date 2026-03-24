@@ -18,7 +18,7 @@ interface ClaimablePosition {
 
 export interface BagsWalletData {
   totalFeesSol: number;
-  bonusCrude: number;
+  bagsCrude: number;
   isActive: boolean;
   positionCount: number;
 }
@@ -55,7 +55,7 @@ async function bagsGet<T>(path: string, params: Record<string, string> = {}): Pr
 }
 
 /**
- * Fetch claimable positions for a wallet and compute bonus CRUDE.
+ * Fetch claimable positions for a wallet and compute Bags Refinery $CRUDE.
  * Returns safe defaults on any failure so it never blocks the main flow.
  */
 export async function fetchBagsWalletData(wallet: string): Promise<BagsWalletData> {
@@ -71,17 +71,17 @@ export async function fetchBagsWalletData(wallet: string): Promise<BagsWalletDat
     );
 
     const totalFeesSol = totalLamports / 1_000_000_000;
-    const bonusCrude = Math.floor(totalFeesSol * 1000);
+    const bagsCrude = Math.floor(totalFeesSol * 2000);
 
     return {
       totalFeesSol,
-      bonusCrude,
+      bagsCrude,
       isActive: positions.length > 0,
       positionCount: positions.length,
     };
   } catch (err) {
     console.error("[bags] Failed to fetch wallet data:", err);
-    return { totalFeesSol: 0, bonusCrude: 0, isActive: false, positionCount: 0 };
+    return { totalFeesSol: 0, bagsCrude: 0, isActive: false, positionCount: 0 };
   }
 }
 

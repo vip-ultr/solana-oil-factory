@@ -65,9 +65,9 @@ The app is built around a **multi-source refinery system** — each integration 
 
 Refining isn't instant. A session locks your $CRUDE for a duration proportional to your transaction count — up to 6 hours. You can pay **0.002 SOL** to skip the timer instantly.
 
-### Bags Bonus
+### Bags Refinery
 
-Bags claimable fee positions are converted at `1 SOL = 1,000 $CRUDE` and added on top of your Solana Refinery output.
+Bags claimable fee positions are converted at `1 SOL = 1,000 $CRUDE`. This output is tracked separately and combined with your Solana Refinery $CRUDE to form your total.
 
 ---
 

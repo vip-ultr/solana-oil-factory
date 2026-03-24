@@ -278,7 +278,7 @@ export default function RefineryPage() {
 
   // Derived CRUDE values for display
   const solanaCrude = data?.crude ?? 0;
-  const bagsCrude = data?.bonusCrude ?? 0;
+  const bagsCrude = data?.bagsCrude ?? 0;
   const totalCrude = data?.totalCrude ?? (solanaCrude + bagsCrude);
 
   return (
@@ -442,7 +442,7 @@ export default function RefineryPage() {
               <BagsPanel
                 bagsActive={data.bagsActive ?? false}
                 totalFeesSol={data.totalFeesSol ?? 0}
-                bagsCrude={data.bonusCrude ?? 0}
+                bagsCrude={data.bagsCrude ?? 0}
               />
             </div>
 

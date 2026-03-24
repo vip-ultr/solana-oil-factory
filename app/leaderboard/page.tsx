@@ -12,7 +12,7 @@ export const revalidate = 60;
 async function getLeaderboard(): Promise<LeaderboardEntry[]> {
   const { data, error } = await supabase
     .from("wallets")
-    .select("wallet_address, crude, bonus_crude, total_crude, oil_units, barrels, prestige_title, last_updated")
+    .select("wallet_address, crude, bags_crude, total_crude, oil_units, barrels, prestige_title, last_updated")
     .gt("total_crude", 0)
     .order("total_crude", { ascending: false })
     .limit(100);

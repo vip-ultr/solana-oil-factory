@@ -3,14 +3,14 @@ import { supabase } from "@/lib/supabase";
 
 /**
  * POST /api/refine
- * Body: { address: string, oilUnits: number, bonusCrude?: number }
+ * Body: { address: string, oilUnits: number, bagsCrude?: number }
  *
  * Creates a timed refine session in the `refines` table.
  * CRUDE is locked until the timer completes and the user claims.
  * The `wallets` table (leaderboard) is NOT touched here — only on claim.
  */
 export async function POST(request: NextRequest) {
-  let body: { address?: string; oilUnits?: number; bonusCrude?: number };
+  let body: { address?: string; oilUnits?: number; bagsCrude?: number };
 
   try {
     body = await request.json();
@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { address, oilUnits, bonusCrude } = body;
+  const { address, oilUnits, bagsCrude } = body;
 
   if (!address || typeof oilUnits !== "number") {
     return NextResponse.json(
@@ -47,8 +47,8 @@ export async function POST(request: NextRequest) {
   const CRUDE_CAP = 15000;
   const rawCrude = Math.floor(oilUnits / 10);
   const cappedCrude = Math.min(rawCrude, CRUDE_CAP);
-  const safeBonusCrude = typeof bonusCrude === "number" ? bonusCrude : 0;
-  const cappedBonus = Math.min(safeBonusCrude, CRUDE_CAP - cappedCrude);
+  const safeBagsCrude = typeof bagsCrude === "number" ? bagsCrude : 0;
+  const cappedBagsCrude = Math.min(safeBagsCrude, CRUDE_CAP - cappedCrude);
 
   // Calculate refine duration: 10 oil units = 1 minute, max 6 hours
   const durationMinutes = Math.min(oilUnits / 10, 360);
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
     wallet_address: address,
     oil_units: oilUnits,
     crude_amount: cappedCrude,
-    bonus_crude: cappedBonus,
+    bags_crude: cappedBagsCrude,
     duration_ms: durationMs,
     started_at: now.toISOString(),
     ends_at: endsAt.toISOString(),
@@ -89,6 +89,6 @@ export async function POST(request: NextRequest) {
     endsAt: endsAt.toISOString(),
     durationMs,
     crudeAmount: cappedCrude,
-    bonusCrude: cappedBonus,
+    bagsCrude: cappedBagsCrude,
   });
 }

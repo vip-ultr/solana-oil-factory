@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
 
   // Calculate stats for the wallets table
   const oilData = calculateOilData(refine.oil_units);
-  const totalCrude = refine.crude_amount + refine.bonus_crude;
+  const totalCrude = refine.crude_amount + refine.bags_crude;
   const prestigeTitle = getPrestigeTitle(totalCrude);
 
   // Upsert to wallets table (leaderboard entry)
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
       {
         wallet_address: address,
         crude: refine.crude_amount,
-        bonus_crude: refine.bonus_crude,
+        bags_crude: refine.bags_crude,
         total_crude: totalCrude,
         oil_units: refine.oil_units,
         barrels: oilData.barrels,
@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({
     success: true,
     crude: refine.crude_amount,
-    bonusCrude: refine.bonus_crude,
+    bagsCrude: refine.bags_crude,
     totalCrude,
     prestigeTitle,
     oilUnits: refine.oil_units,

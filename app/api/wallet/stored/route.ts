@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
   try {
     const { data: existing, error } = await supabase
       .from("wallets")
-      .select("wallet_address, crude, bonus_crude, total_crude, oil_units, barrels, prestige_title, last_refined_oil_units, last_updated")
+      .select("wallet_address, crude, bags_crude, total_crude, oil_units, barrels, prestige_title, last_refined_oil_units, last_updated")
       .eq("wallet_address", address)
       .single();
 
@@ -34,18 +34,18 @@ export async function GET(request: NextRequest) {
     const oilData = calculateOilData(existing.oil_units);
 
     // Fetch bags data (quick call, non-blocking if it fails)
-    let bags = { totalFeesSol: 0, bonusCrude: 0, isActive: false, positionCount: 0 };
+    let bags = { totalFeesSol: 0, bagsCrude: 0, isActive: false, positionCount: 0 };
     try {
       bags = await fetchBagsWalletData(address);
     } catch {
-      // Use stored bonus_crude as fallback
-      bags.bonusCrude = existing.bonus_crude ?? 0;
-      bags.isActive = (existing.bonus_crude ?? 0) > 0;
+      // Use stored bags_crude as fallback
+      bags.bagsCrude = existing.bags_crude ?? 0;
+      bags.isActive = (existing.bags_crude ?? 0) > 0;
     }
 
     // Recompute total crude with fresh bags data
-    const bonusCrude = bags.bonusCrude;
-    const totalCrude = oilData.crude + bonusCrude;
+    const bagsCrude = bags.bagsCrude;
+    const totalCrude = oilData.crude + bagsCrude;
     const title = getPrestigeTitle(totalCrude);
 
     // Check for active (unclaimed) refine session
@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
     try {
       const { data: refineRow } = await supabase
         .from("refines")
-        .select("crude_amount, bonus_crude, oil_units, ends_at, started_at, duration_ms, is_completed")
+        .select("crude_amount, bags_crude, oil_units, ends_at, started_at, duration_ms, is_completed")
         .eq("wallet_address", address)
         .eq("claimed", false)
         .order("created_at", { ascending: false })
@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
           startedAt: refineRow.started_at,
           durationMs: refineRow.duration_ms,
           crudeAmount: refineRow.crude_amount,
-          bonusCrude: refineRow.bonus_crude,
+          bagsCrude: refineRow.bags_crude,
           oilUnits: refineRow.oil_units,
         };
       }
@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
       address,
       ...oilData,
       title,
-      bonusCrude,
+      bagsCrude,
       totalCrude,
       totalFeesSol: bags.totalFeesSol,
       bagsActive: bags.isActive,

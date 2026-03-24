@@ -9,7 +9,7 @@ interface RefineStatusData {
   startedAt?: string;
   durationMs?: number;
   crudeAmount?: number;
-  bonusCrude?: number;
+  bagsCrude?: number;
   oilUnits?: number;
 }
 
@@ -44,7 +44,7 @@ export default function OilStats({
   onSpeedUp,
 }: OilStatsProps) {
   const { address, oilUnits, barrels, crude, title } = data;
-  const bonusCrude = data.bonusCrude ?? 0;
+  const bagsCrude = data.bagsCrude ?? 0;
   const totalCrude = data.totalCrude ?? crude;
   const lastRefined = data.lastRefinedOilUnits ?? 0;
 
@@ -62,7 +62,7 @@ export default function OilStats({
   );
   const [endsAt, setEndsAt] = useState<number | null>(null);
   const [remaining, setRemaining] = useState("");
-  const [pendingCrude, setPendingCrude] = useState<{ crude: number; bonusCrude: number } | null>(null);
+  const [pendingCrude, setPendingCrude] = useState<{ crude: number; bagsCrude: number } | null>(null);
   const [startingRefine, setStartingRefine] = useState(false);
   const [claiming, setClaiming] = useState(false);
   const [claimError, setClaimError] = useState(false);
@@ -85,13 +85,13 @@ export default function OilStats({
         setEndsAt(new Date(data.activeRefine.endsAt!).getTime());
         setPendingCrude({
           crude: data.activeRefine.crudeAmount ?? 0,
-          bonusCrude: data.activeRefine.bonusCrude ?? 0,
+          bagsCrude: data.activeRefine.bagsCrude ?? 0,
         });
       } else if (data.activeRefine.status === "completed") {
         setRefineStatus("completed");
         setPendingCrude({
           crude: data.activeRefine.crudeAmount ?? 0,
-          bonusCrude: data.activeRefine.bonusCrude ?? 0,
+          bagsCrude: data.activeRefine.bagsCrude ?? 0,
         });
       }
     } else if (wasRefined) {
@@ -115,13 +115,13 @@ export default function OilStats({
           setEndsAt(new Date(res.endsAt!).getTime());
           setPendingCrude({
             crude: res.crudeAmount ?? 0,
-            bonusCrude: res.bonusCrude ?? 0,
+            bagsCrude: res.bagsCrude ?? 0,
           });
         } else if (res.status === "completed") {
           setRefineStatus("completed");
           setPendingCrude({
             crude: res.crudeAmount ?? 0,
-            bonusCrude: res.bonusCrude ?? 0,
+            bagsCrude: res.bagsCrude ?? 0,
           });
         }
       })
@@ -150,7 +150,7 @@ export default function OilStats({
             if (res.status === "completed") {
               setPendingCrude({
                 crude: res.crudeAmount ?? 0,
-                bonusCrude: res.bonusCrude ?? 0,
+                bagsCrude: res.bagsCrude ?? 0,
               });
             }
           })
@@ -182,7 +182,7 @@ export default function OilStats({
       const res = await fetch("/api/refine", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ address, oilUnits, bonusCrude }),
+        body: JSON.stringify({ address, oilUnits, bagsCrude }),
       });
       const json = await res.json();
 
@@ -191,7 +191,7 @@ export default function OilStats({
         setEndsAt(new Date(json.endsAt).getTime());
         setPendingCrude({
           crude: json.crudeAmount ?? 0,
-          bonusCrude: json.bonusCrude ?? 0,
+          bagsCrude: json.bagsCrude ?? 0,
         });
       } else if (json.error) {
         console.error("Refine error:", json.error);
@@ -201,7 +201,7 @@ export default function OilStats({
     } finally {
       setStartingRefine(false);
     }
-  }, [isOwner, address, oilUnits, bonusCrude]);
+  }, [isOwner, address, oilUnits, bagsCrude]);
 
   // ── Claim CRUDE ──
   const handleClaim = useCallback(async () => {
@@ -255,7 +255,7 @@ export default function OilStats({
           setRefineStatus("completed");
           setPendingCrude({
             crude: statusData.crudeAmount ?? 0,
-            bonusCrude: statusData.bonusCrude ?? 0,
+            bagsCrude: statusData.bagsCrude ?? 0,
           });
         }
       } else {
@@ -327,7 +327,7 @@ https://solanaoilfactory.xyz`;
     // ── Timer active — refining in progress ──
     if (refineStatus === "refining") {
       const pendingTotal = pendingCrude
-        ? pendingCrude.crude + pendingCrude.bonusCrude
+        ? pendingCrude.crude + pendingCrude.bagsCrude
         : 0;
       return (
         <div className="refine-timer-container">
@@ -359,7 +359,7 @@ https://solanaoilfactory.xyz`;
     // ── Completed — auto-claiming ──
     if (refineStatus === "completed") {
       const pendingTotal = pendingCrude
-        ? pendingCrude.crude + pendingCrude.bonusCrude
+        ? pendingCrude.crude + pendingCrude.bagsCrude
         : 0;
       return (
         <div className="refine-claim-container">

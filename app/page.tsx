@@ -77,7 +77,7 @@ export default function HomePage() {
                 <img src="/bags-icon.png" alt="Bags" className="home-refinery-logo" />
               </div>
               <h3 className="home-refinery-name">Bags Refinery</h3>
-              <p className="home-refinery-desc">Convert fee earnings into bonus $CRUDE</p>
+              <p className="home-refinery-desc">Convert fee earnings into $CRUDE</p>
               <Link href="/refinery" className="home-refinery-btn">Enter</Link>
             </div>
 

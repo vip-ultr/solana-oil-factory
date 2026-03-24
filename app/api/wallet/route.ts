@@ -35,10 +35,10 @@ export async function GET(request: NextRequest) {
     const bags =
       bagsResult.status === "fulfilled"
         ? bagsResult.value
-        : { totalFeesSol: 0, bonusCrude: 0, isActive: false, positionCount: 0 };
+        : { totalFeesSol: 0, bagsCrude: 0, isActive: false, positionCount: 0 };
 
-    const bonusCrude = bags.bonusCrude;
-    const totalCrude = data.crude + bonusCrude;
+    const bagsCrude = bags.bagsCrude;
+    const totalCrude = data.crude + bagsCrude;
     const title = getPrestigeTitle(totalCrude);
 
     // Fetch existing refine state (if any) from Supabase
@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
       ...data,
       // Override title with totalCrude-based title
       title,
-      bonusCrude,
+      bagsCrude,
       totalCrude,
       totalFeesSol: bags.totalFeesSol,
       bagsActive: bags.isActive,

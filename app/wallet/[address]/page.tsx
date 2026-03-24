@@ -57,13 +57,13 @@ export default async function WalletProfilePage({ params }: Props) {
     const bags =
       bagsResult.status === "fulfilled"
         ? bagsResult.value
-        : { totalFeesSol: 0, bonusCrude: 0, isActive: false, positionCount: 0 };
+        : { totalFeesSol: 0, bagsCrude: 0, isActive: false, positionCount: 0 };
 
     // Fetch claimed wallet record and active refine in parallel
     const [{ data: walletRecord }, { data: activeRefineRow }] = await Promise.all([
       supabase
         .from("wallets")
-        .select("crude, bonus_crude, total_crude, prestige_title")
+        .select("crude, bags_crude, total_crude, prestige_title")
         .eq("wallet_address", address)
         .maybeSingle(),
       supabase
@@ -95,7 +95,7 @@ export default async function WalletProfilePage({ params }: Props) {
         barrels={oilData.barrels}
         fillPercentages={oilData.fillPercentages}
         claimedCrude={hasClaimed ? walletRecord.crude : null}
-        claimedBonusCrude={hasClaimed ? walletRecord.bonus_crude : null}
+        claimedBagsCrude={hasClaimed ? walletRecord.bags_crude : null}
         claimedTotalCrude={hasClaimed ? walletRecord.total_crude : null}
         claimedTitle={hasClaimed ? walletRecord.prestige_title : null}
         isRefining={isRefining}

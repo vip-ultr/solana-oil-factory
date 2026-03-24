@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       status: "completed",
       crudeAmount: refine.crude_amount,
-      bonusCrude: refine.bonus_crude,
+      bagsCrude: refine.bags_crude,
       oilUnits: refine.oil_units,
       endsAt: refine.ends_at,
       startedAt: refine.started_at,
@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
     durationMs: refine.duration_ms,
     remainingMs,
     crudeAmount: refine.crude_amount,
-    bonusCrude: refine.bonus_crude,
+    bagsCrude: refine.bags_crude,
     oilUnits: refine.oil_units,
   });
 }

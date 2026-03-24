@@ -13,7 +13,7 @@ interface WalletProfileProps {
   fillPercentages: number[];
   /** Null until the wallet has completed and claimed at least one refine */
   claimedCrude: number | null;
-  claimedBonusCrude: number | null;
+  claimedBagsCrude: number | null;
   claimedTotalCrude: number | null;
   claimedTitle: string | null;
   /** True when a refine is currently in progress (timer running) */
@@ -28,7 +28,7 @@ export default function WalletProfile({
   barrels,
   fillPercentages,
   claimedCrude,
-  claimedBonusCrude,
+  claimedBagsCrude,
   claimedTotalCrude,
   claimedTitle,
   isRefining,
@@ -65,7 +65,7 @@ export default function WalletProfile({
   const shareText = revealed
     ? `Solana Oil Factory \u{1F6E2}\u{FE0F}
 
-${claimedTotalCrude!.toLocaleString()} CRUDE${(claimedBonusCrude ?? 0) > 0 ? ` (${claimedBonusCrude!.toLocaleString()} bonus from @BagsApp)` : ""}
+${claimedTotalCrude!.toLocaleString()} $CRUDE${(claimedBagsCrude ?? 0) > 0 ? ` (${claimedBagsCrude!.toLocaleString()} from Bags Refinery)` : ""}
 
 \u{1F4CA} Transactions: ${oilUnits.toLocaleString()}
 \u{1F3F7}\u{FE0F} Title: ${claimedTitle}
@@ -190,7 +190,7 @@ https://solanaoilfactory.xyz/wallet/${address}`;
                     <span className="prod-breakdown-badge prod-breakdown-badge--active">Active</span>
                   </div>
                   <span className="prod-breakdown-value">
-                    {revealed ? (claimedBonusCrude ?? 0).toLocaleString() : "—"}
+                    {revealed ? (claimedBagsCrude ?? 0).toLocaleString() : "—"}
                   </span>
                 </div>
 
