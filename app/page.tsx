@@ -40,11 +40,7 @@ export default function HomePage() {
   }, []);
 
   function handleEnterRefinery() {
-    if (connected) {
-      router.push("/refinery");
-    } else {
-      openConnectModal();
-    }
+    router.push("/refinery");
   }
 
   return (
