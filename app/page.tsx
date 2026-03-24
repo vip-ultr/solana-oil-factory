@@ -109,13 +109,13 @@ export default function HomePage() {
             </div>
 
             {/* Believe — Coming Soon */}
-            <div className="home-refinery-card home-refinery-card--disabled">
+            {/* <div className="home-refinery-card home-refinery-card--disabled">
               <div className="home-refinery-icon">
                 <img src="/believe-icon.png" alt="Believe" className="home-refinery-logo" />
               </div>
               <h3 className="home-refinery-name">Believe Refinery</h3>
               <span className="home-refinery-btn home-refinery-btn--disabled">Coming Soon</span>
-            </div>
+            </div> */}
           </div>
         </section>
 

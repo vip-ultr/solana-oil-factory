@@ -24,7 +24,7 @@ const comingSoonRefineries = [
   { name: "Pump.fun", icon: "/pumpfun-icon.png", teaser: "Pump.fun trading activity will generate refinery output." },
   { name: "Bonk.fun", icon: "/bonkfun-icon.png", teaser: "Bonk.fun activity will be convertible to $CRUDE." },
   { name: "Candle",   icon: "/candle-icon.png",   teaser: "Candle refinery integration is on the way." },
-  { name: "Believe",  icon: "/believe-icon.png",  teaser: "Believe protocol activity will fuel your refinery." },
+  // { name: "Believe",  icon: "/believe-icon.png",  teaser: "Believe protocol activity will fuel your refinery." },
 ];
 
 export default function RefineryPage() {
