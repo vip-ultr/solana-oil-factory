@@ -187,8 +187,9 @@ export default function RefineryPage() {
     }
   }
 
-  // Auto-extract: when verified and stored check found nothing, auto-fetch wallet data
-  const autoExtractedRef = useRef<string | null>(null);
+  // Auto-extract: when verified and stored check found nothing, auto-fetch wallet data.
+  // No ref guard needed — loading/data/error conditions already prevent duplicate calls,
+  // and a ref would block re-fetches on soft navigation (component not fully remounted).
   useEffect(() => {
     if (
       connected &&
@@ -198,10 +199,8 @@ export default function RefineryPage() {
       !data &&
       !loading &&
       !storedLoading &&
-      !error &&
-      autoExtractedRef.current !== solanaAddress
+      !error
     ) {
-      autoExtractedRef.current = solanaAddress;
       fetchWalletData(solanaAddress);
     }
   }, [connected, solanaAddress, isVerified, storedChecked, data, loading, storedLoading, error]);
@@ -287,15 +286,20 @@ export default function RefineryPage() {
       <main className="main">
 
         {/* ── Page Header ── */}
-        <div className="refinery-page-header">
+        {/* <div className="refinery-page-header">
           <h1 className="refinery-page-title">Refinery</h1>
           <p className="refinery-page-subtitle">Multi-source production system</p>
-        </div>
+        </div> */}
 
         {/* Search */}
         <section className="search-section">
           <WalletSearch onSearch={fetchWalletData} loading={loading} />
         </section>
+
+        {/* Session initializing — connected but wallet address not yet available */}
+        {connected && !solanaAddress && !data && !loading && !error && (
+          <div className="loading-msg">Connecting to wallet...</div>
+        )}
 
         {/* Empty state — no wallet connected, no search, not loading */}
         {!connected && !data && !loading && !error && (
