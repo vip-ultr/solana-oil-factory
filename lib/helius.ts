@@ -1,10 +1,16 @@
 const HELIUS_URL = `https://mainnet.helius-rpc.com/?api-key=${process.env.HELIUS_API_KEY}`;
+const HELIUS_ENHANCED_URL = `https://api.helius.xyz/v0`;
 const PAGE_SIZE = 1000;
 
 // Safety limits to prevent Vercel function timeouts
 const MAX_PAGES = 150;               // 150,000 transactions max
 const REQUEST_TIMEOUT_MS = 8_000;    // 8s per individual RPC call
 const TOTAL_BUDGET_MS = 50_000;      // 50s total time budget (leaves headroom before Vercel's 60s)
+
+// Swap analytics limits
+const SWAP_PAGE_SIZE = 100;
+const MAX_SWAP_PAGES = 10;
+const SWAP_BUDGET_MS = 15_000;
 
 export interface TransactionCountResult {
   count: number;
@@ -123,4 +129,165 @@ export async function getTransactionCount(
   }
 
   return { count: total, partial };
+}
+
+// ── Swap Analytics (Enhanced Transactions API) ──────────────────────
+
+export interface HeliusTokenTransfer {
+  mint: string;
+  tokenAmount: number;
+  tokenStandard?: string;
+  tokenName?: string;
+  tokenSymbol?: string;
+}
+
+export interface HeliusEnrichedTransaction {
+  signature: string;
+  type: string;
+  tokenTransfers: HeliusTokenTransfer[];
+  events?: {
+    swap?: {
+      tokenInputs?: { mint: string; tokenStandard?: string }[];
+      tokenOutputs?: { mint: string; tokenStandard?: string }[];
+    };
+  };
+}
+
+/**
+ * Fetches enriched SWAP transactions for a wallet using the Helius
+ * Enhanced Transactions REST API. Paginated with a dedicated time budget.
+ */
+export async function fetchSwapTransactions(
+  walletAddress: string
+): Promise<HeliusEnrichedTransaction[]> {
+  const apiKey = process.env.HELIUS_API_KEY;
+  if (!apiKey) throw new Error("HELIUS_API_KEY not configured");
+
+  const all: HeliusEnrichedTransaction[] = [];
+  let before: string | undefined;
+  let pages = 0;
+  let retries = 0;
+  const startTime = Date.now();
+
+  while (pages < MAX_SWAP_PAGES) {
+    if (Date.now() - startTime > SWAP_BUDGET_MS) {
+      console.warn(`[helius] Swap fetch time budget exceeded at page ${pages}`);
+      break;
+    }
+
+    const url = new URL(
+      `${HELIUS_ENHANCED_URL}/addresses/${walletAddress}/transactions`
+    );
+    url.searchParams.set("api-key", apiKey);
+    url.searchParams.set("type", "SWAP");
+    url.searchParams.set("limit", String(SWAP_PAGE_SIZE));
+    if (before) url.searchParams.set("before-signature", before);
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+    try {
+      const res = await fetch(url.toString(), { signal: controller.signal });
+      if (!res.ok) {
+        throw new Error(`Helius Enhanced API error: ${res.status}`);
+      }
+
+      const body = await res.json();
+
+      // Handle runtime type filtering continuation pattern:
+      // API may return an error with a continuation signature when no
+      // SWAP matches exist in the current search window.
+      if (body && typeof body === "object" && "error" in body) {
+        const errMsg = String(body.error ?? "");
+        const match = errMsg.match(/before-signature.*?set to (\S+)/i);
+        if (match?.[1]) {
+          before = match[1];
+          retries++;
+          if (retries > MAX_SWAP_PAGES) break; // prevent infinite loops
+          continue;
+        }
+        break;
+      }
+
+      const batch: HeliusEnrichedTransaction[] = Array.isArray(body)
+        ? body
+        : [];
+      if (batch.length === 0) break;
+
+      retries = 0;
+      all.push(...batch);
+      pages++;
+
+      if (batch.length < SWAP_PAGE_SIZE) break;
+      before = batch[batch.length - 1].signature;
+    } catch (err) {
+      if (pages === 0) throw err;
+      console.warn(`[helius] Swap fetch failed at page ${pages}, returning partial`);
+      break;
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
+  return all;
+}
+
+export interface TokenMetadata {
+  name: string;
+  symbol: string;
+}
+
+/**
+ * Resolves token mint addresses to name/symbol via Helius DAS getAssetBatch.
+ * Returns a Map; missing/failed mints are simply omitted.
+ */
+export async function fetchTokenMetadataBatch(
+  mints: string[]
+): Promise<Map<string, TokenMetadata>> {
+  const result = new Map<string, TokenMetadata>();
+  if (mints.length === 0) return result;
+
+  const BATCH_SIZE = 1000;
+  for (let i = 0; i < mints.length; i += BATCH_SIZE) {
+    const chunk = mints.slice(i, i + BATCH_SIZE);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+    try {
+      const res = await fetch(HELIUS_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: "das-batch",
+          method: "getAssetBatch",
+          params: { ids: chunk },
+        }),
+        signal: controller.signal,
+      });
+
+      if (!res.ok) continue;
+
+      const json = await res.json();
+      const assets = json.result;
+      if (!Array.isArray(assets)) continue;
+
+      for (const asset of assets) {
+        const id = asset?.id;
+        const content = asset?.content?.metadata;
+        if (id && content) {
+          result.set(id, {
+            name: content.name ?? "",
+            symbol: content.symbol ?? "",
+          });
+        }
+      }
+    } catch {
+      console.warn(`[helius] DAS batch failed for chunk starting at index ${i}`);
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
+  return result;
 }

@@ -3,6 +3,7 @@ import { getTransactionCount } from "@/lib/helius";
 import { calculateOilData, getPrestigeTitle } from "@/lib/oilCalculator";
 import { supabase } from "@/lib/supabase";
 import { fetchBagsWalletData } from "@/lib/bags";
+import { getBagsAnalytics } from "@/lib/bagsWalletAnalyzer";
 
 // Allow this route to run up to 60s on Vercel (Pro plan).
 // Hobby plan caps at 10s regardless — upgrade if large wallets still timeout.
@@ -17,10 +18,11 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Run Helius + Bags calls in parallel — Bags failure never blocks the flow
-    const [heliusResult, bagsResult] = await Promise.allSettled([
+    // Run Helius + Bags + Analytics in parallel — failures never block the flow
+    const [heliusResult, bagsResult, analyticsResult] = await Promise.allSettled([
       getTransactionCount(address),
       fetchBagsWalletData(address),
+      getBagsAnalytics(address),
     ]);
 
     // Helius is required
@@ -36,6 +38,12 @@ export async function GET(request: NextRequest) {
       bagsResult.status === "fulfilled"
         ? bagsResult.value
         : { totalFeesSol: 0, bagsCrude: 0, isActive: false, positionCount: 0 };
+
+    // Analytics is optional — use safe defaults on failure
+    const bagsAnalytics =
+      analyticsResult.status === "fulfilled"
+        ? analyticsResult.value
+        : { unique_tokens_traded: 0, total_swap_transactions: 0, tokens: [] as string[] };
 
     const bagsCrude = bags.bagsCrude;
     const totalCrude = data.crude + bagsCrude;
@@ -67,6 +75,7 @@ export async function GET(request: NextRequest) {
       bagsActive: bags.isActive,
       partial,
       lastRefinedOilUnits,
+      bagsAnalytics,
     });
   } catch (error) {
     const message =

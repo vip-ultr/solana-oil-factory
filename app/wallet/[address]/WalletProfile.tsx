@@ -199,7 +199,7 @@ https://solanaoilfactory.xyz/wallet/${address}`;
                   { name: "Pump.fun", icon: "/pumpfun-icon.png" },
                   { name: "Bonk.fun", icon: "/bonkfun-icon.png" },
                   { name: "Candle",   icon: "/candle-icon.png" },
-                  { name: "Believe",  icon: "/believe-icon.png" },
+                  // { name: "Believe",  icon: "/believe-icon.png" },
                 ].map((r) => (
                   <div key={r.name} className="prod-breakdown-row prod-breakdown-row--inactive">
                     <div className="prod-breakdown-source">
