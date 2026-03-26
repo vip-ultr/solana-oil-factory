@@ -47,8 +47,8 @@ export async function POST(request: NextRequest) {
   const txCrude = Math.floor(swapCount / BAGS_CRUDE_RATE);
   const crudeAmount = feeCrude + txCrude;
 
-  // Duration: min(crudeAmount, 360) minutes, max 6 hours
-  const durationMinutes = Math.min(crudeAmount, 360);
+  // Duration: min 30 min, max 6 hours
+  const durationMinutes = Math.max(30, Math.min(crudeAmount, 360));
   const durationMs = Math.round(durationMinutes * 60 * 1000);
   const now = new Date();
   const endsAt = new Date(now.getTime() + durationMs);

@@ -59,11 +59,11 @@ The app is built around a **multi-source refinery system** — each integration 
 | Pump.fun Refinery | 🔜 Soon | Pump.fun trading activity |
 | Bonk.fun Refinery | 🔜 Soon | Bonk.fun activity |
 | Candle Refinery | 🔜 Soon | Candle protocol integration |
-| Believe Refinery | 🔜 Soon | Believe protocol activity |
+<!-- | Believe Refinery | 🔜 Soon | Believe protocol activity | -->
 
 ### Timed Refinement
 
-Refining isn't instant. A session locks your $CRUDE for a duration proportional to your transaction count — up to 6 hours. You can pay **0.002 SOL** to skip the timer instantly.
+Refining isn't instant. A session locks your $CRUDE for a duration proportional to your transaction count — minimum 30 minutes, up to 6 hours. You can pay **0.002 SOL** to skip the timer instantly.
 
 ### Bags Refinery
 
@@ -104,6 +104,7 @@ Bags claimable fee positions are converted at `1 SOL = 1,000 $CRUDE`. This outpu
 - The barrel section is **collapsible** with a smooth CSS grid-row animation
 
 ### Production Stats
+- Production stats appear **first** — left on desktop, top on mobile — for each refinery
 - Per-refinery $CRUDE breakdown — see exactly how much each source contributes
 - Total $CRUDE highlighted with accent styling once revealed
 - Prestige Title badge displayed after claiming
