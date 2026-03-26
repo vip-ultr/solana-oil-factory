@@ -749,8 +749,8 @@ body {
   gap: 18px;
   grid-template-columns: 1fr 1fr;
   grid-template-areas:
-    "refinery  production"
-    "share     share";
+    "production  refinery"
+    "share       share";
 }
 .oil-stats-refinery   { grid-area: refinery; }
 .oil-stats-production { grid-area: production; }
@@ -762,8 +762,8 @@ body {
   .oil-stats-grid {
     grid-template-columns: 1fr;
     grid-template-areas:
-      "refinery"
       "production"
+      "refinery"
       "share";
   }
 }
@@ -2789,6 +2789,7 @@ body {
 .refinery-section-title {
   font-family: var(--font-display), "Space Grotesk", sans-serif;
   font-size: 1.1rem;
+  text-transform: uppercase;
   font-weight: 700;
   color: var(--text-primary);
   margin: 0;

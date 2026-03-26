@@ -317,7 +317,7 @@ export default function BagsOilStats({
             refine. Refine again to update your stats!
           </p>
           <button onClick={handleRefine} className="btn-refine btn-refine--rerefine">
-            Refine Bags Oil
+            Refine Oil
           </button>
         </div>
       );
