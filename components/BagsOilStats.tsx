@@ -400,7 +400,7 @@ export default function BagsOilStats({
             ) : refineStatus === "refining" || refineStatus === "completed" ? (
               <p className="stat-card-value dim">Pending...</p>
             ) : (
-              <p className="stat-card-value">0</p>
+              <p className="stat-card-value">-</p>
             )}
           </div>
           <div className="stat-card">
@@ -410,7 +410,7 @@ export default function BagsOilStats({
             ) : refineStatus === "refining" || refineStatus === "completed" ? (
               <p className="stat-card-value dim">Pending...</p>
             ) : (
-              <p className="stat-card-value">0</p>
+              <p className="stat-card-value">-</p>
             )}
           </div>
           <div className="stat-card">
@@ -420,7 +420,7 @@ export default function BagsOilStats({
             ) : refineStatus === "refining" || refineStatus === "completed" ? (
               <p className="stat-card-value dim">Pending...</p>
             ) : (
-              <p className="stat-card-value">0</p>
+              <p className="stat-card-value">-</p>
             )}
           </div>
         </div>
