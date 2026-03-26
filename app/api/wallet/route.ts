@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getTransactionCount } from "@/lib/helius";
-import { calculateOilData, getPrestigeTitle } from "@/lib/oilCalculator";
+import { calculateOilData, calculateBagsOilData, getPrestigeTitle } from "@/lib/oilCalculator";
 import { supabase } from "@/lib/supabase";
 import { fetchBagsWalletData } from "@/lib/bags";
 import { getBagsAnalytics } from "@/lib/bagsWalletAnalyzer";
@@ -45,29 +45,59 @@ export async function GET(request: NextRequest) {
         ? analyticsResult.value
         : { unique_tokens_traded: 0, total_swap_transactions: 0, tokens: [] as string[] };
 
-    const bagsCrude = bags.bagsCrude;
+    // Compute Bags oil data using combined CRUDE (fee + transaction)
+    const bagsOilData = calculateBagsOilData(
+      bagsAnalytics.total_swap_transactions,
+      bags.totalFeesSol
+    );
+
+    const bagsCrude = bagsOilData.bagsCrude;
     const totalCrude = data.crude + bagsCrude;
     const title = getPrestigeTitle(totalCrude);
 
     // Fetch existing refine state (if any) from Supabase
     let lastRefinedOilUnits = 0;
+    let lastRefinedBagsOilUnits = 0;
     const { data: existing } = await supabase
       .from("wallets")
-      .select("last_refined_oil_units")
+      .select("last_refined_oil_units, last_refined_bags_oil_units")
       .eq("wallet_address", address)
-      .single();
+      .maybeSingle();
 
     if (existing) {
       lastRefinedOilUnits = existing.last_refined_oil_units ?? 0;
+      lastRefinedBagsOilUnits = existing.last_refined_bags_oil_units ?? 0;
     }
 
-    // NOTE: We do NOT upsert to Supabase here.
-    // Wallets only appear on the leaderboard after refining (via /api/refine).
+    // Check for active Bags refine session
+    let activeBagsRefine = null;
+    const { data: bagsRefine } = await supabase
+      .from("bags_refines")
+      .select("*")
+      .eq("wallet_address", address)
+      .eq("claimed", false)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (bagsRefine) {
+      const now = new Date();
+      const endsAt = new Date(bagsRefine.ends_at);
+      activeBagsRefine = {
+        status: now >= endsAt ? "completed" as const : "refining" as const,
+        endsAt: bagsRefine.ends_at,
+        startedAt: bagsRefine.started_at,
+        durationMs: bagsRefine.duration_ms,
+        crudeAmount: bagsRefine.crude_amount,
+        feeCrude: bagsRefine.fee_crude,
+        txCrude: bagsRefine.tx_crude,
+        oilUnits: bagsRefine.oil_units,
+      };
+    }
 
     return NextResponse.json({
       address,
       ...data,
-      // Override title with totalCrude-based title
       title,
       bagsCrude,
       totalCrude,
@@ -76,6 +106,9 @@ export async function GET(request: NextRequest) {
       partial,
       lastRefinedOilUnits,
       bagsAnalytics,
+      bagsOilData,
+      lastRefinedBagsOilUnits,
+      activeBagsRefine,
     });
   } catch (error) {
     const message =
