@@ -1,6 +1,5 @@
 import {
   fetchSwapTransactions,
-  fetchTokenMetadataBatch,
   type HeliusEnrichedTransaction,
 } from "@/lib/helius";
 import {
@@ -15,67 +14,41 @@ const EMPTY_ANALYTICS: BagsAnalyticsData = {
   tokens: [],
 };
 
-function isBagsToken(mint: string, name: string, symbol: string): boolean {
-  return (
-    mint.endsWith("BAGS") ||
-    symbol.toLowerCase().includes("bags") ||
-    name.toLowerCase().includes("bags")
-  );
-}
-
 /**
- * Extracts token metadata directly from Enhanced Transactions API responses.
- * The API returns tokenName/tokenSymbol in tokenTransfers, so we try that first.
- * Returns a Map of mint → { name, symbol } for tokens that had inline metadata.
- * Also returns the set of mints that are missing metadata (need DAS fallback).
+ * Collects all token mints referenced in a swap transaction.
  */
-function extractTokenInfo(txns: HeliusEnrichedTransaction[]): {
-  knownTokens: Map<string, { name: string; symbol: string }>;
-  unknownMints: Set<string>;
-} {
-  const knownTokens = new Map<string, { name: string; symbol: string }>();
-  const allMints = new Set<string>();
-
-  for (const tx of txns) {
-    if (tx.tokenTransfers) {
-      for (const t of tx.tokenTransfers) {
-        if (!t.mint) continue;
-        allMints.add(t.mint);
-        // Enhanced API includes tokenName/tokenSymbol in tokenTransfers
-        if ((t.tokenName || t.tokenSymbol) && !knownTokens.has(t.mint)) {
-          knownTokens.set(t.mint, {
-            name: t.tokenName ?? "",
-            symbol: t.tokenSymbol ?? "",
-          });
-        }
-      }
-    }
-    const swap = tx.events?.swap;
-    if (swap) {
-      for (const input of swap.tokenInputs ?? []) {
-        if (input.mint) allMints.add(input.mint);
-      }
-      for (const output of swap.tokenOutputs ?? []) {
-        if (output.mint) allMints.add(output.mint);
-      }
+function getSwapMints(tx: HeliusEnrichedTransaction): Set<string> {
+  const mints = new Set<string>();
+  if (tx.tokenTransfers) {
+    for (const t of tx.tokenTransfers) {
+      if (t.mint) mints.add(t.mint);
     }
   }
-
-  const unknownMints = new Set<string>();
-  for (const mint of allMints) {
-    if (!knownTokens.has(mint)) unknownMints.add(mint);
+  const swap = tx.events?.swap;
+  if (swap) {
+    for (const input of swap.tokenInputs ?? []) {
+      if (input.mint) mints.add(input.mint);
+    }
+    for (const output of swap.tokenOutputs ?? []) {
+      if (output.mint) mints.add(output.mint);
+    }
   }
-
-  return { knownTokens, unknownMints };
+  return mints;
 }
 
 /**
  * Returns Bags swap analytics for a wallet.
+ *
+ * @param knownBagsMints - Set of token mints known to be Bags tokens
+ *   (from the Bags feed + claimable positions). Swaps involving any of
+ *   these mints are counted as Bags swaps.
+ *
  * Checks Supabase cache first (10 min TTL), falls back to live Helius computation.
  * Never throws — returns safe defaults on any failure.
  */
 export async function getBagsAnalytics(
-  wallet: string
+  wallet: string,
+  knownBagsMints: Set<string>
 ): Promise<BagsAnalyticsData> {
   try {
     // Step 1: Check cache
@@ -85,91 +58,43 @@ export async function getBagsAnalytics(
       return cached;
     }
 
-    // Step 2: Fetch swap transactions
+    // If we have no known Bags mints, we can't identify any Bags swaps
+    if (knownBagsMints.size === 0) {
+      console.log("[bagsAnalyzer] No known Bags mints — skipping swap scan");
+      setCachedAnalytics(wallet, EMPTY_ANALYTICS).catch(() => {});
+      return EMPTY_ANALYTICS;
+    }
+
+    // Step 2: Fetch swap transactions from Helius
     const swaps = await fetchSwapTransactions(wallet);
     if (swaps.length === 0) {
       setCachedAnalytics(wallet, EMPTY_ANALYTICS).catch(() => {});
       return EMPTY_ANALYTICS;
     }
 
-    // Step 3: Extract token info from Enhanced API response first
-    const { knownTokens, unknownMints } = extractTokenInfo(swaps);
-
-    // Step 4: Fallback to DAS for mints missing metadata
-    if (unknownMints.size > 0) {
-      const dasMetadata = await fetchTokenMetadataBatch([...unknownMints]);
-      for (const [mint, meta] of dasMetadata) {
-        knownTokens.set(mint, meta);
-      }
-    }
-
-    // Step 5: Identify Bags tokens (by metadata OR mint suffix "BAGS")
-    const bagsTokens = new Map<string, string>(); // mint → display name
-    for (const [mint, meta] of knownTokens) {
-      if (isBagsToken(mint, meta.name, meta.symbol)) {
-        bagsTokens.set(mint, meta.symbol || meta.name || mint.slice(0, 8));
-      }
-    }
-    // Also catch mints ending in BAGS that had no metadata at all
-    for (const tx of swaps) {
-      const txMints: string[] = [];
-      if (tx.tokenTransfers) {
-        for (const t of tx.tokenTransfers) {
-          if (t.mint) txMints.push(t.mint);
-        }
-      }
-      const swap = tx.events?.swap;
-      if (swap) {
-        for (const input of swap.tokenInputs ?? []) {
-          if (input.mint) txMints.push(input.mint);
-        }
-        for (const output of swap.tokenOutputs ?? []) {
-          if (output.mint) txMints.push(output.mint);
-        }
-      }
-      for (const mint of txMints) {
-        if (mint.endsWith("BAGS") && !bagsTokens.has(mint)) {
-          bagsTokens.set(mint, mint.slice(0, 8));
-        }
-      }
-    }
-
-    // Step 6: Count swap transactions involving at least one Bags token
+    // Step 3: Count swaps involving known Bags tokens
     let bagsSwapCount = 0;
-    for (const tx of swaps) {
-      const txMints = new Set<string>();
-      if (tx.tokenTransfers) {
-        for (const t of tx.tokenTransfers) {
-          if (t.mint) txMints.add(t.mint);
-        }
-      }
-      const swap = tx.events?.swap;
-      if (swap) {
-        for (const input of swap.tokenInputs ?? []) {
-          if (input.mint) txMints.add(input.mint);
-        }
-        for (const output of swap.tokenOutputs ?? []) {
-          if (output.mint) txMints.add(output.mint);
-        }
-      }
+    const matchedMints = new Set<string>();
 
+    for (const tx of swaps) {
+      const txMints = getSwapMints(tx);
       for (const mint of txMints) {
-        if (bagsTokens.has(mint)) {
+        if (knownBagsMints.has(mint)) {
           bagsSwapCount++;
-          break;
+          matchedMints.add(mint);
+          break; // count each tx only once
         }
       }
     }
 
-    // Step 7: Build result
-    const uniqueTokenNames = [...new Set(bagsTokens.values())];
+    // Step 4: Build result
     const analytics: BagsAnalyticsData = {
-      unique_tokens_traded: bagsTokens.size,
+      unique_tokens_traded: matchedMints.size,
       total_swap_transactions: bagsSwapCount,
-      tokens: uniqueTokenNames,
+      tokens: [...matchedMints],
     };
 
-    // Step 8: Fire-and-forget cache write
+    // Step 5: Fire-and-forget cache write
     setCachedAnalytics(wallet, analytics).catch(() => {});
 
     return analytics;

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getTransactionCount } from "@/lib/helius";
 import { calculateOilData, calculateBagsOilData, getPrestigeTitle } from "@/lib/oilCalculator";
 import { supabase } from "@/lib/supabase";
-import { fetchBagsWalletData } from "@/lib/bags";
+import { fetchBagsWalletData, fetchBagsFeedMints } from "@/lib/bags";
 import { getBagsAnalytics } from "@/lib/bagsWalletAnalyzer";
 
 // Allow this route to run up to 60s on Vercel (Pro plan).
@@ -18,11 +18,11 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Run Helius + Bags + Analytics in parallel — failures never block the flow
-    const [heliusResult, bagsResult, analyticsResult] = await Promise.allSettled([
+    // Run Helius + Bags + Feed in parallel — failures never block the flow
+    const [heliusResult, bagsResult, feedMintsResult] = await Promise.allSettled([
       getTransactionCount(address),
       fetchBagsWalletData(address),
-      getBagsAnalytics(address),
+      fetchBagsFeedMints(),
     ]);
 
     // Helius is required
@@ -37,13 +37,15 @@ export async function GET(request: NextRequest) {
     const bags =
       bagsResult.status === "fulfilled"
         ? bagsResult.value
-        : { totalFeesSol: 0, bagsCrude: 0, isActive: false, positionCount: 0 };
+        : { totalFeesSol: 0, bagsCrude: 0, isActive: false, positionCount: 0, tokenMints: [] as string[] };
 
-    // Analytics is optional — use safe defaults on failure
-    const bagsAnalytics =
-      analyticsResult.status === "fulfilled"
-        ? analyticsResult.value
-        : { unique_tokens_traded: 0, total_swap_transactions: 0, tokens: [] as string[] };
+    // Build set of known Bags token mints from feed + wallet positions
+    const feedMints =
+      feedMintsResult.status === "fulfilled" ? feedMintsResult.value : [];
+    const knownBagsMints = new Set<string>([...feedMints, ...bags.tokenMints]);
+
+    // Analytics uses known mints to identify Bags swaps in Helius data
+    const bagsAnalytics = await getBagsAnalytics(address, knownBagsMints);
 
     // Compute Bags oil data using combined CRUDE (fee + transaction)
     const bagsOilData = calculateBagsOilData(

@@ -180,7 +180,7 @@ lib/
 
 ## Local Development
 
-**Prerequisites:** Node.js 20+, [Helius API key](https://helius.dev), [Supabase project](https://supabase.com), [Bags API key](https://bags.fm)
+**Prerequisites:** Node.js 20+, [Helius API key](https://helius.dev), [Supabase project](https://supabase.com), [Bags API key](https://dev.bags.fm)
 
 ```bash
 git clone https://github.com/vip-ultr/solana-oil-factory.git

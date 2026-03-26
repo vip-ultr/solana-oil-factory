@@ -21,6 +21,8 @@ export interface BagsWalletData {
   bagsCrude: number;
   isActive: boolean;
   positionCount: number;
+  /** Token mints from the wallet's claimable fee positions */
+  tokenMints: string[];
 }
 
 export interface BagsFeedToken {
@@ -74,37 +76,28 @@ export async function fetchBagsWalletData(wallet: string): Promise<BagsWalletDat
     );
 
     const totalFeesSol = totalLamports / 1_000_000_000;
-    const bagsCrude = Math.floor(totalFeesSol * 2000);
+    const bagsCrude = Math.floor(totalFeesSol * 1000);
 
     return {
       totalFeesSol,
       bagsCrude,
       isActive: positions.length > 0,
       positionCount: positions.length,
+      tokenMints: positions.map((p) => p.baseMint).filter(Boolean),
     };
   } catch (err) {
     console.error("[bags] Failed to fetch wallet data:", err);
-    return { totalFeesSol: 0, bagsCrude: 0, isActive: false, positionCount: 0 };
+    return { totalFeesSol: 0, bagsCrude: 0, isActive: false, positionCount: 0, tokenMints: [] };
   }
 }
 
 /**
  * Fetch recent token launches from the Bags feed.
- * Returns up to 5 items. Returns [] on any failure.
+ * Returns up to 5 items for display. Returns [] on any failure.
  */
 export async function fetchBagsFeed(): Promise<BagsFeedToken[]> {
   try {
-    const feed = await bagsGet<Array<{
-      name: string;
-      symbol: string;
-      description?: string;
-      image: string;
-      tokenMint: string;
-      status: string;
-      twitter?: string;
-      website?: string;
-    }>>("/token-launch/feed");
-
+    const feed = await fetchBagsFeedRaw();
     return feed.slice(0, 5).map(({ name, symbol, description, image, tokenMint, twitter, website }) => ({
       name,
       symbol,
@@ -118,4 +111,31 @@ export async function fetchBagsFeed(): Promise<BagsFeedToken[]> {
     console.error("[bags] Failed to fetch feed:", err);
     return [];
   }
+}
+
+/**
+ * Fetch ALL token mints from the Bags feed.
+ * Used to build a set of known Bags tokens for swap identification.
+ */
+export async function fetchBagsFeedMints(): Promise<string[]> {
+  try {
+    const feed = await fetchBagsFeedRaw();
+    return feed.map((t) => t.tokenMint).filter(Boolean);
+  } catch (err) {
+    console.error("[bags] Failed to fetch feed mints:", err);
+    return [];
+  }
+}
+
+async function fetchBagsFeedRaw(): Promise<Array<{
+  name: string;
+  symbol: string;
+  description?: string;
+  image: string;
+  tokenMint: string;
+  status: string;
+  twitter?: string;
+  website?: string;
+}>> {
+  return bagsGet("/token-launch/feed");
 }
