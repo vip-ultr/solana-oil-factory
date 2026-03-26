@@ -88,3 +88,58 @@ export function calculateOilData(txCount: number): OilData {
 
   return { oilUnits, barrels, remainder, fillPercentages, crude, title };
 }
+
+// ── Bags Refinery Calculator ──────────────────────────────────────
+
+export interface BagsOilData {
+  oilUnits: number;
+  barrels: number;
+  remainder: number;
+  fillPercentages: number[];
+  feeCrude: number;
+  txCrude: number;
+  bagsCrude: number;
+  title: string;
+}
+
+const BAGS_CRUDE_RATE = 2; // 2 swaps = 1 CRUDE
+
+export function calculateBagsOilData(
+  swapCount: number,
+  totalFeesSol: number
+): BagsOilData {
+  const oilUnits = swapCount;
+  const feeCrude = Math.floor(totalFeesSol * 2000);
+  const txCrude = Math.floor(oilUnits / BAGS_CRUDE_RATE);
+  const bagsCrude = feeCrude + txCrude; // no cap
+
+  // Barrels from both swap oil units AND fee crude oil-equivalent
+  const feeOilEquivalent = feeCrude * BAGS_CRUDE_RATE; // convert fee CRUDE back to oil units
+  const totalOilForBarrels = oilUnits + feeOilEquivalent;
+  const barrels = Math.floor(totalOilForBarrels / BARREL_SIZE);
+  const remainder = totalOilForBarrels % BARREL_SIZE;
+  const title = getPrestigeTitle(bagsCrude);
+
+  const fillPercentages: number[] = [];
+
+  if (barrels > 9) {
+    const displayCount = Math.min(barrels, SHOWCASE_BARRELS + MAX_BARRELS);
+    const rand = makeSeededRandom(totalOilForBarrels);
+    for (let i = 0; i < SHOWCASE_BARRELS; i++) {
+      fillPercentages.push(Math.round(15 + rand() * 75));
+    }
+    for (let i = SHOWCASE_BARRELS; i < displayCount; i++) {
+      fillPercentages.push(100);
+    }
+  } else {
+    const displayBarrels = Math.min(barrels, MAX_BARRELS);
+    if (remainder > 0 && displayBarrels < MAX_BARRELS) {
+      fillPercentages.push(Math.round((remainder / BARREL_SIZE) * 100));
+    }
+    for (let i = 0; i < displayBarrels; i++) {
+      fillPercentages.push(100);
+    }
+  }
+
+  return { oilUnits, barrels, remainder, fillPercentages, feeCrude, txCrude, bagsCrude, title };
+}

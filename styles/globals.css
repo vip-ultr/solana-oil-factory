@@ -2616,7 +2616,7 @@ body {
   margin-top: 8px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 .bags-feed-loading,
 .bags-feed-empty {
@@ -2624,36 +2624,113 @@ body {
   color: var(--text-muted);
   margin: 0;
 }
-.bags-feed-item {
+
+/* ── Feed Card ── */
+.bags-feed-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--bg-elevated, rgba(255,255,255,0.03));
+  border: 1px solid var(--border-subtle, rgba(255,255,255,0.06));
+  transition: border-color 0.15s, background 0.15s;
+}
+.bags-feed-card:hover {
+  border-color: var(--border-hover, rgba(255,255,255,0.12));
+  background: var(--bg-highlight, rgba(255,255,255,0.05));
+}
+
+/* Main row: identity left, socials right */
+.bags-feed-card-main {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 0.82rem;
-  color: var(--text-secondary);
+  justify-content: space-between;
+  gap: 10px;
+}
+
+/* Token identity (image + name/symbol) */
+.bags-feed-card-identity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   text-decoration: none;
-  padding: 4px 6px;
-  border-radius: 6px;
-  transition: background 0.15s;
+  min-width: 0;
+  flex: 1;
 }
-.bags-feed-item:hover {
-  background: var(--bg-highlight);
-}
-.bags-feed-item:hover .bags-feed-item-name {
-  color: var(--accent);
-}
-.bags-feed-item-img {
-  width: 20px;
-  height: 20px;
+.bags-feed-card-img {
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   object-fit: cover;
   background: var(--bg-elevated);
+  flex-shrink: 0;
 }
-.bags-feed-item-name {
+.bags-feed-card-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.bags-feed-card-name {
+  font-size: 0.82rem;
+  font-weight: 600;
   color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.15s;
 }
-.bags-feed-item-symbol {
+.bags-feed-card-identity:hover .bags-feed-card-name {
+  color: var(--accent);
+}
+.bags-feed-card-symbol {
+  font-size: 0.72rem;
   color: var(--text-muted);
-  font-size: 0.76rem;
+  letter-spacing: 0.02em;
+}
+
+/* Social icon row */
+.bags-feed-card-socials {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.bags-feed-social-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid var(--border-subtle, rgba(255,255,255,0.08));
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+  text-decoration: none;
+}
+.bags-feed-social-link:hover {
+  color: var(--accent);
+  background: var(--bg-highlight, rgba(255,255,255,0.06));
+  border-color: var(--accent);
+}
+.bags-feed-social-link--bags {
+  color: var(--text-muted);
+}
+.bags-feed-social-link--bags:hover {
+  color: var(--accent);
+}
+
+/* Description — shown only on desktop */
+.bags-feed-card-desc {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 /* ═══════════════════════════════════════════════════
@@ -2875,7 +2952,13 @@ body {
   .bags-status { font-size: 0.8rem; }
   .bags-output-line { font-size: 0.78rem; }
   .bags-feed-toggle { font-size: 0.72rem; }
-  .bags-feed-item { font-size: 0.76rem; }
+  .bags-feed-card { padding: 8px 10px; }
+  .bags-feed-card-img { width: 28px; height: 28px; }
+  .bags-feed-card-name { font-size: 0.78rem; }
+  .bags-feed-card-symbol { font-size: 0.68rem; }
+  .bags-feed-card-desc { font-size: 0.7rem; -webkit-line-clamp: 1; }
+  .bags-feed-social-link { width: 26px; height: 26px; }
+  .bags-feed-social-link svg { width: 12px; height: 12px; }
 
   .barrel-hero-title { font-size: 0.78rem; letter-spacing: 1.5px; }
 
@@ -2955,9 +3038,14 @@ body {
   .bags-output { gap: 1px; }
   .bags-output-line { font-size: 0.76rem; }
   .bags-feed-toggle { font-size: 0.7rem; padding-top: 6px; margin-top: 6px; }
-  .bags-feed-item { font-size: 0.74rem; gap: 6px; padding: 3px 4px; }
-  .bags-feed-item-img { width: 18px; height: 18px; }
-  .bags-feed-item-symbol { font-size: 0.68rem; }
+  .bags-feed-card { padding: 7px 8px; gap: 4px; }
+  .bags-feed-card-img { width: 24px; height: 24px; }
+  .bags-feed-card-name { font-size: 0.74rem; }
+  .bags-feed-card-symbol { font-size: 0.65rem; }
+  .bags-feed-card-desc { display: none; }
+  .bags-feed-card-socials { gap: 4px; }
+  .bags-feed-social-link { width: 24px; height: 24px; border-radius: 5px; }
+  .bags-feed-social-link svg { width: 11px; height: 11px; }
 
   .barrel-hero-title { font-size: 0.7rem; letter-spacing: 1.3px; }
   .barrel-hero-header { gap: 12px; margin-bottom: 24px; }

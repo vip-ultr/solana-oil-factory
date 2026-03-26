@@ -20,7 +20,7 @@ const SPEEDUP_LAMPORTS = 2_000_000; // 0.002 SOL
  * 6. Active unclaimed refine exists for this wallet
  */
 export async function POST(request: NextRequest) {
-  let body: { wallet?: string; signature?: string };
+  let body: { wallet?: string; signature?: string; type?: string };
 
   try {
     body = await request.json();
@@ -28,7 +28,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { wallet, signature } = body;
+  const { wallet, signature, type } = body;
+  const table = type === "bags" ? "bags_refines" : "refines";
 
   if (!wallet || !signature) {
     return NextResponse.json(
@@ -39,7 +40,7 @@ export async function POST(request: NextRequest) {
 
   // 1. Check for active unclaimed refine
   const { data: refine, error: fetchErr } = await supabase
-    .from("refines")
+    .from(table)
     .select("id, is_completed, claimed, speedup_used, tx_signature")
     .eq("wallet_address", wallet)
     .eq("claimed", false)
@@ -62,13 +63,22 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // 2. Check signature not already used (replay prevention)
-  const { data: existingTx } = await supabase
+  // 2. Check signature not already used (replay prevention — check both tables)
+  const { data: existingTx1 } = await supabase
     .from("refines")
     .select("id")
     .eq("tx_signature", signature)
     .limit(1)
     .single();
+
+  const { data: existingTx2 } = await supabase
+    .from("bags_refines")
+    .select("id")
+    .eq("tx_signature", signature)
+    .limit(1)
+    .single();
+
+  const existingTx = existingTx1 || existingTx2;
 
   if (existingTx) {
     return NextResponse.json(
@@ -177,7 +187,7 @@ export async function POST(request: NextRequest) {
 
   // 7. All checks passed — complete the refine instantly
   const { error: updateErr } = await supabase
-    .from("refines")
+    .from(table)
     .update({
       is_completed: true,
       ends_at: new Date().toISOString(),

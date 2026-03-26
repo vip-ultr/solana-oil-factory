@@ -28,6 +28,9 @@ export interface BagsFeedToken {
   symbol: string;
   image: string;
   tokenMint: string;
+  description?: string;
+  twitter?: string;
+  website?: string;
 }
 
 async function bagsGet<T>(path: string, params: Record<string, string> = {}): Promise<T> {
@@ -94,16 +97,22 @@ export async function fetchBagsFeed(): Promise<BagsFeedToken[]> {
     const feed = await bagsGet<Array<{
       name: string;
       symbol: string;
+      description?: string;
       image: string;
       tokenMint: string;
       status: string;
+      twitter?: string;
+      website?: string;
     }>>("/token-launch/feed");
 
-    return feed.slice(0, 5).map(({ name, symbol, image, tokenMint }) => ({
+    return feed.slice(0, 5).map(({ name, symbol, description, image, tokenMint, twitter, website }) => ({
       name,
       symbol,
+      description,
       image,
       tokenMint,
+      twitter: twitter || undefined,
+      website: website || undefined,
     }));
   } catch (err) {
     console.error("[bags] Failed to fetch feed:", err);
