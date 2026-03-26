@@ -74,7 +74,7 @@ export async function fetchBagsWalletData(wallet: string): Promise<BagsWalletDat
     );
 
     const totalFeesSol = totalLamports / 1_000_000_000;
-    const bagsCrude = Math.floor(totalFeesSol * 2000);
+    const bagsCrude = Math.floor(totalFeesSol * 1000);
 
     return {
       totalFeesSol,
