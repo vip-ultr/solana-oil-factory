@@ -50,8 +50,8 @@ export async function POST(request: NextRequest) {
   const safeBagsCrude = typeof bagsCrude === "number" ? bagsCrude : 0;
   const cappedBagsCrude = Math.min(safeBagsCrude, CRUDE_CAP - cappedCrude);
 
-  // Calculate refine duration: 10 oil units = 1 minute, max 6 hours
-  const durationMinutes = Math.min(oilUnits / 10, 360);
+  // Calculate refine duration: 10 oil units = 1 minute, min 30 min, max 6 hours
+  const durationMinutes = Math.max(30, Math.min(oilUnits / 10, 360));
   const durationMs = Math.round(durationMinutes * 60 * 1000);
   const now = new Date();
   const endsAt = new Date(now.getTime() + durationMs);
