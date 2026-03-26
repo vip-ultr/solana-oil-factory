@@ -2593,12 +2593,12 @@ body {
   gap: 6px;
   background: none;
   border: none;
-  color: var(--text-muted);
+  color: var(--color-white);
   font-size: 0.78rem;
   cursor: pointer;
   padding: 8px 0 0;
   margin-top: 8px;
-  border-top: 1px solid var(--border-subtle);
+  border-top: 2px solid var(--border-subtle);
   transition: color 0.15s;
 }
 .bags-feed-toggle:hover {
