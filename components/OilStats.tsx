@@ -403,7 +403,7 @@ https://solanaoilfactory.xyz`;
             detected since your last refine. Refine again to update your stats!
           </p>
           <button onClick={handleRefine} className="btn-refine btn-refine--rerefine">
-            🛢 Refine Oil
+            Refine Oil
           </button>
         </div>
       );
