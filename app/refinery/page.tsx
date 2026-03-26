@@ -389,7 +389,7 @@ export default function RefineryPage() {
 
             {/* ── Global Summary ── */}
             <div className="panel refinery-global-summary">
-              <p className="global-summary-label">Total Refined</p>
+              <p className="global-summary-label">Total Production</p>
               <p className="global-summary-value">{totalCrude.toLocaleString()} $CRUDE</p>
               <div className="crude-progress-bar">
                 <div

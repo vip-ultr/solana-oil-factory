@@ -46,7 +46,7 @@ export default function BagsPanel({ bagsActive, totalFeesSol, bagsCrude }: BagsP
       <div className="panel bags-panel">
         <div className="bags-panel-header">
           <img src="/bags-icon.png" alt="Bags" className="bags-panel-icon" />
-          <p className="panel-label bags-panel-label">Bags Refinery</p>
+          <p className="panel-label bags-panel-label">Bags Feed</p>
         </div>
 
         {bagsActive ? (
@@ -70,7 +70,7 @@ export default function BagsPanel({ bagsActive, totalFeesSol, bagsCrude }: BagsP
           <div className="bags-status bags-status-inactive">
             <p className="bags-inactive-title">No refinery activity detected.</p>
             <p className="bags-inactive-hint">
-              Trade on <a href="https://bags.fm" target="_blank" rel="noopener noreferrer" className="bags-inline-link">Bags</a> to earn fee rewards and generate refinery output.
+              Trade on <a href="https://bags.fm" target="_blank" rel="noopener noreferrer" className="bags-inline-link">Bags</a> to generate refinery output.
             </p>
           </div>
         )}
