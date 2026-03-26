@@ -2593,7 +2593,7 @@ body {
   gap: 6px;
   background: none;
   border: none;
-  color: var(--color-white);
+  color: white;
   font-size: 0.78rem;
   cursor: pointer;
   padding: 8px 0 0;
