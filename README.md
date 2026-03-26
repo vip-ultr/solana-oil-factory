@@ -34,7 +34,7 @@
 | **Extract** | Scan your on-chain transactions and convert them into oil units |
 | **Refine** | Start a timed refine session to convert oil into **$CRUDE** |
 | **Compete** | Appear on the global leaderboard ranked by total $CRUDE |
-| **Share** | Post your prestige title and refinery stats to X |
+| **Share** | Post your prestige title and refinery stats to X or other social media handles
 
 ### Oil Math
 

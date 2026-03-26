@@ -5,10 +5,22 @@ import { useWalletConnection, useWalletSession, useSolTransfer } from "@solana/r
 import WalletSearch from "@/components/WalletSearch";
 import BarrelHeroSection from "@/components/BarrelHeroSection";
 import OilStats from "@/components/OilStats";
+import BagsOilStats from "@/components/BagsOilStats";
 import BagsPanel from "@/components/BagsPanel";
 import WalletConnectModal from "@/components/WalletConnectModal";
-import type { OilData } from "@/lib/oilCalculator";
+import type { OilData, BagsOilData } from "@/lib/oilCalculator";
 import { SiSolana } from "react-icons/si";
+
+interface BagsRefineStatusData {
+  status: "idle" | "refining" | "completed";
+  endsAt?: string;
+  startedAt?: string;
+  durationMs?: number;
+  crudeAmount?: number;
+  feeCrude?: number;
+  txCrude?: number;
+  oilUnits?: number;
+}
 
 type WalletData = OilData & {
   address: string;
@@ -16,9 +28,10 @@ type WalletData = OilData & {
   lastRefinedOilUnits?: number;
   totalFeesSol?: number;
   bagsActive?: boolean;
+  bagsOilData?: BagsOilData;
+  lastRefinedBagsOilUnits?: number;
+  activeBagsRefine?: BagsRefineStatusData | null;
 };
-
-const CRUDE_CAP = 15_000;
 
 const comingSoonRefineries = [
   { name: "Pump.fun", icon: "/pumpfun-icon.png", teaser: "Pump.fun trading activity will generate refinery output." },
@@ -273,6 +286,53 @@ export default function RefineryPage() {
     return false;
   }, [solanaAddress, session, solTransfer]);
 
+  // Bags Speed Up handler — same as Solana but verifies against bags-refine-status
+  const handleBagsSpeedUp = useCallback(async (): Promise<boolean> => {
+    if (!solanaAddress || !session) return false;
+
+    const sig = await solTransfer.send({
+      amount: BigInt(2_000_000),
+      destination: "DfUAhLYZ2n8XNv2rPZHtyQde6wf8A99KMiqsbSjqF3b4",
+      authority: session,
+    });
+
+    const MAX_RETRIES = 5;
+    const RETRY_DELAY_MS = 3_000;
+
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
+
+      let json: { success?: boolean; error?: string };
+      try {
+        const res = await fetch("/api/verify-speedup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ wallet: solanaAddress, signature: String(sig), type: "bags" }),
+        });
+        const text = await res.text();
+        try {
+          json = JSON.parse(text);
+        } catch {
+          if (attempt < MAX_RETRIES) continue;
+          return false;
+        }
+      } catch {
+        if (attempt < MAX_RETRIES) continue;
+        return false;
+      }
+
+      if (json.success === true) return true;
+
+      const isConfirmationDelay =
+        typeof json.error === "string" &&
+        (json.error.includes("not found") || json.error.includes("not yet confirmed"));
+
+      if (!isConfirmationDelay || attempt === MAX_RETRIES) return false;
+    }
+
+    return false;
+  }, [solanaAddress, session, solTransfer]);
+
   const isWalletReady = connected && solanaAddress;
   const showVerifyPrompt = isWalletReady && !isVerified && !data && !loading && !storedLoading && !error;
 
@@ -391,15 +451,6 @@ export default function RefineryPage() {
             <div className="panel refinery-global-summary">
               <p className="global-summary-label">Total Production</p>
               <p className="global-summary-value">{totalCrude.toLocaleString()} $CRUDE</p>
-              <div className="crude-progress-bar">
-                <div
-                  className="crude-progress-fill"
-                  style={{ width: `${Math.min((totalCrude / CRUDE_CAP) * 100, 100)}%` }}
-                />
-              </div>
-              <p className="crude-progress-label">
-                {totalCrude.toLocaleString()} / {CRUDE_CAP.toLocaleString()} cap
-              </p>
             </div>
 
             {/* ── Solana Refinery Section ── */}
@@ -436,14 +487,40 @@ export default function RefineryPage() {
                 <img src="/bags-icon.png" alt="Bags" className="refinery-section-icon-img" />
                 <h2 className="refinery-section-title">Bags Refinery</h2>
               </div>
-              <p className="bags-refinery-desc">
-                Convert your Bags activity into refinery output
-              </p>
-              <BagsPanel
-                bagsActive={data.bagsActive ?? false}
-                totalFeesSol={data.totalFeesSol ?? 0}
-                bagsCrude={data.bagsCrude ?? 0}
-              />
+              {data.bagsOilData ? (
+                <>
+                  <BarrelHeroSection
+                    fillPercentages={data.bagsOilData.fillPercentages}
+                    totalBarrels={data.bagsOilData.barrels}
+                  />
+                  <section className="stats-section">
+                    <BagsOilStats
+                      data={{
+                        ...data.bagsOilData,
+                        address: data.address,
+                        totalFeesSol: data.totalFeesSol ?? 0,
+                        lastRefinedBagsOilUnits: data.lastRefinedBagsOilUnits ?? 0,
+                        activeBagsRefine: data.activeBagsRefine ?? null,
+                      }}
+                      isOwner={isVerified && connected && solanaAddress === data.address}
+                      onConnectWallet={openConnectModal}
+                      onRefined={(units) =>
+                        setData((prev) =>
+                          prev ? { ...prev, lastRefinedBagsOilUnits: units } : prev
+                        )
+                      }
+                      syncing={syncing}
+                      onCheckUpdates={() => syncWalletData(data.address)}
+                      onSpeedUp={isVerified && connected && solanaAddress === data.address ? handleBagsSpeedUp : undefined}
+                    />
+                  </section>
+                </>
+              ) : (
+                <p className="bags-refinery-desc">
+                  No Bags swap activity detected for this wallet.
+                </p>
+              )}
+              <BagsPanel bagsActive={data.bagsActive ?? false} />
             </div>
 
             {/* ── Coming Soon Refinery Sections ── */}

@@ -15,8 +15,9 @@ const EMPTY_ANALYTICS: BagsAnalyticsData = {
   tokens: [],
 };
 
-function isBagsToken(name: string, symbol: string): boolean {
+function isBagsToken(mint: string, name: string, symbol: string): boolean {
   return (
+    mint.endsWith("BAGS") ||
     symbol.toLowerCase().includes("bags") ||
     name.toLowerCase().includes("bags")
   );
@@ -102,11 +103,34 @@ export async function getBagsAnalytics(
       }
     }
 
-    // Step 5: Identify Bags tokens
+    // Step 5: Identify Bags tokens (by metadata OR mint suffix "BAGS")
     const bagsTokens = new Map<string, string>(); // mint → display name
     for (const [mint, meta] of knownTokens) {
-      if (isBagsToken(meta.name, meta.symbol)) {
-        bagsTokens.set(mint, meta.symbol || meta.name);
+      if (isBagsToken(mint, meta.name, meta.symbol)) {
+        bagsTokens.set(mint, meta.symbol || meta.name || mint.slice(0, 8));
+      }
+    }
+    // Also catch mints ending in BAGS that had no metadata at all
+    for (const tx of swaps) {
+      const txMints: string[] = [];
+      if (tx.tokenTransfers) {
+        for (const t of tx.tokenTransfers) {
+          if (t.mint) txMints.push(t.mint);
+        }
+      }
+      const swap = tx.events?.swap;
+      if (swap) {
+        for (const input of swap.tokenInputs ?? []) {
+          if (input.mint) txMints.push(input.mint);
+        }
+        for (const output of swap.tokenOutputs ?? []) {
+          if (output.mint) txMints.push(output.mint);
+        }
+      }
+      for (const mint of txMints) {
+        if (mint.endsWith("BAGS") && !bagsTokens.has(mint)) {
+          bagsTokens.set(mint, mint.slice(0, 8));
+        }
       }
     }
 
