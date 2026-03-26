@@ -14,6 +14,28 @@ const EMPTY_ANALYTICS: BagsAnalyticsData = {
   tokens: [],
 };
 
+// Bags/Meteora program IDs — swaps through these programs are Bags swaps.
+// Source: https://docs.bags.fm/principles/program-ids
+const BAGS_PROGRAM_IDS = new Set([
+  "dbcij3LWUppWqq96dh6gJWwBifmcGfLSB5D4DuSMaqN", // Meteora Dynamic Bonding Curve
+  "cpamdpZCGKUy5JxQXB4dcpGPiikHawvSWAd6mEn1sGG", // Meteora DAMM (AMM post-migration)
+]);
+
+/**
+ * Checks if a transaction interacts with any Bags program.
+ * Uses accountData (all accounts involved in the tx) to check for program IDs.
+ */
+function isBagsSwap(tx: HeliusEnrichedTransaction): boolean {
+  if (tx.accountData) {
+    for (const entry of tx.accountData) {
+      if (BAGS_PROGRAM_IDS.has(entry.account)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 /**
  * Collects all token mints referenced in a swap transaction.
  */
@@ -39,9 +61,9 @@ function getSwapMints(tx: HeliusEnrichedTransaction): Set<string> {
 /**
  * Returns Bags swap analytics for a wallet.
  *
- * @param knownBagsMints - Set of token mints known to be Bags tokens
- *   (from the Bags feed + claimable positions). Swaps involving any of
- *   these mints are counted as Bags swaps.
+ * Identifies Bags swaps by checking if the transaction interacts with
+ * Bags/Meteora program IDs (DBC bonding curve or DAMM AMM).
+ * Also matches against known Bags token mints as a secondary signal.
  *
  * Checks Supabase cache first (10 min TTL), falls back to live Helius computation.
  * Never throws — returns safe defaults on any failure.
@@ -58,13 +80,6 @@ export async function getBagsAnalytics(
       return cached;
     }
 
-    // If we have no known Bags mints, we can't identify any Bags swaps
-    if (knownBagsMints.size === 0) {
-      console.log("[bagsAnalyzer] No known Bags mints — skipping swap scan");
-      setCachedAnalytics(wallet, EMPTY_ANALYTICS).catch(() => {});
-      return EMPTY_ANALYTICS;
-    }
-
     // Step 2: Fetch swap transactions from Helius
     const swaps = await fetchSwapTransactions(wallet);
     if (swaps.length === 0) {
@@ -72,17 +87,31 @@ export async function getBagsAnalytics(
       return EMPTY_ANALYTICS;
     }
 
-    // Step 3: Count swaps involving known Bags tokens
+    // Step 3: Count swaps that are Bags swaps
+    // A swap is a Bags swap if:
+    //   - It interacts with a Bags/Meteora program (DBC or DAMM), OR
+    //   - It involves a known Bags token mint (from feed/positions)
     let bagsSwapCount = 0;
     const matchedMints = new Set<string>();
 
     for (const tx of swaps) {
+      const programMatch = isBagsSwap(tx);
       const txMints = getSwapMints(tx);
-      for (const mint of txMints) {
-        if (knownBagsMints.has(mint)) {
-          bagsSwapCount++;
+
+      let mintMatch = false;
+      if (knownBagsMints.size > 0) {
+        for (const mint of txMints) {
+          if (knownBagsMints.has(mint)) {
+            mintMatch = true;
+            break;
+          }
+        }
+      }
+
+      if (programMatch || mintMatch) {
+        bagsSwapCount++;
+        for (const mint of txMints) {
           matchedMints.add(mint);
-          break; // count each tx only once
         }
       }
     }
@@ -96,6 +125,10 @@ export async function getBagsAnalytics(
 
     // Step 5: Fire-and-forget cache write
     setCachedAnalytics(wallet, analytics).catch(() => {});
+
+    console.log(
+      `[bagsAnalyzer] ${wallet}: ${bagsSwapCount} Bags swaps across ${matchedMints.size} tokens (from ${swaps.length} total swaps)`
+    );
 
     return analytics;
   } catch (err) {

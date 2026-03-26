@@ -144,7 +144,9 @@ export interface HeliusTokenTransfer {
 export interface HeliusEnrichedTransaction {
   signature: string;
   type: string;
+  source?: string;
   tokenTransfers: HeliusTokenTransfer[];
+  accountData?: { account: string; nativeBalanceChange?: number }[];
   events?: {
     swap?: {
       tokenInputs?: { mint: string; tokenStandard?: string }[];
