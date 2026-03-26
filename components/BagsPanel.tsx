@@ -71,7 +71,7 @@ export default function BagsPanel({ bagsActive }: BagsPanelProps) {
           <div className="bags-status bags-status-inactive">
             <p className="bags-inactive-title">No refinery activity detected.</p>
             <p className="bags-inactive-hint">
-              Trade on <a href="https://bags.fm" target="_blank" rel="noopener noreferrer" className="bags-inline-link">Bags</a> to earn fee rewards and generate refinery output.
+              Trade on <a href="https://bags.fm" target="_blank" rel="noopener noreferrer" className="bags-inline-link">Bags</a> generate refinery output.
             </p>
           </div>
         )}
