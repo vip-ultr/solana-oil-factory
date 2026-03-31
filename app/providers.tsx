@@ -24,7 +24,7 @@ const solanaClient = createClient({
 export default function Providers({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider attribute="data-theme" defaultTheme="system" enableSystem>
-      <SolanaProvider client={solanaClient}>{children}</SolanaProvider>
+      <SolanaProvider client={solanaClient} walletPersistence={{ autoConnect: false }}>{children}</SolanaProvider>
     </ThemeProvider>
   );
 }
