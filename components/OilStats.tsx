@@ -284,7 +284,7 @@ export default function OilStats({
 
   const shareText = `Solana Oil Factory \u{1F6E2}\u{FE0F}
 
-I just refined ${totalCrude.toLocaleString()} $CRUDE
+I just refined ${totalCrude.toLocaleString()} $CRUDE on @solanaOilFac
 
 \u{1F4CA} Transactions: ${oilUnits.toLocaleString()}
 \u{1F3F7}\u{FE0F} Title: ${title}
