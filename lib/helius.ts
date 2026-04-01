@@ -185,12 +185,13 @@ export async function fetchSwapTransactions(
 
   const all: HeliusEnrichedTransaction[] = [];
   let before: string | undefined;
-  let pages = 0;
+  let scannedPages = 0;
+  let swapPages = 0;
   const startTime = Date.now();
 
-  while (pages < MAX_SWAP_PAGES) {
+  while (true) {
     if (Date.now() - startTime > SWAP_BUDGET_MS) {
-      console.warn(`[helius] Swap fetch time budget exceeded at page ${pages}`);
+      console.warn(`[helius] Swap fetch time budget exceeded at scanned page ${scannedPages}`);
       break;
     }
 
@@ -217,18 +218,24 @@ export async function fetchSwapTransactions(
         : [];
       if (batch.length === 0) break;
 
+      let pageSwapCount = 0;
       for (const tx of batch) {
         if (isSwapLikeTransaction(tx)) {
           all.push(tx);
+          pageSwapCount++;
         }
       }
-      pages++;
+      scannedPages++;
+      if (pageSwapCount > 0) {
+        swapPages++;
+        if (swapPages >= MAX_SWAP_PAGES) break;
+      }
 
       if (batch.length < SWAP_PAGE_SIZE) break;
       before = batch[batch.length - 1].signature;
     } catch (err) {
-      if (pages === 0) throw err;
-      console.warn(`[helius] Swap fetch failed at page ${pages}, returning partial`);
+      if (scannedPages === 0) throw err;
+      console.warn(`[helius] Swap fetch failed at page ${scannedPages}, returning partial`);
       break;
     } finally {
       clearTimeout(timeout);
