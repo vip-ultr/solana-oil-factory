@@ -261,7 +261,7 @@ https://solanaoilfactory.xyz/wallet/${address}`;
         <section className="stats-section">
           <div className="panel share-panel">
             <p className="panel-label">Share</p>
-            <p className="share-desc">Share this wallet&apos;s refinery stats.</p>
+            <p className="share-desc">Share wallet&apos;s refinery stats.</p>
             <button onClick={handleShare} className="btn-share">
               Share on&nbsp;
               <svg
