@@ -1,5 +1,6 @@
 import {
   fetchSwapTransactions,
+  fetchTokenMetadataBatch,
   type HeliusEnrichedTransaction,
 } from "@/lib/helius";
 import {
@@ -58,6 +59,24 @@ function getSwapMints(tx: HeliusEnrichedTransaction): Set<string> {
   return mints;
 }
 
+function getTokenLabels(tx: HeliusEnrichedTransaction): Array<{
+  mint: string;
+  symbol: string;
+  name: string;
+}> {
+  const labels = new Map<string, { symbol: string; name: string }>();
+  if (tx.tokenTransfers) {
+    for (const t of tx.tokenTransfers) {
+      if (!t.mint) continue;
+      labels.set(t.mint, {
+        symbol: t.tokenSymbol ?? "",
+        name: t.tokenName ?? "",
+      });
+    }
+  }
+  return [...labels.entries()].map(([mint, v]) => ({ mint, ...v }));
+}
+
 /**
  * Returns Bags swap analytics for a wallet.
  *
@@ -80,12 +99,22 @@ export async function getBagsAnalytics(
       return cached;
     }
 
-    // Step 2: Fetch swap transactions from Helius
+    // Step 2: Fetch swap-like transactions from Helius
     const swaps = await fetchSwapTransactions(wallet);
     if (swaps.length === 0) {
+      console.log(`[bagsAnalyzer] ${wallet}: no swap-like transactions found`);
       setCachedAnalytics(wallet, EMPTY_ANALYTICS).catch(() => {});
       return EMPTY_ANALYTICS;
     }
+
+    // Debug: inspect real Helius tx shape and token labels.
+    const sample = swaps.slice(0, 2).map((tx) => ({
+      signature: tx.signature,
+      type: tx.type,
+      tokenTransfers: tx.tokenTransfers?.slice(0, 4) ?? [],
+      swapEvent: tx.events?.swap ?? null,
+    }));
+    console.log("[bagsAnalyzer] sample swap-like tx", JSON.stringify(sample));
 
     // Step 3: Count swaps that are Bags swaps
     // A swap is a Bags swap if:
@@ -93,10 +122,13 @@ export async function getBagsAnalytics(
     //   - It involves a known Bags token mint (from feed/positions)
     let bagsSwapCount = 0;
     const matchedMints = new Set<string>();
+    const allSwapMints = new Set<string>();
+    const observedLabels = new Map<string, { symbol: string; name: string }>();
 
     for (const tx of swaps) {
       const programMatch = isBagsSwap(tx);
       const txMints = getSwapMints(tx);
+      const labels = getTokenLabels(tx);
 
       let mintMatch = false;
       if (knownBagsMints.size > 0) {
@@ -108,6 +140,11 @@ export async function getBagsAnalytics(
         }
       }
 
+      for (const mint of txMints) allSwapMints.add(mint);
+      for (const label of labels) {
+        observedLabels.set(label.mint, { symbol: label.symbol, name: label.name });
+      }
+
       if (programMatch || mintMatch) {
         bagsSwapCount++;
         for (const mint of txMints) {
@@ -117,6 +154,23 @@ export async function getBagsAnalytics(
     }
 
     // Step 4: Build result
+    const unresolvedMints = [...matchedMints].filter((mint) => {
+      const label = observedLabels.get(mint);
+      return !label || (!label.symbol && !label.name);
+    });
+    if (unresolvedMints.length > 0) {
+      const metadata = await fetchTokenMetadataBatch(unresolvedMints);
+      for (const mint of unresolvedMints) {
+        const meta = metadata.get(mint);
+        if (meta) observedLabels.set(mint, { symbol: meta.symbol, name: meta.name });
+      }
+    }
+
+    const sampleLabels = [...matchedMints]
+      .slice(0, 8)
+      .map((mint) => ({ mint, ...(observedLabels.get(mint) ?? { symbol: "", name: "" }) }));
+    console.log("[bagsAnalyzer] matched token labels", JSON.stringify(sampleLabels));
+
     const analytics: BagsAnalyticsData = {
       unique_tokens_traded: matchedMints.size,
       total_swap_transactions: bagsSwapCount,
@@ -127,7 +181,7 @@ export async function getBagsAnalytics(
     setCachedAnalytics(wallet, analytics).catch(() => {});
 
     console.log(
-      `[bagsAnalyzer] ${wallet}: ${bagsSwapCount} Bags swaps across ${matchedMints.size} tokens (from ${swaps.length} total swaps)`
+      `[bagsAnalyzer] ${wallet}: ${bagsSwapCount} Bags swaps across ${matchedMints.size} tokens (from ${swaps.length} swap-like txs, ${allSwapMints.size} swap mints observed)`
     );
 
     return analytics;

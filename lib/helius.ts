@@ -155,9 +155,27 @@ export interface HeliusEnrichedTransaction {
   };
 }
 
+export function isSwapLikeTransaction(tx: HeliusEnrichedTransaction): boolean {
+  if (tx.type === "SWAP") return true;
+
+  const swapEvent = tx.events?.swap;
+  const hasSwapEvent =
+    !!swapEvent &&
+    ((swapEvent.tokenInputs?.length ?? 0) > 0 ||
+      (swapEvent.tokenOutputs?.length ?? 0) > 0);
+  if (hasSwapEvent) return true;
+
+  const transfers = tx.tokenTransfers ?? [];
+  if (transfers.length < 2) return false;
+
+  const uniqueMints = new Set(transfers.map((t) => t.mint).filter(Boolean));
+  return uniqueMints.size >= 2;
+}
+
 /**
- * Fetches enriched SWAP transactions for a wallet using the Helius
- * Enhanced Transactions REST API. Paginated with a dedicated time budget.
+ * Fetches enriched transactions for a wallet using the Helius Enhanced
+ * Transactions REST API, then keeps only swap-like activity.
+ * Paginated with a dedicated time budget.
  */
 export async function fetchSwapTransactions(
   walletAddress: string
@@ -168,7 +186,6 @@ export async function fetchSwapTransactions(
   const all: HeliusEnrichedTransaction[] = [];
   let before: string | undefined;
   let pages = 0;
-  let retries = 0;
   const startTime = Date.now();
 
   while (pages < MAX_SWAP_PAGES) {
@@ -181,7 +198,6 @@ export async function fetchSwapTransactions(
       `${HELIUS_ENHANCED_URL}/addresses/${walletAddress}/transactions`
     );
     url.searchParams.set("api-key", apiKey);
-    url.searchParams.set("type", "SWAP");
     url.searchParams.set("limit", String(SWAP_PAGE_SIZE));
     if (before) url.searchParams.set("before-signature", before);
 
@@ -196,28 +212,16 @@ export async function fetchSwapTransactions(
 
       const body = await res.json();
 
-      // Handle runtime type filtering continuation pattern:
-      // API may return an error with a continuation signature when no
-      // SWAP matches exist in the current search window.
-      if (body && typeof body === "object" && "error" in body) {
-        const errMsg = String(body.error ?? "");
-        const match = errMsg.match(/before-signature.*?set to (\S+)/i);
-        if (match?.[1]) {
-          before = match[1];
-          retries++;
-          if (retries > MAX_SWAP_PAGES) break; // prevent infinite loops
-          continue;
-        }
-        break;
-      }
-
       const batch: HeliusEnrichedTransaction[] = Array.isArray(body)
         ? body
         : [];
       if (batch.length === 0) break;
 
-      retries = 0;
-      all.push(...batch);
+      for (const tx of batch) {
+        if (isSwapLikeTransaction(tx)) {
+          all.push(tx);
+        }
+      }
       pages++;
 
       if (batch.length < SWAP_PAGE_SIZE) break;
