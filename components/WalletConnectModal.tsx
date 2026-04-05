@@ -3,6 +3,7 @@
 import { useEffect, useCallback, useState, useRef } from "react";
 import { useWalletConnection } from "@solana/react-hooks";
 import { getWallets } from "@wallet-standard/app";
+import type { Wallet } from "@wallet-standard/base";
 
 /* ── Solana-only connector filter ────────────────────────────────────── */
 const NON_SOLANA = ["sui", "ethereum", "metamask", "rabby", "aptos"];
@@ -14,6 +15,20 @@ function isSolanaConnector(c: { id: string; name: string }): boolean {
   if (NON_SOLANA.some((x) => id.includes(x) || name.includes(x))) return false;
   if (id.includes(MWA_KEYWORD) || name.includes(MWA_KEYWORD)) return false;
   return true;
+}
+
+function isSolanaWallet(wallet: Wallet): boolean {
+  const name = wallet.name.toLowerCase();
+  if (NON_SOLANA.some((x) => name.includes(x))) return false;
+  if (name.includes(MWA_KEYWORD)) return false;
+  // Check if wallet supports Solana chain
+  return wallet.chains.some(
+    (chain) =>
+      chain.includes("solana") ||
+      chain === "solana:mainnet" ||
+      chain === "solana:devnet" ||
+      chain === "solana:testnet"
+  );
 }
 
 /* ── Environment detection ───────────────────────────────────────────── */
@@ -57,14 +72,79 @@ interface WalletConnectModalProps {
   onClose: () => void;
 }
 
+interface WalletItem {
+  id: string;
+  name: string;
+  icon?: string;
+  connectId?: string; // ID to use when calling connect()
+}
+
 export default function WalletConnectModal({ isOpen, onClose }: WalletConnectModalProps) {
   const { connectors, connect, connecting, isReady, connected } = useWalletConnection();
+  const [allWallets, setAllWallets] = useState<WalletItem[]>([]);
   const [connectingId, setConnectingId] = useState<string | null>(null);
   const [connectError, setConnectError] = useState<string | null>(null);
   const abortRef = useRef(false);
   const autoConnectAttemptedRef = useRef(false);
 
-  const solanaConnectors = connectors.filter(isSolanaConnector);
+  // Discover all available wallets using Wallet Standard API
+  useEffect(() => {
+    const discoverWallets = () => {
+      try {
+        const { get } = getWallets();
+        const standardWallets = get();
+
+        // Convert Wallet Standard wallets to connector format
+        const walletsFromStandard = standardWallets
+          .filter(isSolanaWallet)
+          .map((wallet) => ({
+            id: wallet.name.toLowerCase().replace(/\s+/g, "-"),
+            name: wallet.name,
+            icon: wallet.icon,
+            connectId: wallet.name, // Use wallet name for connect call
+          }));
+
+        // Also include connectors from the hook (for compatibility)
+        const connectorsList = connectors.filter(isSolanaConnector).map((c) => ({
+          id: c.id,
+          name: c.name,
+          icon: c.icon,
+          connectId: c.id, // Use original ID from hook
+        }));
+
+        // Merge both sources, avoiding duplicates (prefer standard wallets)
+        const merged: WalletItem[] = [];
+        const seenNames = new Set<string>();
+
+        // Add standard wallets first
+        walletsFromStandard.forEach((w) => {
+          merged.push(w);
+          seenNames.add(w.name.toLowerCase());
+        });
+
+        // Add hook connectors that aren't already in standard wallets
+        connectorsList.forEach((connector) => {
+          if (!seenNames.has(connector.name.toLowerCase())) {
+            merged.push(connector);
+          }
+        });
+
+        setAllWallets(merged);
+      } catch (err) {
+        // Fallback to hook connectors if standard API fails
+        const solanaConnectorsList = connectors
+          .filter(isSolanaConnector)
+          .map((c) => ({ id: c.id, name: c.name, icon: c.icon, connectId: c.id }));
+        setAllWallets(solanaConnectorsList);
+      }
+    };
+
+    if (isOpen) {
+      discoverWallets();
+    }
+  }, [isOpen, connectors]);
+
+  const solanaConnectors = allWallets;
 
   const mobile = typeof window !== "undefined" && isMobile();
   const inWalletBrowser = typeof window !== "undefined" && isInWalletBrowser();
@@ -105,20 +185,22 @@ export default function WalletConnectModal({ isOpen, onClose }: WalletConnectMod
     [onClose],
   );
 
-  const handleConnect = async (connector: { id: string; name: string }) => {
-    setConnectingId(connector.id);
+  const handleConnect = async (wallet: WalletItem) => {
+    setConnectingId(wallet.id);
     setConnectError(null);
     abortRef.current = false;
 
     try {
-      await connect(connector.id);
+      // Use connectId if available (for Wallet Standard), otherwise use id
+      const idToConnect = wallet.connectId || wallet.id;
+      await connect(idToConnect);
     } catch (err) {
       if (abortRef.current) return;
       const msg = err instanceof Error ? err.message : "Connection failed";
       if (msg.includes("reject") || msg.includes("cancel") || msg.includes("denied")) {
         setConnectError("Connection rejected. Please approve in your wallet.");
       } else {
-        setConnectError(`Failed to connect to ${connector.name}. Try again.`);
+        setConnectError(`Failed to connect to ${wallet.name}. Try again.`);
       }
     } finally {
       if (!abortRef.current) setConnectingId(null);
@@ -289,8 +371,8 @@ function WalletList({
   onConnect,
   disabled,
 }: {
-  connectors: { id: string; name: string; icon?: string }[];
-  onConnect: (c: { id: string; name: string }) => void;
+  connectors: WalletItem[];
+  onConnect: (wallet: WalletItem) => void;
   disabled: boolean;
 }) {
   return (
