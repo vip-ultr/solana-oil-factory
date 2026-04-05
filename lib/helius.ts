@@ -155,6 +155,14 @@ export interface HeliusEnrichedTransaction {
   };
 }
 
+export interface SwapTransactionsFetchResult {
+  transactions: HeliusEnrichedTransaction[];
+  partial: boolean;
+  scannedPages: number;
+  swapPages: number;
+  error?: string;
+}
+
 export function isSwapLikeTransaction(tx: HeliusEnrichedTransaction): boolean {
   if (tx.type === "SWAP") return true;
 
@@ -179,7 +187,7 @@ export function isSwapLikeTransaction(tx: HeliusEnrichedTransaction): boolean {
  */
 export async function fetchSwapTransactions(
   walletAddress: string
-): Promise<HeliusEnrichedTransaction[]> {
+): Promise<SwapTransactionsFetchResult> {
   const apiKey = process.env.HELIUS_API_KEY;
   if (!apiKey) throw new Error("HELIUS_API_KEY not configured");
 
@@ -187,11 +195,15 @@ export async function fetchSwapTransactions(
   let before: string | undefined;
   let scannedPages = 0;
   let swapPages = 0;
+  let partial = false;
+  let error: string | undefined;
   const startTime = Date.now();
 
   while (true) {
     if (Date.now() - startTime > SWAP_BUDGET_MS) {
       console.warn(`[helius] Swap fetch time budget exceeded at scanned page ${scannedPages}`);
+      partial = true;
+      error = "TIME_BUDGET_EXCEEDED";
       break;
     }
 
@@ -236,13 +248,21 @@ export async function fetchSwapTransactions(
     } catch (err) {
       if (scannedPages === 0) throw err;
       console.warn(`[helius] Swap fetch failed at page ${scannedPages}, returning partial`);
+      partial = true;
+      error = err instanceof Error ? err.message : "SWAP_PAGE_FETCH_FAILED";
       break;
     } finally {
       clearTimeout(timeout);
     }
   }
 
-  return all;
+  return {
+    transactions: all,
+    partial,
+    scannedPages,
+    swapPages,
+    error,
+  };
 }
 
 export interface TokenMetadata {

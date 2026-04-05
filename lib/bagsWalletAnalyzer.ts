@@ -100,10 +100,15 @@ export async function getBagsAnalytics(
     }
 
     // Step 2: Fetch swap-like transactions from Helius
-    const swaps = await fetchSwapTransactions(wallet);
+    const swapFetch = await fetchSwapTransactions(wallet);
+    const swaps = swapFetch.transactions;
     if (swaps.length === 0) {
-      console.log(`[bagsAnalyzer] ${wallet}: no swap-like transactions found`);
-      setCachedAnalytics(wallet, EMPTY_ANALYTICS).catch(() => {});
+      console.log(
+        `[bagsAnalyzer] ${wallet}: no swap-like transactions found (partial=${swapFetch.partial}, scannedPages=${swapFetch.scannedPages}, swapPages=${swapFetch.swapPages}, error=${swapFetch.error ?? "none"})`
+      );
+      if (!swapFetch.partial) {
+        setCachedAnalytics(wallet, EMPTY_ANALYTICS).catch(() => {});
+      }
       return EMPTY_ANALYTICS;
     }
 
@@ -177,11 +182,13 @@ export async function getBagsAnalytics(
       tokens: [...matchedMints],
     };
 
-    // Step 5: Fire-and-forget cache write
-    setCachedAnalytics(wallet, analytics).catch(() => {});
+    // Step 5: Fire-and-forget cache write (skip partial snapshots)
+    if (!swapFetch.partial) {
+      setCachedAnalytics(wallet, analytics).catch(() => {});
+    }
 
     console.log(
-      `[bagsAnalyzer] ${wallet}: ${bagsSwapCount} Bags swaps across ${matchedMints.size} tokens (from ${swaps.length} swap-like txs, ${allSwapMints.size} swap mints observed)`
+      `[bagsAnalyzer] ${wallet}: ${bagsSwapCount} Bags swaps across ${matchedMints.size} tokens (from ${swaps.length} swap-like txs, ${allSwapMints.size} swap mints observed, partial=${swapFetch.partial}, scannedPages=${swapFetch.scannedPages}, swapPages=${swapFetch.swapPages}, error=${swapFetch.error ?? "none"})`
     );
 
     return analytics;
