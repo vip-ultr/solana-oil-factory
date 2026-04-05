@@ -92,6 +92,8 @@ export async function getBagsAnalytics(
   knownBagsMints: Set<string>
 ): Promise<BagsAnalyticsData> {
   try {
+    const debugEnabled = process.env.BAGS_ANALYZER_DEBUG === "true";
+
     // Step 1: Check cache
     const cached = await getCachedAnalytics(wallet);
     if (cached) {
@@ -113,13 +115,15 @@ export async function getBagsAnalytics(
     }
 
     // Debug: inspect real Helius tx shape and token labels.
-    const sample = swaps.slice(0, 2).map((tx) => ({
-      signature: tx.signature,
-      type: tx.type,
-      tokenTransfers: tx.tokenTransfers?.slice(0, 4) ?? [],
-      swapEvent: tx.events?.swap ?? null,
-    }));
-    console.log("[bagsAnalyzer] sample swap-like tx", JSON.stringify(sample));
+    if (debugEnabled) {
+      const sample = swaps.slice(0, 2).map((tx) => ({
+        signature: tx.signature,
+        type: tx.type,
+        tokenTransfers: tx.tokenTransfers?.slice(0, 4) ?? [],
+        swapEvent: tx.events?.swap ?? null,
+      }));
+      console.log("[bagsAnalyzer] sample swap-like tx", JSON.stringify(sample));
+    }
 
     // Step 3: Count swaps that are Bags swaps
     // A swap is a Bags swap if:
@@ -133,7 +137,7 @@ export async function getBagsAnalytics(
     for (const tx of swaps) {
       const programMatch = isBagsSwap(tx);
       const txMints = getSwapMints(tx);
-      const labels = getTokenLabels(tx);
+      const labels = debugEnabled ? getTokenLabels(tx) : [];
 
       let mintMatch = false;
       if (knownBagsMints.size > 0) {
@@ -159,22 +163,24 @@ export async function getBagsAnalytics(
     }
 
     // Step 4: Build result
-    const unresolvedMints = [...matchedMints].filter((mint) => {
-      const label = observedLabels.get(mint);
-      return !label || (!label.symbol && !label.name);
-    });
-    if (unresolvedMints.length > 0) {
-      const metadata = await fetchTokenMetadataBatch(unresolvedMints);
-      for (const mint of unresolvedMints) {
-        const meta = metadata.get(mint);
-        if (meta) observedLabels.set(mint, { symbol: meta.symbol, name: meta.name });
+    if (debugEnabled) {
+      const unresolvedMints = [...matchedMints].filter((mint) => {
+        const label = observedLabels.get(mint);
+        return !label || (!label.symbol && !label.name);
+      });
+      if (unresolvedMints.length > 0) {
+        const metadata = await fetchTokenMetadataBatch(unresolvedMints);
+        for (const mint of unresolvedMints) {
+          const meta = metadata.get(mint);
+          if (meta) observedLabels.set(mint, { symbol: meta.symbol, name: meta.name });
+        }
       }
-    }
 
-    const sampleLabels = [...matchedMints]
-      .slice(0, 8)
-      .map((mint) => ({ mint, ...(observedLabels.get(mint) ?? { symbol: "", name: "" }) }));
-    console.log("[bagsAnalyzer] matched token labels", JSON.stringify(sampleLabels));
+      const sampleLabels = [...matchedMints]
+        .slice(0, 8)
+        .map((mint) => ({ mint, ...(observedLabels.get(mint) ?? { symbol: "", name: "" }) }));
+      console.log("[bagsAnalyzer] matched token labels", JSON.stringify(sampleLabels));
+    }
 
     const analytics: BagsAnalyticsData = {
       unique_tokens_traded: matchedMints.size,
