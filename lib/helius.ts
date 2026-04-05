@@ -155,25 +155,55 @@ export interface HeliusEnrichedTransaction {
   };
 }
 
+export interface SwapTransactionsFetchResult {
+  transactions: HeliusEnrichedTransaction[];
+  partial: boolean;
+  scannedPages: number;
+  swapPages: number;
+  error?: string;
+}
+
+export function isSwapLikeTransaction(tx: HeliusEnrichedTransaction): boolean {
+  if (tx.type === "SWAP") return true;
+
+  const swapEvent = tx.events?.swap;
+  const hasSwapEvent =
+    !!swapEvent &&
+    ((swapEvent.tokenInputs?.length ?? 0) > 0 ||
+      (swapEvent.tokenOutputs?.length ?? 0) > 0);
+  if (hasSwapEvent) return true;
+
+  const transfers = tx.tokenTransfers ?? [];
+  if (transfers.length < 2) return false;
+
+  const uniqueMints = new Set(transfers.map((t) => t.mint).filter(Boolean));
+  return uniqueMints.size >= 2;
+}
+
 /**
- * Fetches enriched SWAP transactions for a wallet using the Helius
- * Enhanced Transactions REST API. Paginated with a dedicated time budget.
+ * Fetches enriched transactions for a wallet using the Helius Enhanced
+ * Transactions REST API, then keeps only swap-like activity.
+ * Paginated with a dedicated time budget.
  */
 export async function fetchSwapTransactions(
   walletAddress: string
-): Promise<HeliusEnrichedTransaction[]> {
+): Promise<SwapTransactionsFetchResult> {
   const apiKey = process.env.HELIUS_API_KEY;
   if (!apiKey) throw new Error("HELIUS_API_KEY not configured");
 
   const all: HeliusEnrichedTransaction[] = [];
   let before: string | undefined;
-  let pages = 0;
-  let retries = 0;
+  let scannedPages = 0;
+  let swapPages = 0;
+  let partial = false;
+  let error: string | undefined;
   const startTime = Date.now();
 
-  while (pages < MAX_SWAP_PAGES) {
+  while (true) {
     if (Date.now() - startTime > SWAP_BUDGET_MS) {
-      console.warn(`[helius] Swap fetch time budget exceeded at page ${pages}`);
+      console.warn(`[helius] Swap fetch time budget exceeded at scanned page ${scannedPages}`);
+      partial = true;
+      error = "TIME_BUDGET_EXCEEDED";
       break;
     }
 
@@ -181,7 +211,6 @@ export async function fetchSwapTransactions(
       `${HELIUS_ENHANCED_URL}/addresses/${walletAddress}/transactions`
     );
     url.searchParams.set("api-key", apiKey);
-    url.searchParams.set("type", "SWAP");
     url.searchParams.set("limit", String(SWAP_PAGE_SIZE));
     if (before) url.searchParams.set("before-signature", before);
 
@@ -196,42 +225,44 @@ export async function fetchSwapTransactions(
 
       const body = await res.json();
 
-      // Handle runtime type filtering continuation pattern:
-      // API may return an error with a continuation signature when no
-      // SWAP matches exist in the current search window.
-      if (body && typeof body === "object" && "error" in body) {
-        const errMsg = String(body.error ?? "");
-        const match = errMsg.match(/before-signature.*?set to (\S+)/i);
-        if (match?.[1]) {
-          before = match[1];
-          retries++;
-          if (retries > MAX_SWAP_PAGES) break; // prevent infinite loops
-          continue;
-        }
-        break;
-      }
-
       const batch: HeliusEnrichedTransaction[] = Array.isArray(body)
         ? body
         : [];
       if (batch.length === 0) break;
 
-      retries = 0;
-      all.push(...batch);
-      pages++;
+      let pageSwapCount = 0;
+      for (const tx of batch) {
+        if (isSwapLikeTransaction(tx)) {
+          all.push(tx);
+          pageSwapCount++;
+        }
+      }
+      scannedPages++;
+      if (pageSwapCount > 0) {
+        swapPages++;
+        if (swapPages >= MAX_SWAP_PAGES) break;
+      }
 
       if (batch.length < SWAP_PAGE_SIZE) break;
       before = batch[batch.length - 1].signature;
     } catch (err) {
-      if (pages === 0) throw err;
-      console.warn(`[helius] Swap fetch failed at page ${pages}, returning partial`);
+      if (scannedPages === 0) throw err;
+      console.warn(`[helius] Swap fetch failed at page ${scannedPages}, returning partial`);
+      partial = true;
+      error = err instanceof Error ? err.message : "SWAP_PAGE_FETCH_FAILED";
       break;
     } finally {
       clearTimeout(timeout);
     }
   }
 
-  return all;
+  return {
+    transactions: all,
+    partial,
+    scannedPages,
+    swapPages,
+    error,
+  };
 }
 
 export interface TokenMetadata {
