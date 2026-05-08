@@ -10,19 +10,27 @@ export const metadata: Metadata = {
 export const revalidate = 60;
 
 async function getLeaderboard(): Promise<LeaderboardEntry[]> {
-  const { data, error } = await supabase
-    .from("wallets")
-    .select("wallet_address, crude, bags_crude, total_crude, oil_units, barrels, prestige_title, last_updated")
-    .gt("total_crude", 0)
-    .order("total_crude", { ascending: false })
-    .limit(100);
+  // try/catch around the whole call so build-time prerender survives missing env
+  // (e.g. SUPABASE_SERVICE_ROLE_KEY) — the page renders empty and ISR revalidates
+  // it later once env is in place. Real Supabase errors are still logged.
+  try {
+    const { data, error } = await supabase
+      .from("wallets")
+      .select("wallet_address, crude, bags_crude, total_crude, oil_units, barrels, prestige_title, last_updated")
+      .gt("total_crude", 0)
+      .order("total_crude", { ascending: false })
+      .limit(100);
 
-  if (error) {
-    console.error("[leaderboard page]", error.message);
+    if (error) {
+      console.error("[leaderboard page]", error.message);
+      return [];
+    }
+
+    return data ?? [];
+  } catch (err) {
+    console.error("[leaderboard page]", err instanceof Error ? err.message : err);
     return [];
   }
-
-  return data ?? [];
 }
 
 export default async function LeaderboardPage() {

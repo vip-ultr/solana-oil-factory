@@ -179,10 +179,11 @@ export default function OilStats({
 
     setStartingRefine(true);
     try {
+      // Server is authoritative on oilUnits + crude — body intentionally minimal.
       const res = await fetch("/api/refine", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ address, oilUnits, bagsCrude }),
+        body: JSON.stringify({ address }),
       });
       const json = await res.json();
 
@@ -191,7 +192,7 @@ export default function OilStats({
         setEndsAt(new Date(json.endsAt).getTime());
         setPendingCrude({
           crude: json.crudeAmount ?? 0,
-          bagsCrude: json.bagsCrude ?? 0,
+          bagsCrude: 0,
         });
       } else if (json.error) {
         console.error("Refine error:", json.error);
@@ -201,7 +202,7 @@ export default function OilStats({
     } finally {
       setStartingRefine(false);
     }
-  }, [isOwner, address, oilUnits, bagsCrude]);
+  }, [isOwner, address]);
 
   // ── Claim CRUDE ──
   const handleClaim = useCallback(async () => {

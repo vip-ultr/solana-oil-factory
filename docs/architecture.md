@@ -98,6 +98,7 @@ app/
     verify-speedup/route.ts      POST — verify 0.002 SOL payment, mark complete
     leaderboard/route.ts         GET — top 100 wallets
     bags/feed/route.ts           GET — recent Bags launches
+    rpc/route.ts                 POST — Helius RPC proxy for the browser (server-side API key)
 
   refinery/page.tsx              Main dashboard (extract + refine + claim flow)
   leaderboard/page.tsx           SSR ISR (60s revalidate)
@@ -123,7 +124,7 @@ lib/
   bags.ts                        Bags API client
   bagsWalletAnalyzer.ts          Bags swap classifier + cache layer
   bagsAnalyticsCache.ts          Supabase-backed swap analytics cache
-  supabase.ts                    Supabase client (anon key)
+  supabase.ts                    Supabase client (service role, server-only)
 ```
 
 ## Known issues / drift
@@ -131,7 +132,7 @@ lib/
 Tracked here so they don't get lost. Move to issues / fix as appropriate.
 
 - **README ↔ code drift on Bags fee rate.** README says `1 SOL = 1,000 $CRUDE`; code uses `× 2000` in both `oilCalculator.ts` and `/api/bags-refine/route.ts`.
-- **Anon-key writes / no server-side verification.** `/api/refine` trusts client-supplied `oilUnits` and `bagsCrude` — anyone can POST arbitrary numbers and mint themselves into the leaderboard. The Supabase anon key is also used for writes. Either Supabase RLS must lock down `wallets`/`refines` so writes can only originate from a verified path, or the API routes must re-verify oilUnits server-side from Helius before insert. See `backend-strategy.md` for the indexed-DB approach that solves this properly.
+- **Anon-key writes / no server-side verification.** `/api/refine` trusts client-supplied `oilUnits` and `bagsCrude` — anyone can POST arbitrary numbers and mint themselves into the leaderboard. The Supabase anon key is also used for writes. Either Supabase RLS must lock down `wallets`/`refines` so writes can only originate from a verified path, or the API routes must re-verify oilUnits server-side from Helius before insert. See `backend-strategy.md` for the indexed-DB approach that solves this properly. Tracked in `docs/solana-audit.md` as C2 + H2.
 - **Invalid HTML in `OilStats.tsx`** (~line 466–481): `<p>` containing `<h2>`, `<h1>`, nested `<p>`. Will hydration-warn.
 - **Two near-duplicate refine flows** — `OilStats` + `BagsOilStats`, and `/api/refine*` + `/api/bags-refine*`. Worth a single shared `useRefineSession(kind)` hook + a generic refine route once a third refinery (Pump.fun, Bonk.fun, Candle) gets built.
 - **Auto-verify in `Navbar.tsx:31`** prompts a sign on every page on first connect, even if the user only wanted to look at the leaderboard. Consider deferring verify until the user actually needs it (refine action).

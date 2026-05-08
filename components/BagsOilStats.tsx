@@ -151,14 +151,11 @@ export default function BagsOilStats({
 
     setStartingRefine(true);
     try {
+      // Server is authoritative on swapCount + totalFeesSol — body intentionally minimal.
       const res = await fetch("/api/bags-refine", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          address,
-          swapCount: oilUnits,
-          totalFeesSol: data.totalFeesSol,
-        }),
+        body: JSON.stringify({ address }),
       });
       const json = await res.json();
 
@@ -174,7 +171,7 @@ export default function BagsOilStats({
     } finally {
       setStartingRefine(false);
     }
-  }, [isOwner, address, oilUnits, data.totalFeesSol]);
+  }, [isOwner, address]);
 
   // Claim Bags CRUDE
   const handleClaim = useCallback(async () => {

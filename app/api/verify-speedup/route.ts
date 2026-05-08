@@ -87,7 +87,12 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // 3. Fetch transaction from Helius RPC
+  // 3. Fetch transaction from Helius RPC.
+  // Use encoding:"jsonParsed" so accountKeys includes ALT-loaded keys with their
+  // pubkey + role flags, and the index space aligns with preBalances/postBalances.
+  // Per the official Solana exchange-integration guide, encoding:"json" can leave
+  // ALT-loaded accounts in meta.loadedAddresses outside accountKeys — which would
+  // miss the recipient on any v0 tx that uses lookup tables.
   let txData: {
     meta: {
       err: unknown;
@@ -96,8 +101,12 @@ export async function POST(request: NextRequest) {
     };
     transaction: {
       message: {
-        // Legacy txs: string[].  V0 txs with encoding:"json": {pubkey,signer,writable}[]
-        accountKeys: (string | { pubkey: string })[];
+        accountKeys: {
+          pubkey: string;
+          signer: boolean;
+          writable: boolean;
+          source?: "transaction" | "lookupTable";
+        }[];
       };
     };
   };
@@ -113,7 +122,7 @@ export async function POST(request: NextRequest) {
         params: [
           signature,
           {
-            encoding: "json",
+            encoding: "jsonParsed",
             maxSupportedTransactionVersion: 0,
             commitment: "confirmed",
           },
@@ -147,13 +156,11 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // 5. Verify sender === user wallet
-  // accountKeys can be string[] (legacy tx) or {pubkey:string}[] (v0 tx with encoding:"json")
-  const rawKeys = txData.transaction.message.accountKeys as (string | { pubkey: string })[];
-  const toKeyStr = (k: string | { pubkey: string }): string =>
-    typeof k === "string" ? k : k.pubkey;
-
-  const sender = toKeyStr(rawKeys[0]);
+  // 5. Verify sender === user wallet.
+  // jsonParsed merges ALT-loaded keys into accountKeys; the fee payer is always
+  // the first entry and is always a static signer.
+  const accountKeys = txData.transaction.message.accountKeys;
+  const sender = accountKeys[0]?.pubkey;
 
   if (sender !== wallet) {
     return NextResponse.json(
@@ -162,9 +169,8 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // 6. Verify recipient and amount
-  // Find the recipient index in accountKeys
-  const recipientIndex = rawKeys.findIndex((k) => toKeyStr(k) === SPEEDUP_RECIPIENT);
+  // 6. Verify recipient and amount.
+  const recipientIndex = accountKeys.findIndex((k) => k.pubkey === SPEEDUP_RECIPIENT);
 
   if (recipientIndex === -1) {
     return NextResponse.json(
@@ -198,6 +204,15 @@ export async function POST(request: NextRequest) {
 
   if (updateErr) {
     console.error("[verify-speedup] update error:", updateErr.message);
+    // 23505 = unique_violation. Authoritative replay check: the SELECT-then-UPDATE
+    // pattern above is racy under concurrent requests, but a unique index on
+    // tx_signature (see supabase/migrations/) makes this UPDATE atomic.
+    if (updateErr.code === "23505") {
+      return NextResponse.json(
+        { error: "This transaction has already been used" },
+        { status: 400 }
+      );
+    }
     return NextResponse.json(
       { error: "Failed to update refine status" },
       { status: 500 }

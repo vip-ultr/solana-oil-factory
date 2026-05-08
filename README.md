@@ -193,10 +193,20 @@ Create `.env.local`:
 ```env
 HELIUS_API_KEY=your-helius-key
 
-NEXT_PUBLIC_SOLANA_RPC_URL=https://mainnet.helius-rpc.com/?api-key=your-helius-key
+# Optional. Override the WS endpoint (defaults to public mainnet-beta — rate-limited).
+# Do NOT embed a Helius key in NEXT_PUBLIC_SOLANA_RPC_URL/_WS_URL — it's exposed to every visitor.
+# The browser uses /api/rpc which proxies through the backend with HELIUS_API_KEY.
+# NEXT_PUBLIC_SOLANA_WS_URL=wss://your-ws-provider/...
+
+# Optional. Comma-separated list of additional origins allowed to hit /api/rpc in production.
+# Same-origin requests are always allowed. Useful for staging / preview deployments.
+# RPC_ALLOWED_ORIGINS=https://staging.solanaoilfactory.xyz,https://preview-xyz.vercel.app
 
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+# Server-only. Bypasses RLS — used by API routes and server components.
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+# Reserved for future client-side reads (RLS-protected). Not currently used.
+# NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 
 BAGS_API_KEY=your-bags-api-key
 ```
