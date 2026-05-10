@@ -2831,3 +2831,543 @@ table.sof-refineries tbody td.num {
   .sof-rd-body { padding: 20px; }
   .sof-rd-hdr-r { width: 100%; justify-content: flex-start; }
 }
+
+/* ============================================================
+ * LAUNCH WIZARD (sof-lw-* prefix). Single-page stacked-form
+ * pattern from the locked design — all 4 steps visible at once,
+ * stepper at top is a nav (scroll-into-view), not state.
+ * ============================================================ */
+
+.sof-lw-hdr { padding: 32px 48px 8px; }
+.sof-lw-hdr .crumb {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  margin-bottom: 14px;
+}
+.sof-lw-hdr h1 {
+  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-weight: 600;
+  font-size: 32px;
+  letter-spacing: -0.02em;
+  margin: 0 0 6px;
+}
+.sof-lw-hdr p {
+  color: var(--text-secondary);
+  font-size: 14px;
+  max-width: 640px;
+  margin: 0;
+}
+
+.sof-lw-stepper {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 24px 48px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-elevated);
+}
+.sof-lw-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  flex: none;
+  background: transparent;
+}
+.sof-lw-step .num {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: var(--bg-input);
+  color: var(--text-tertiary);
+  display: grid;
+  place-items: center;
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid var(--border-subtle);
+}
+.sof-lw-step .lab {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+.sof-lw-step.done .num {
+  background: var(--success);
+  color: #0a1f12;
+  border-color: var(--success);
+}
+.sof-lw-step.done .lab { color: var(--text-secondary); }
+.sof-lw-step.active .num {
+  background: var(--accent);
+  color: #1a1208;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-bg);
+}
+.sof-lw-step.active .lab { color: var(--text-primary); }
+.sof-lw-conn {
+  flex: 1;
+  height: 1px;
+  background: var(--border-subtle);
+  margin: 0 6px;
+}
+.sof-lw-conn.done { background: var(--success); }
+
+.sof-lw-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: 32px;
+  padding: 32px 48px;
+  align-items: start;
+}
+.sof-lw-main {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 0;
+}
+.sof-lw-aside {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: sticky;
+  top: 24px;
+}
+
+.sof-lw-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  overflow: hidden;
+  scroll-margin-top: 24px;
+}
+.sof-lw-card.current {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-bg);
+}
+.sof-lw-card-head {
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.sof-lw-card-head h3 {
+  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  margin: 0;
+}
+.sof-lw-card-head .step-num {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+.sof-lw-card-head .step-num.current { color: var(--accent); }
+.sof-lw-card-body { padding: 24px; }
+
+.sof-lw-grp {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+.sof-lw-grp:last-child { margin-bottom: 0; }
+.sof-lw-lab {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.sof-lw-lab .hint {
+  font-size: 11.5px;
+  color: var(--text-tertiary);
+  font-weight: 400;
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+}
+.sof-lw-input {
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  padding: 11px 14px;
+  font-size: 14px;
+  color: var(--text-primary);
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  width: 100%;
+}
+.sof-lw-input:focus {
+  outline: 0;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-bg);
+}
+.sof-lw-input.with-suffix { padding-right: 90px; }
+.sof-lw-input::placeholder { color: var(--text-tertiary); }
+.sof-lw-help {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  line-height: 1.5;
+}
+.sof-lw-help.warn { color: var(--warning); }
+.sof-lw-help.err { color: var(--error); }
+.sof-lw-help.ok { color: var(--success); }
+.sof-lw-input-wrap { position: relative; }
+.sof-lw-input-wrap .suffix {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 12px;
+  color: var(--text-tertiary);
+  pointer-events: none;
+}
+
+.sof-lw-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.sof-lw-row-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+}
+
+.sof-lw-token-preview {
+  margin-top: 12px;
+  padding: 14px 16px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.sof-lw-token-preview .nm {
+  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+}
+.sof-lw-token-preview .ml {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sof-lw-checks {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 14px;
+}
+.sof-lw-check-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12.5px;
+  color: var(--text-secondary);
+}
+.sof-lw-check-row .ind {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex: none;
+}
+.sof-lw-check-row .ind.ok { background: var(--success); }
+.sof-lw-check-row .ind.warn { background: var(--warning); }
+.sof-lw-check-row .ind.err { background: var(--error); }
+.sof-lw-check-row .v {
+  margin-left: auto;
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 11.5px;
+  color: var(--text-tertiary);
+}
+.sof-lw-check-row .v.ok { color: var(--success); }
+.sof-lw-check-row .v.warn { color: var(--warning); }
+
+.sof-lw-seg {
+  display: inline-flex;
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  padding: 3px;
+  gap: 1px;
+}
+.sof-lw-seg button {
+  padding: 6px 14px;
+  border-radius: 4px;
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 11.5px;
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+.sof-lw-seg button.on {
+  background: var(--bg-overlay);
+  color: var(--text-primary);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.sof-lw-advanced {
+  margin-top: 18px;
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 18px;
+}
+.sof-lw-advanced summary {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sof-lw-advanced summary::-webkit-details-marker { display: none; }
+.sof-lw-advanced summary::after {
+  content: "▾";
+  color: var(--text-tertiary);
+  transition: transform 150ms;
+  margin-left: auto;
+}
+.sof-lw-advanced[open] summary::after { transform: rotate(180deg); }
+.sof-lw-advanced > div { margin-top: 14px; }
+
+.sof-lw-fund-vis {
+  padding: 18px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  margin-top: 18px;
+}
+.sof-lw-fund-vis .ttl {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 10.5px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 14px;
+}
+.sof-lw-fund-vis .row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  font-size: 13px;
+  border-top: 1px dashed var(--border-subtle);
+}
+.sof-lw-fund-vis .row:first-of-type { border-top: 0; }
+.sof-lw-fund-vis .row .l { color: var(--text-secondary); }
+.sof-lw-fund-vis .row .r {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  color: var(--text-primary);
+}
+.sof-lw-fund-vis .row.tot {
+  margin-top: 8px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-strong);
+  font-weight: 600;
+}
+.sof-lw-fund-vis .row.tot .r {
+  color: var(--accent);
+  font-size: 16px;
+}
+
+.sof-lw-snap-pic {
+  margin: 14px 0;
+  height: 64px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  position: relative;
+  padding: 14px 16px;
+  overflow: hidden;
+}
+.sof-lw-snap-pic .axis {
+  position: absolute;
+  left: 0; right: 0;
+  bottom: 14px;
+  height: 1px;
+  background: var(--border-subtle);
+}
+.sof-lw-snap-pic .tick {
+  position: absolute;
+  bottom: 8px;
+  width: 1px;
+  background: var(--accent);
+  height: 14px;
+}
+.sof-lw-snap-pic .tick::after {
+  content: "";
+  position: absolute;
+  top: -3px;
+  left: -2px;
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.sof-lw-snap-pic .lab {
+  position: absolute;
+  top: 10px;
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 9.5px;
+  color: var(--text-tertiary);
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.sof-lw-rev-grp {
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.sof-lw-rev-grp:last-of-type { border-bottom: 0; }
+.sof-lw-rev-grp h4 {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 10.5px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin: 0 0 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.sof-lw-rev-grp h4 a {
+  font-family: var(--font-body, "Inter"), sans-serif;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 11.5px;
+  color: var(--accent);
+  cursor: pointer;
+}
+.sof-lw-rev-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 24px;
+}
+.sof-lw-rev-list > div {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  padding: 5px 0;
+}
+.sof-lw-rev-list .k { color: var(--text-secondary); }
+.sof-lw-rev-list .v {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  color: var(--text-primary);
+}
+
+.sof-lw-consent {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 14px 18px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  margin-top: 16px;
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+.sof-lw-consent input {
+  margin-top: 2px;
+  accent-color: var(--accent);
+}
+
+.sof-lw-summary-card .head {
+  padding: 14px 18px;
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.sof-lw-summary-card .head h4 {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 10.5px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin: 0;
+}
+.sof-lw-summary-card .head .nm {
+  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  margin-top: 4px;
+}
+.sof-lw-summary-card .body {
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.sof-lw-summary-card .body .row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12.5px;
+}
+.sof-lw-summary-card .body .row .k { color: var(--text-tertiary); }
+.sof-lw-summary-card .body .row .v {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  color: var(--text-primary);
+}
+.sof-lw-summary-card .body .row.acc .v { color: var(--accent); }
+
+.sof-lw-help-card {
+  padding: 16px 18px;
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+.sof-lw-help-card h5 {
+  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-size: 13px;
+  color: var(--text-primary);
+  margin: 0 0 8px;
+  font-weight: 600;
+}
+.sof-lw-help-card a { color: var(--accent); cursor: pointer; }
+
+.sof-lw-nav {
+  display: flex;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-elevated);
+}
+.sof-lw-nav .btn-ghost {
+  color: var(--text-secondary);
+  padding: 11px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  background: transparent;
+}
+.sof-lw-nav .btn-ghost:hover {
+  color: var(--text-primary);
+  background: var(--bg-overlay);
+}
+
+@media (max-width: 1100px) {
+  .sof-lw-grid { grid-template-columns: 1fr; padding: 24px 32px; }
+  .sof-lw-aside { position: static; }
+}
+@media (max-width: 680px) {
+  .sof-lw-hdr { padding: 20px 20px 8px; }
+  .sof-lw-stepper {
+    padding: 18px 20px;
+    overflow-x: auto;
+    gap: 0;
+    scrollbar-width: none;
+  }
+  .sof-lw-stepper::-webkit-scrollbar { display: none; }
+  .sof-lw-step .lab { display: none; }
+  .sof-lw-grid { padding: 20px; }
+  .sof-lw-row-2,
+  .sof-lw-row-3 { grid-template-columns: 1fr; }
+  .sof-lw-rev-list { grid-template-columns: 1fr; }
+}
