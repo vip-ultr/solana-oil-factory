@@ -11,9 +11,9 @@
 
 import { Connection, PublicKey } from "@solana/web3.js";
 import {
-  loadSnapshot,
+  loadSnapshotFromDisk as loadSnapshot,
   saveSnapshot,
-} from "../lib/indexer/store";
+} from "../lib/indexer/store.node";
 import { decodeTransactionEvents } from "../lib/indexer/decoder";
 import type { IndexedEvent } from "../lib/indexer/types";
 

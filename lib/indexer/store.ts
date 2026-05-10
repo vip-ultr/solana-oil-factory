@@ -1,19 +1,18 @@
-// JSON-file persistence for the indexer.
+// Read-side persistence for the indexer.
 //
 // Phase 2a is intentionally minimalist — events live in a single
 // committed JSON file at lib/indexer/events.json. The indexer
-// script (run-once or loop) updates the file, the user commits +
-// pushes, the next Vercel deploy ships the data with the build.
-// Frontend reads via `loadEvents()` from server components.
+// script (run-once or loop) updates the file via fs writes; the
+// frontend reads the bundled JSON import below — webpack inlines
+// it into the Vercel deploy artifact, which works in every
+// runtime including edge + serverless. Direct fs reads in serverless
+// don't see non-code files, hence this split.
 //
-// Phase 2b will swap this for Supabase / Postgres without
-// changing the consumer signatures.
+// The writer lives in `store.node.ts` and is only imported by
+// `scripts/indexer.cts`. Phase 2b will swap both for a real DB.
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
-import { dirname, join } from "path";
-import type { IndexedEvent, IndexerCursor, IndexerSnapshot } from "./types";
-
-const DATA_PATH = join(process.cwd(), "lib", "indexer", "events.json");
+import type { IndexedEvent, IndexerSnapshot } from "./types";
+import bundled from "./events.json";
 
 const EMPTY: IndexerSnapshot = {
   cursor: {
@@ -26,33 +25,9 @@ const EMPTY: IndexerSnapshot = {
 };
 
 export function loadSnapshot(): IndexerSnapshot {
-  if (!existsSync(DATA_PATH)) return structuredClone(EMPTY);
-  try {
-    const raw = readFileSync(DATA_PATH, "utf8");
-    return JSON.parse(raw) as IndexerSnapshot;
-  } catch {
-    return structuredClone(EMPTY);
-  }
+  return (bundled as unknown as IndexerSnapshot) ?? structuredClone(EMPTY);
 }
 
-export function saveSnapshot(snapshot: IndexerSnapshot): void {
-  if (!existsSync(dirname(DATA_PATH))) {
-    mkdirSync(dirname(DATA_PATH), { recursive: true });
-  }
-  writeFileSync(
-    DATA_PATH,
-    JSON.stringify(snapshot, null, 2) + "\n",
-    "utf8",
-  );
-}
-
-/**
- * Read-side helpers for server components.
- *
- * The frontend uses these at request time. The file is bundled
- * into the Next.js server build so reads don't hit a network or
- * any filesystem outside the deploy artifact.
- */
 export function loadEvents(): IndexedEvent[] {
   return loadSnapshot().events;
 }
