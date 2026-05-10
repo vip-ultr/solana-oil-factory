@@ -129,58 +129,29 @@ function ConnectControl() {
 
   const truncated = `${address.slice(0, 4)}…${address.slice(-4)}`;
   return (
-    <div
-      className="sof-connect-btn"
-      style={{ display: "flex", alignItems: "center", gap: 6, padding: 0 }}
+    <Link
+      href={`/wallet/${address}`}
+      title={address}
+      className="sof-connect-btn sof-connect-btn-connected"
     >
-      <Link
-        href={`/wallet/${address}`}
-        title={address}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          flex: 1,
-          padding: "10px 12px",
-          color: "inherit",
-          textDecoration: "none",
-          minWidth: 0,
-        }}
-      >
-        <span className="ic" style={{ flex: "none" }}>
-          <Wallet strokeWidth={1.8} aria-hidden="true" />
-        </span>
-        <span
-          className="label"
-          style={{
-            fontFamily: "var(--font-mono, monospace)",
-            fontSize: 12,
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-          }}
-        >
-          {truncated}
-        </span>
-      </Link>
+      <span className="ic">
+        <Wallet strokeWidth={1.8} aria-hidden="true" />
+      </span>
+      <span className="label font-mono">{truncated}</span>
       <button
         type="button"
-        onClick={() => {
+        className="sof-disconnect"
+        onClick={(e) => {
+          // Stop the click from navigating to the wallet page.
+          e.preventDefault();
+          e.stopPropagation();
           void disconnect();
         }}
         title="Disconnect"
         aria-label="Disconnect wallet"
-        style={{
-          padding: "8px 10px",
-          border: 0,
-          background: "transparent",
-          color: "var(--text-tertiary)",
-          cursor: "pointer",
-          flex: "none",
-        }}
       >
         <LogOut size={14} strokeWidth={1.8} aria-hidden="true" />
       </button>
-    </div>
+    </Link>
   );
 }

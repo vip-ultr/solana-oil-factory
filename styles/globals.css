@@ -702,6 +702,45 @@ button {
   opacity: 1;
 }
 
+/* Connected-state variant: same layout as the disconnected
+ * button (Linear-style 64px collapsed → 256px on hover) but
+ * the label is the wallet's truncated address and a small
+ * disconnect button reveals on hover. */
+.sof-connect-btn-connected {
+  text-decoration: none;
+  color: var(--accent);
+}
+.sof-connect-btn-connected .label {
+  font-size: 12px;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sof-disconnect {
+  flex: none;
+  margin-right: 14px;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 150ms ease-out, background 120ms, color 120ms;
+}
+.sof-sidebar:hover .sof-disconnect,
+.sof-sidebar[data-expanded="true"] .sof-disconnect {
+  opacity: 1;
+}
+.sof-disconnect:hover {
+  background: var(--bg-input);
+  color: var(--text-primary);
+}
+
 /* Hide sidebar on mobile in favor of bottom nav */
 @media (max-width: 768px) {
   .sof-sidebar {
