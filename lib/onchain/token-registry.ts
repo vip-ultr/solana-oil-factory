@@ -72,6 +72,14 @@ export function tokenMetaFor(mint: string): TokenMeta {
   };
 }
 
+/** Whether `mint` has a curated entry in the hardcoded registry.
+ *  Used by metadata.ts to decide if a Helius lookup is worth
+ *  attempting (registered mints take priority — their variants
+ *  control how the UI renders the token mark). */
+export function hasRegistryEntry(mint: string): boolean {
+  return mint in REGISTRY;
+}
+
 export function shortMint(mint: string): string {
   if (mint.length <= 12) return mint;
   return `${mint.slice(0, 6)}…${mint.slice(-4)}`;

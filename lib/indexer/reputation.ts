@@ -17,11 +17,19 @@
 //     — needs per-mint metadata + audit signals. Deferred.
 
 import { loadEvents } from "./store";
+import tenureCache from "./wallet-tenure.json";
 import type { ReputationTier } from "@/lib/mock-data";
+
+interface TenureEntry {
+  firstTxUnix: number | null;
+  partial: boolean;
+  updatedAt: string;
+}
+const TENURE: { wallets: Record<string, TenureEntry> } = tenureCache as never;
 
 export interface ReputationSignal {
   /** One-letter component code, matches the docs. */
-  code: "C" | "O" | "P" | "R" | "A";
+  code: "C" | "O" | "P" | "R" | "A" | "D";
   label: string;
   /** Weight contributed by this signal, 0..max. */
   value: number;
@@ -45,6 +53,7 @@ export interface ReputationResult {
     earlyClosures: number;
     tenureDays: number;
     distinctRefineriesAny: number;
+    consistentSnapshotRefineries: number;
     isOperator: boolean;
     isClaimer: boolean;
   };
@@ -135,17 +144,20 @@ export function computeReputation(walletPubkey: string): ReputationResult {
   ).length;
   const pValue = Math.min(30, verifiedDeployerCount * 10);
 
-  // ── R — Tenure on the platform (max 20) ───
-  // True wallet age would need a getSignaturesForAddress walk
-  // back to the first ever tx. v0.5 uses "time since the
-  // wallet first appeared in any indexed SOF event" as a
-  // proxy that costs nothing extra to compute.
+  // ── R — Wallet tenure (max 20) ───
+  // Prefers the wallet-tenure cache (true first-tx timestamp
+  // walked by scripts/wallet-tenure.cts) when present;
+  // otherwise falls back to "time since first SOF event".
+  const cached = TENURE.wallets[walletPubkey];
   const myEvents = events.filter((e) => e.wallet === walletPubkey);
-  let firstSeen: number | null = null;
-  for (const e of myEvents) {
-    if (e.blockTime === null) continue;
-    if (firstSeen === null || e.blockTime < firstSeen) firstSeen = e.blockTime;
+  let firstSeen: number | null = cached?.firstTxUnix ?? null;
+  if (firstSeen === null) {
+    for (const e of myEvents) {
+      if (e.blockTime === null) continue;
+      if (firstSeen === null || e.blockTime < firstSeen) firstSeen = e.blockTime;
+    }
   }
+  const isTrueAge = cached?.firstTxUnix !== null && cached?.firstTxUnix !== undefined;
   const now = Math.floor(Date.now() / 1000);
   const tenureDays =
     firstSeen !== null ? Math.floor((now - firstSeen) / 86_400) : 0;
@@ -153,6 +165,74 @@ export function computeReputation(walletPubkey: string): ReputationResult {
   if (tenureDays >= 7) rValue += 5;
   if (tenureDays >= 30) rValue += 5;
   if (tenureDays >= 90) rValue += 10;
+
+  // ── D — Snapshot consistency (max 20) ───
+  // For each refinery this wallet operates, check whether
+  // SnapshotSubmitted events match the refinery's stated
+  // cadence. We measure the median delta between consecutive
+  // submissions and compare it to the cadence's expected
+  // window:
+  //
+  //   atLaunch     → 1 submission expected (no delta to check)
+  //   hourly       → expected ≤ 1.5h between submissions
+  //   daily        → expected ≤ 30h
+  //   weekly       → expected ≤ 8d
+  //   perEpochOnly → operator-driven; always counts as consistent
+  //
+  // +5 per consistent refinery, capped at 20 (4 = max).
+  const launchByMyRefinery = new Map<string, { strategy: string }>();
+  for (const ev of myLaunches) {
+    const refinery = ev.data.refinery as string | undefined;
+    const strategyObj = ev.data.snapshot_strategy as
+      | Record<string, unknown>
+      | undefined;
+    const strategy = strategyObj
+      ? Object.keys(strategyObj)[0] ?? "atLaunch"
+      : "atLaunch";
+    if (refinery) launchByMyRefinery.set(refinery, { strategy });
+  }
+  const snapshotsByRefinery = new Map<string, number[]>();
+  for (const ev of events) {
+    if (ev.eventName !== "SnapshotSubmitted") continue;
+    const refinery = ev.refinery;
+    if (!refinery || !launchByMyRefinery.has(refinery)) continue;
+    if (ev.blockTime === null) continue;
+    const arr = snapshotsByRefinery.get(refinery) ?? [];
+    arr.push(ev.blockTime);
+    snapshotsByRefinery.set(refinery, arr);
+  }
+  let consistentRefineries = 0;
+  for (const [refinery, meta] of launchByMyRefinery) {
+    const stamps = (snapshotsByRefinery.get(refinery) ?? []).sort(
+      (a, b) => a - b,
+    );
+    const cadenceMaxSeconds: Record<string, number> = {
+      atLaunch: Number.POSITIVE_INFINITY,
+      perEpochOnly: Number.POSITIVE_INFINITY,
+      hourly: 1.5 * 3600,
+      daily: 30 * 3600,
+      weekly: 8 * 86_400,
+    };
+    const limit = cadenceMaxSeconds[meta.strategy] ?? Number.POSITIVE_INFINITY;
+    if (limit === Number.POSITIVE_INFINITY) {
+      // Cadences with no inter-submission expectation always
+      // count as consistent — operator can't fall behind.
+      if (stamps.length >= 1) consistentRefineries += 1;
+      continue;
+    }
+    if (stamps.length < 2) continue; // not enough data yet
+    const deltas: number[] = [];
+    for (let i = 1; i < stamps.length; i++) {
+      deltas.push(stamps[i] - stamps[i - 1]);
+    }
+    deltas.sort((a, b) => a - b);
+    const median =
+      deltas.length % 2 === 0
+        ? (deltas[deltas.length / 2 - 1] + deltas[deltas.length / 2]) / 2
+        : deltas[Math.floor(deltas.length / 2)];
+    if (median <= limit) consistentRefineries += 1;
+  }
+  const dValue = Math.min(20, consistentRefineries * 5);
 
   // ── A — Activity diversity (max 20) ───
   // Number of distinct refineries the wallet has touched —
@@ -172,7 +252,7 @@ export function computeReputation(walletPubkey: string): ReputationResult {
   // Composite score — raw sum capped at 100. The cap means a
   // wallet maxing C+O alone still tops out at 100, but a
   // diversified wallet can hit 100 with lower C/O.
-  const rawSum = cValue + oValue + pValue + rValue + aValue;
+  const rawSum = cValue + oValue + pValue + rValue + aValue + dValue;
   const score = Math.max(0, Math.min(100, rawSum));
   const tier = tierFor(score);
 
@@ -215,13 +295,15 @@ export function computeReputation(walletPubkey: string): ReputationResult {
     },
     {
       code: "R",
-      label: "Platform tenure",
+      label: "Wallet tenure",
       value: rValue,
       max: 20,
       detail:
         tenureDays === 0
-          ? "no SOF activity indexed"
-          : `${tenureDays} day${tenureDays === 1 ? "" : "s"} since first SOF event`,
+          ? "no on-chain history indexed"
+          : isTrueAge
+            ? `wallet age ${tenureDays}d (true first-tx)`
+            : `${tenureDays}d since first SOF event (proxy)`,
     },
     {
       code: "A",
@@ -234,6 +316,18 @@ export function computeReputation(walletPubkey: string): ReputationResult {
           : distinctAny === 1
             ? "active at one refinery"
             : `active across ${distinctAny} refineries`,
+    },
+    {
+      code: "D",
+      label: "Snapshot consistency",
+      value: dValue,
+      max: 20,
+      detail:
+        myLaunches.length === 0
+          ? "n/a · wallet does not operate refineries"
+          : consistentRefineries === 0
+            ? "snapshot cadence not yet verified"
+            : `${consistentRefineries} refiner${consistentRefineries === 1 ? "y" : "ies"} on cadence`,
     },
   ];
 
@@ -250,6 +344,7 @@ export function computeReputation(walletPubkey: string): ReputationResult {
       earlyClosures,
       tenureDays,
       distinctRefineriesAny: distinctAny,
+      consistentSnapshotRefineries: consistentRefineries,
       isOperator: myLaunches.length > 0,
       isClaimer: myClaims.length > 0,
     },

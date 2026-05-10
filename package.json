@@ -9,7 +9,8 @@
     "start": "next start",
     "lint": "next lint",
     "indexer": "tsx scripts/indexer.cts",
-    "indexer:loop": "tsx scripts/indexer.cts -- --loop"
+    "indexer:loop": "tsx scripts/indexer.cts -- --loop",
+    "wallet-tenure": "tsx scripts/wallet-tenure.cts"
   },
   "keywords": [],
   "author": "",

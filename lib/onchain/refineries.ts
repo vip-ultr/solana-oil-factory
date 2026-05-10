@@ -9,7 +9,13 @@ import type {
   VerificationTier,
 } from "@/lib/mock-data";
 import { getProgram, snapshotPda } from "./client";
-import { tokenMetaFor, shortMint, shortPubkey } from "./token-registry";
+import {
+  tokenMetaFor,
+  hasRegistryEntry,
+  shortMint,
+  shortPubkey,
+} from "./token-registry";
+import { fetchMetadataFor, tokenMetaWithOverride } from "./metadata";
 
 /**
  * Convert a base-unit u64 amount into a "whole tokens" number,
@@ -72,28 +78,37 @@ export async function fetchAllRefineries(): Promise<UiRefinery[]> {
   );
 
   // Fetch the latest snapshot (current_snapshot_index) per
-  // refinery in parallel — needed for holders_eligible + the
-  // age-of-snapshot indicator.
-  const snapshots = await Promise.all(
-    all.map(async (r) => {
-      const idx = r.account.currentSnapshotIndex;
-      if (!idx || idx === 0) return null;
-      try {
-        const snap = await program.account.snapshot.fetch(
-          snapshotPda(r.publicKey, idx),
-        );
-        return snap;
-      } catch {
-        return null;
-      }
-    }),
+  // refinery + Helius metadata for any mints not in the
+  // hardcoded registry. Both run in parallel.
+  const unknownMints = Array.from(
+    new Set(
+      all
+        .map((r) => r.account.tokenMint.toBase58())
+        .filter((m) => !hasRegistryEntry(m)),
+    ),
   );
+  const [snapshots, metaOverride] = await Promise.all([
+    Promise.all(
+      all.map(async (r) => {
+        const idx = r.account.currentSnapshotIndex;
+        if (!idx || idx === 0) return null;
+        try {
+          return await program.account.snapshot.fetch(
+            snapshotPda(r.publicKey, idx),
+          );
+        } catch {
+          return null;
+        }
+      }),
+    ),
+    fetchMetadataFor(unknownMints),
+  ]);
 
   const now = Math.floor(Date.now() / 1000);
   const ui: UiRefinery[] = all.map((r, i) => {
     const a = r.account;
     const snap = snapshots[i];
-    return mapRefinery(r.publicKey, a, snap, i + 1, now);
+    return mapRefinery(r.publicKey, a, snap, i + 1, now, metaOverride);
   });
 
   return ui;
@@ -113,18 +128,19 @@ export async function fetchRefinery(id: string): Promise<UiRefinery | null> {
   }
   try {
     const a = await program.account.refinery.fetch(pda);
-    let snap = null;
-    if (a.currentSnapshotIndex && a.currentSnapshotIndex > 0) {
-      try {
-        snap = await program.account.snapshot.fetch(
-          snapshotPda(pda, a.currentSnapshotIndex),
-        );
-      } catch {
-        // snapshot may not exist yet for early-stage refineries
-      }
-    }
+    const mintStr = a.tokenMint.toBase58();
+    const [snap, metaOverride] = await Promise.all([
+      a.currentSnapshotIndex && a.currentSnapshotIndex > 0
+        ? program.account.snapshot
+            .fetch(snapshotPda(pda, a.currentSnapshotIndex))
+            .catch(() => null)
+        : Promise.resolve(null),
+      hasRegistryEntry(mintStr)
+        ? Promise.resolve(new Map())
+        : fetchMetadataFor([mintStr]),
+    ]);
     const now = Math.floor(Date.now() / 1000);
-    return mapRefinery(pda, a, snap, 0, now);
+    return mapRefinery(pda, a, snap, 0, now, metaOverride);
   } catch {
     return null;
   }
@@ -136,9 +152,10 @@ function mapRefinery(
   snap: any | null,
   rank: number,
   now: number,
+  metaOverride: Map<string, { name: string; symbol: string }>,
 ): UiRefinery {
   const mintStr = a.tokenMint.toBase58();
-  const meta = tokenMetaFor(mintStr);
+  const meta = tokenMetaWithOverride(mintStr, metaOverride);
 
   const claimWindowEnd = a.claimWindowEnd?.toNumber?.() ?? 0;
   const claimWindowDaysLeft =
