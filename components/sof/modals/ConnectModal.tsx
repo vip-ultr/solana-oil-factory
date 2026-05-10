@@ -1,26 +1,38 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useState } from "react";
 import { Check, X } from "lucide-react";
-
-type Phase = "pick" | "signing";
+import { useWalletConnection } from "@solana/react-hooks";
 
 interface Props {
   open: boolean;
   onClose: () => void;
 }
 
-const WALLETS = [
-  { key: "phantom", name: "Phantom", icon: "/phantom-icon.png", det: "DETECTED", detected: true },
-  { key: "solflare", name: "Solflare", icon: "/solflare-icon.png", det: "Install ↗", detected: false },
-  { key: "backpack", name: "Backpack", icon: "/backpack-icon.png", det: "Install ↗", detected: false },
-];
-
 export function ConnectModal({ open, onClose }: Props) {
-  const [phase, setPhase] = useState<Phase>("pick");
-  const [picked, setPicked] = useState<string | null>(null);
+  const {
+    connectors,
+    connect,
+    connected,
+    connecting,
+    isReady,
+    error,
+    currentConnector,
+  } = useWalletConnection();
 
+  // Local UI state for the "you can install this one" rows that
+  // aren't actually wallet-standard ready yet.
+  const [picked, setPicked] = useState<string | null>(null);
+  const [localError, setLocalError] = useState<string | null>(null);
+
+  // Auto-close on successful connect.
+  useEffect(() => {
+    if (open && connected) {
+      onClose();
+    }
+  }, [open, connected, onClose]);
+
+  // Modal lifecycle: lock body scroll, hook Esc, reset on open.
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();
@@ -28,6 +40,8 @@ export function ConnectModal({ open, onClose }: Props) {
     if (open) {
       addEventListener("keydown", onKey);
       document.body.style.overflow = "hidden";
+      setPicked(null);
+      setLocalError(null);
     }
     return () => {
       removeEventListener("keydown", onKey);
@@ -35,21 +49,38 @@ export function ConnectModal({ open, onClose }: Props) {
     };
   }, [open, onClose]);
 
-  // Reset phase when modal opens
-  useEffect(() => {
-    if (open) setPhase("pick");
-  }, [open]);
-
   if (!open) return null;
 
-  function handlePick(walletKey: string) {
-    setPicked(walletKey);
-    setPhase("signing");
-    // Mock signing — in production this calls the wallet adapter.
-    setTimeout(() => {
-      // No-op for v1 mock; just leaves the spinner up.
-    }, 0);
+  async function handlePick(connectorId: string, name: string) {
+    setPicked(connectorId);
+    setLocalError(null);
+    try {
+      await connect(connectorId);
+      // useEffect above closes the modal once `connected` flips.
+    } catch (err) {
+      setLocalError(
+        err instanceof Error ? err.message : `Could not connect to ${name}`,
+      );
+    }
   }
+
+  const showSigning =
+    connecting ||
+    (picked !== null && currentConnector?.id !== picked && !localError);
+  const errorMessage =
+    localError ?? (error instanceof Error ? error.message : null);
+
+  // Connectors come from wallet-standard discovery — Phantom,
+  // Solflare, Backpack etc. all show up automatically when their
+  // browser extensions are installed. `ready` is false for
+  // wallets the user hasn't installed yet; we still surface them
+  // so they can be prompted to install.
+  const sortedConnectors = [...connectors].sort((a, b) => {
+    // Ready wallets first, then alphabetical.
+    if (a.ready && !b.ready) return -1;
+    if (b.ready && !a.ready) return 1;
+    return a.name.localeCompare(b.name);
+  });
 
   return (
     <div
@@ -62,126 +93,257 @@ export function ConnectModal({ open, onClose }: Props) {
       }}
     >
       <div className="sof-mo-modal">
-        {phase === "pick" ? (
-          <>
-            <div className="sof-mo-h">
-              <div>
-                <h3 id="sof-mo-title">Connect wallet</h3>
-                <p>
-                  Choose a Solana wallet. We&apos;ll request a free signature
-                  challenge — never an approval transaction.
-                </p>
-              </div>
-              <button
-                type="button"
-                className="x"
-                onClick={onClose}
-                aria-label="Close connect modal"
-              >
-                <X size={16} strokeWidth={2} />
-              </button>
-            </div>
-            <div className="sof-mo-wallets">
-              {WALLETS.map((w) => (
-                <button
-                  key={w.key}
-                  type="button"
-                  className={`sof-mo-wallet-opt${w.detected ? " detected" : ""}`}
-                  onClick={() => handlePick(w.key)}
-                >
-                  <Image src={w.icon} alt="" width={28} height={28} />
-                  <span className="nm">{w.name}</span>
-                  <span className="det">{w.det}</span>
-                  <span className="arrow">→</span>
-                </button>
-              ))}
-              <button type="button" className="sof-mo-wallet-opt">
-                <span className="more-ic" aria-hidden="true">⋯</span>
-                <span className="nm">More wallets</span>
-                <span className="det">22 supported</span>
-                <span className="arrow">→</span>
-              </button>
-            </div>
-            <div className="sof-mo-foot">
-              <div className="row">
-                <Check strokeWidth={2} aria-hidden="true" />
-                <span>
-                  <b style={{ color: "var(--text-primary)" }}>Non-custodial.</b> We
-                  never see or store your private key.
-                </span>
-              </div>
-              <div className="row">
-                <Check strokeWidth={2} aria-hidden="true" />
-                <span>
-                  <b style={{ color: "var(--text-primary)" }}>
-                    No transaction at connect.
-                  </b>{" "}
-                  Just a free signature to prove you own the wallet.
-                </span>
-              </div>
-              <div style={{ marginTop: 8 }}>
-                By connecting you agree to the <a>terms</a>. Programs are{" "}
-                <a>verified on-chain</a>.
-              </div>
-            </div>
-          </>
+        {showSigning ? (
+          <SigningPhase
+            connectorName={picked
+              ? (sortedConnectors.find((c) => c.id === picked)?.name ?? "wallet")
+              : "wallet"}
+            errorMessage={errorMessage}
+            onCancel={() => {
+              setPicked(null);
+              setLocalError(null);
+            }}
+            onClose={onClose}
+          />
         ) : (
-          <>
-            <div className="sof-mo-h">
-              <div>
-                <h3 id="sof-mo-title">Sign to verify</h3>
-                <p>
-                  Approve the signature request in your{" "}
-                  {WALLETS.find((w) => w.key === picked)?.name ?? "wallet"}.
-                  This is free and never moves funds.
-                </p>
-              </div>
-              <button
-                type="button"
-                className="x"
-                onClick={onClose}
-                aria-label="Cancel signing"
-              >
-                <X size={16} strokeWidth={2} />
-              </button>
-            </div>
-            <div className="sof-mo-signing">
-              <div className="ring" aria-hidden="true" />
-              <h4>
-                Waiting for{" "}
-                {WALLETS.find((w) => w.key === picked)?.name ?? "your wallet"}…
-              </h4>
-              <p>
-                You&apos;ll see a popup asking to sign a message. The request
-                includes only a domain and timestamp.
-              </p>
-              <div className="wallet-prompt">
-                Sign in with: <b>solanaoilfactory.com</b>
-                <br />
-                Wallet: <b>Hxk2…7gPZ</b>
-                <br />
-                Issued: <b>{new Date().toISOString()}</b>
-                <br />
-                Nonce: <b>f4xAKMdRq2…</b>
-              </div>
-            </div>
-            <div className="sof-mo-foot">
-              <div
-                className="row"
-                style={{
-                  color: "var(--text-tertiary)",
-                  justifyContent: "center",
-                }}
-              >
-                <span>
-                  Wallet not responding?{" "}
-                  <a onClick={() => setPhase("pick")}>Cancel and retry →</a>
-                </span>
-              </div>
-            </div>
-          </>
+          <PickPhase
+            connectors={sortedConnectors}
+            isReady={isReady}
+            errorMessage={errorMessage}
+            onPick={handlePick}
+            onClose={onClose}
+          />
         )}
       </div>
     </div>
+  );
+}
+
+interface PickProps {
+  connectors: ReturnType<typeof useWalletConnection>["connectors"];
+  isReady: boolean;
+  errorMessage: string | null;
+  onPick: (connectorId: string, name: string) => void;
+  onClose: () => void;
+}
+
+function PickPhase({
+  connectors,
+  isReady,
+  errorMessage,
+  onPick,
+  onClose,
+}: PickProps) {
+  return (
+    <>
+      <div className="sof-mo-h">
+        <div>
+          <h3 id="sof-mo-title">Connect wallet</h3>
+          <p>
+            Choose a Solana wallet. We&apos;ll request a free signature
+            challenge — never an approval transaction.
+          </p>
+        </div>
+        <button
+          type="button"
+          className="x"
+          onClick={onClose}
+          aria-label="Close connect modal"
+        >
+          <X size={16} strokeWidth={2} />
+        </button>
+      </div>
+
+      <div className="sof-mo-wallets">
+        {!isReady ? (
+          <div
+            style={{
+              padding: "20px 14px",
+              fontSize: 12.5,
+              color: "var(--text-tertiary)",
+            }}
+          >
+            Detecting installed wallets…
+          </div>
+        ) : connectors.length === 0 ? (
+          <div
+            style={{
+              padding: "20px 14px",
+              fontSize: 12.5,
+              color: "var(--text-tertiary)",
+              lineHeight: 1.55,
+            }}
+          >
+            No Solana wallets detected. Install{" "}
+            <a
+              href="https://phantom.app/"
+              target="_blank"
+              rel="noreferrer"
+              style={{ color: "var(--accent)" }}
+            >
+              Phantom
+            </a>
+            ,{" "}
+            <a
+              href="https://solflare.com/"
+              target="_blank"
+              rel="noreferrer"
+              style={{ color: "var(--accent)" }}
+            >
+              Solflare
+            </a>
+            , or{" "}
+            <a
+              href="https://backpack.app/"
+              target="_blank"
+              rel="noreferrer"
+              style={{ color: "var(--accent)" }}
+            >
+              Backpack
+            </a>{" "}
+            and reload.
+          </div>
+        ) : (
+          connectors.map((c) => {
+            const ready = c.ready ?? true;
+            return (
+              <button
+                key={c.id}
+                type="button"
+                className={`sof-mo-wallet-opt${ready ? " detected" : ""}`}
+                onClick={() => ready && onPick(c.id, c.name)}
+                disabled={!ready}
+                aria-disabled={!ready}
+              >
+                {c.icon ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={c.icon} alt="" width={28} height={28} />
+                ) : (
+                  <span className="more-ic" aria-hidden="true">
+                    {c.name.slice(0, 1)}
+                  </span>
+                )}
+                <span className="nm">{c.name}</span>
+                <span className="det">{ready ? "DETECTED" : "Install ↗"}</span>
+                <span className="arrow">→</span>
+              </button>
+            );
+          })
+        )}
+      </div>
+
+      {errorMessage && (
+        <div
+          role="alert"
+          style={{
+            margin: "0 16px 4px",
+            padding: "10px 12px",
+            background: "rgba(239, 68, 68, 0.08)",
+            border: "1px solid rgba(239, 68, 68, 0.3)",
+            color: "var(--error)",
+            borderRadius: 6,
+            fontSize: 12.5,
+          }}
+        >
+          {errorMessage}
+        </div>
+      )}
+
+      <div className="sof-mo-foot">
+        <div className="row">
+          <Check strokeWidth={2} aria-hidden="true" />
+          <span>
+            <b style={{ color: "var(--text-primary)" }}>Non-custodial.</b> We
+            never see or store your private key.
+          </span>
+        </div>
+        <div className="row">
+          <Check strokeWidth={2} aria-hidden="true" />
+          <span>
+            <b style={{ color: "var(--text-primary)" }}>
+              No transaction at connect.
+            </b>{" "}
+            Just a wallet handshake to prove you own the address.
+          </span>
+        </div>
+        <div style={{ marginTop: 8 }}>
+          By connecting you agree to the{" "}
+          <a href="/legal/terms">terms</a>. Programs are{" "}
+          <a href="/trust">verified on-chain</a>.
+        </div>
+      </div>
+    </>
+  );
+}
+
+interface SigningProps {
+  connectorName: string;
+  errorMessage: string | null;
+  onCancel: () => void;
+  onClose: () => void;
+}
+
+function SigningPhase({
+  connectorName,
+  errorMessage,
+  onCancel,
+  onClose,
+}: SigningProps) {
+  return (
+    <>
+      <div className="sof-mo-h">
+        <div>
+          <h3 id="sof-mo-title">
+            {errorMessage ? "Connection failed" : `Approve in ${connectorName}`}
+          </h3>
+          <p>
+            {errorMessage
+              ? "Pick a different wallet or try again. No SOL was moved."
+              : `Confirm the connect prompt in your ${connectorName} extension. This is free and never moves funds.`}
+          </p>
+        </div>
+        <button
+          type="button"
+          className="x"
+          onClick={onClose}
+          aria-label="Cancel signing"
+        >
+          <X size={16} strokeWidth={2} />
+        </button>
+      </div>
+      <div className="sof-mo-signing">
+        {errorMessage ? (
+          <>
+            <h4 style={{ color: "var(--error)" }}>{errorMessage}</h4>
+            <p>The wallet may have rejected the request.</p>
+          </>
+        ) : (
+          <>
+            <div className="ring" aria-hidden="true" />
+            <h4>Waiting for {connectorName}…</h4>
+            <p>
+              You&apos;ll see a popup asking to connect. Click approve there to
+              continue.
+            </p>
+          </>
+        )}
+      </div>
+      <div className="sof-mo-foot">
+        <div
+          className="row"
+          style={{
+            color: "var(--text-tertiary)",
+            justifyContent: "center",
+          }}
+        >
+          <span>
+            Wallet not responding?{" "}
+            <a onClick={onCancel} style={{ cursor: "pointer" }}>
+              Cancel and retry →
+            </a>
+          </span>
+        </div>
+      </div>
+    </>
   );
 }

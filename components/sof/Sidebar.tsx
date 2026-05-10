@@ -16,7 +16,9 @@ import {
   HelpCircle,
   Wallet,
   Flame,
+  LogOut,
 } from "lucide-react";
+import { useWalletConnection } from "@solana/react-hooks";
 import { cn } from "@/lib/cn";
 import type { ComponentType, SVGProps } from "react";
 
@@ -99,19 +101,86 @@ export function Sidebar() {
             <span className="v">Devnet</span>
           </span>
         </div>
-        <button
-          type="button"
-          className="sof-connect-btn"
-          onClick={() =>
-            dispatchEvent(new CustomEvent("sof:open-connect"))
-          }
-        >
-          <span className="ic">
-            <Wallet strokeWidth={1.8} aria-hidden="true" />
-          </span>
-          <span className="label">Connect wallet</span>
-        </button>
+        <ConnectControl />
       </div>
     </aside>
+  );
+}
+
+function ConnectControl() {
+  const { connected, wallet, disconnect, isReady } = useWalletConnection();
+  const address = wallet?.account?.address?.toString();
+
+  if (!connected || !address) {
+    return (
+      <button
+        type="button"
+        className="sof-connect-btn"
+        onClick={() => dispatchEvent(new CustomEvent("sof:open-connect"))}
+        disabled={!isReady}
+      >
+        <span className="ic">
+          <Wallet strokeWidth={1.8} aria-hidden="true" />
+        </span>
+        <span className="label">Connect wallet</span>
+      </button>
+    );
+  }
+
+  const truncated = `${address.slice(0, 4)}…${address.slice(-4)}`;
+  return (
+    <div
+      className="sof-connect-btn"
+      style={{ display: "flex", alignItems: "center", gap: 6, padding: 0 }}
+    >
+      <Link
+        href={`/wallet/${address}`}
+        title={address}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          flex: 1,
+          padding: "10px 12px",
+          color: "inherit",
+          textDecoration: "none",
+          minWidth: 0,
+        }}
+      >
+        <span className="ic" style={{ flex: "none" }}>
+          <Wallet strokeWidth={1.8} aria-hidden="true" />
+        </span>
+        <span
+          className="label"
+          style={{
+            fontFamily: "var(--font-mono, monospace)",
+            fontSize: 12,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {truncated}
+        </span>
+      </Link>
+      <button
+        type="button"
+        onClick={() => {
+          void disconnect();
+        }}
+        title="Disconnect"
+        aria-label="Disconnect wallet"
+        style={{
+          padding: "8px 10px",
+          border: 0,
+          background: "transparent",
+          color: "var(--text-tertiary)",
+          cursor: "pointer",
+          flex: "none",
+        }}
+      >
+        <LogOut size={14} strokeWidth={1.8} aria-hidden="true" />
+      </button>
+    </div>
   );
 }
