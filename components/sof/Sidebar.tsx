@@ -15,6 +15,7 @@ import {
   Code2,
   HelpCircle,
   Wallet,
+  Flame,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import type { ComponentType, SVGProps } from "react";
@@ -31,6 +32,7 @@ type NavItem = {
 const NAV_PRIMARY: NavItem[] = [
   { key: "home", label: "Home", href: "/", Icon: Home, match: "exact" },
   { key: "refineries", label: "Refineries", href: "/refineries", Icon: Building2, match: "prefix" },
+  { key: "launchpad", label: "Launchpad refining", href: "/launchpad", Icon: Flame, match: "prefix" },
   { key: "leaderboard", label: "Leaderboard", href: "/leaderboard", Icon: BarChart3, match: "prefix" },
   { key: "launch", label: "Launch refinery", href: "/refinery/launch", Icon: Factory, match: "prefix" },
 ];
