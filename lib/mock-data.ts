@@ -28,13 +28,15 @@ export type TokenMarkVariant =
   | "default";
 
 export interface Refinery {
-  id: string;                       // refinery PDA (mock)
+  id: string;                       // refinery PDA (full base58)
   rank: number;                     // index 1-12
   tokenName: string;
   tokenSymbol: string;
   tokenMint: string;                // truncated for display: "DezX5p…AKKM"
+  tokenMintFull?: string;           // full base58 mint (live data only)
   tokenMarkVariant: TokenMarkVariant;
   operator: string;                 // truncated wallet: "Hxk2…7gPZ"
+  operatorFull?: string;            // full base58 (live data only)
   operatorReputation: number;       // 0-100
   verification: VerificationTier;
   poolInitial: number;              // base units (display via formatTokens)

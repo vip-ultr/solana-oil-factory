@@ -166,8 +166,10 @@ function mapRefinery(
     tokenName: meta.name,
     tokenSymbol: meta.symbol,
     tokenMint: shortMint(mintStr),
+    tokenMintFull: mintStr,
     tokenMarkVariant: meta.variant,
     operator: shortPubkey(a.operator.toBase58()),
+    operatorFull: a.operator.toBase58(),
     operatorReputation: 0, // pending indexer
     verification,
     poolInitial: toWhole(poolInitialBase, meta.decimals),

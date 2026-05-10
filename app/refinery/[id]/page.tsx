@@ -20,8 +20,14 @@ import {
 } from "@/lib/mock-data";
 import { fetchRefinery } from "@/lib/onchain/refineries";
 import { fetchSnapshots } from "@/lib/onchain/snapshots";
+import { fetchMint, formatSupply } from "@/lib/onchain/mint";
+import { explorerUrl } from "@/lib/program";
 import { buildActivityFeed } from "@/lib/indexer/ui";
-import { topClaimantsForRefinery } from "@/lib/indexer/aggregations";
+import {
+  topClaimantsForRefinery,
+  operatorStatsFor,
+} from "@/lib/indexer/aggregations";
+import { computeReputation } from "@/lib/indexer/reputation";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -64,11 +70,18 @@ export default async function RefineryPage({ params }: PageProps) {
   });
 
   // Snapshot history (on-chain) + top claimants (indexer
-  // aggregation) — fetched in parallel.
-  const [snapshots, topClaimants] = await Promise.all([
+  // aggregation) + token-mint metadata — fetched in parallel.
+  const [snapshots, topClaimants, mintInfo] = await Promise.all([
     fetchSnapshots(id),
     Promise.resolve(topClaimantsForRefinery(id, 7)),
+    r.tokenMintFull ? fetchMint(r.tokenMintFull) : Promise.resolve(null),
   ]);
+
+  // Operator stats from indexer + reputation v0 score.
+  const operatorStats = r.operatorFull
+    ? operatorStatsFor(r.operatorFull)
+    : null;
+  const operatorRep = r.operatorFull ? computeReputation(r.operatorFull) : null;
 
   return (
     <>
@@ -372,35 +385,75 @@ export default async function RefineryPage({ params }: PageProps) {
           <div className="sof-rd-panel">
             <div className="sof-rd-panel-head">
               <h3>Token info</h3>
-              <a className="sof-rd-ext" style={{ fontSize: 11 }}>
-                Jupiter <ExternalLink size={10} />
-              </a>
+              {r.tokenMintFull && (
+                <a
+                  className="sof-rd-ext"
+                  style={{ fontSize: 11 }}
+                  href={explorerUrl(r.tokenMintFull, "address")}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Explorer <ExternalLink size={10} />
+                </a>
+              )}
             </div>
             <div className="sof-rd-token-info">
               <div>
                 <div className="k">Decimals</div>
-                <div className="v">5</div>
+                <div className="v">{mintInfo?.decimals ?? "—"}</div>
               </div>
               <div>
                 <div className="k">Supply</div>
-                <div className="v">88.7T</div>
+                <div className="v">
+                  {mintInfo
+                    ? formatSupply(mintInfo.supply, mintInfo.decimals)
+                    : "—"}
+                </div>
+              </div>
+              <div>
+                <div className="k">Mint authority</div>
+                <div
+                  className="v"
+                  style={{
+                    color: mintInfo?.mintAuthority
+                      ? "var(--warning)"
+                      : "var(--success)",
+                  }}
+                >
+                  {mintInfo
+                    ? mintInfo.mintAuthority
+                      ? "Active"
+                      : "Renounced"
+                    : "—"}
+                </div>
+              </div>
+              <div>
+                <div className="k">Freeze authority</div>
+                <div
+                  className="v"
+                  style={{
+                    color: mintInfo?.freezeAuthority
+                      ? "var(--warning)"
+                      : "var(--success)",
+                  }}
+                >
+                  {mintInfo
+                    ? mintInfo.freezeAuthority
+                      ? "Active"
+                      : "Renounced"
+                    : "—"}
+                </div>
               </div>
               <div>
                 <div className="k">Market cap</div>
-                <div className="v">$1.42B</div>
+                <div className="v" style={{ color: "var(--text-tertiary)" }}>
+                  v1.1
+                </div>
               </div>
               <div>
                 <div className="k">Holders (chain)</div>
-                <div className="v">204,812</div>
-              </div>
-              <div>
-                <div className="k">24h volume</div>
-                <div className="v">$184M</div>
-              </div>
-              <div>
-                <div className="k">Listed</div>
-                <div className="v" style={{ color: "var(--success)" }}>
-                  Jupiter ✓
+                <div className="v" style={{ color: "var(--text-tertiary)" }}>
+                  v1.1
                 </div>
               </div>
             </div>
@@ -451,40 +504,55 @@ export default async function RefineryPage({ params }: PageProps) {
             <div className="sof-rd-op-card">
               <div className="top">
                 <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                  <WalletPill address={r.operator} />
-                  <ReputationChip score={r.operatorReputation} prefix="" />
+                  <WalletPill address={r.operatorFull ?? r.operator} />
+                  {operatorRep && (
+                    <ReputationChip score={operatorRep.score} prefix="" />
+                  )}
                 </div>
-                <ButtonLink href={`/wallet/${r.operator}`} variant="miniGhost">
-                  Profile <ExternalLink size={10} />
-                </ButtonLink>
+                {r.operatorFull && (
+                  <ButtonLink
+                    href={`/wallet/${r.operatorFull}`}
+                    variant="miniGhost"
+                  >
+                    Profile <ExternalLink size={10} />
+                  </ButtonLink>
+                )}
               </div>
               <div className="sof-rd-op-stats">
                 <div>
                   <div className="k">Refineries</div>
-                  <div className="v">2</div>
+                  <div className="v">{operatorStats?.refineryCount ?? 0}</div>
                 </div>
                 <div>
                   <div className="k">Distributed</div>
-                  <div className="v">$14,820</div>
+                  <div className="v">
+                    {operatorStats
+                      ? formatTokens(operatorStats.totalDistributed)
+                      : "0"}
+                  </div>
                 </div>
                 <div>
-                  <div className="k">Avg rep of claimers</div>
-                  <div className="v">78</div>
+                  <div className="k">Holders served</div>
+                  <div className="v">
+                    {operatorStats?.uniqueHoldersServed ?? 0}
+                  </div>
                 </div>
                 <div>
                   <div className="k">Wallet age</div>
-                  <div className="v">380d</div>
+                  <div
+                    className="v"
+                    style={{ color: "var(--text-tertiary)" }}
+                  >
+                    v0.5
+                  </div>
                 </div>
               </div>
               <div style={{ fontSize: 12, color: "var(--text-tertiary)", lineHeight: 1.5 }}>
                 {r.verification === "verifiedDeployer"
-                  ? `Verified deployer. Same wallet that minted ${r.tokenSymbol}. No prior refineries closed early or paused without notice.`
+                  ? `Verified deployer. Same wallet that minted ${r.tokenSymbol}.`
                   : r.verification === "verifiedCto"
                     ? `Verified community takeover. Manually verified by Solana Oil Factory after the original deployer abandoned the project.`
                     : `Unverified operator. Wallet doesn't match the mint authority and has not applied for a Verified CTO badge. Check operator reputation and history before claiming.`}
-              </div>
-              <div style={{ fontSize: 11, color: "var(--text-tertiary)" }}>
-                Last on-chain action {formatRelativeTime(r.snapshotAgeSeconds)}
               </div>
             </div>
           </div>

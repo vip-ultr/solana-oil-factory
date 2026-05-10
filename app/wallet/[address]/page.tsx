@@ -169,7 +169,7 @@ export default async function WalletPage({ params }: PageProps) {
             {reputation.score}
             <small>{TIER_LABEL[reputation.tier] ?? reputation.tier}</small>
           </div>
-          <div className="sub">v0 · 2 of 6 signals</div>
+          <div className="sub">v0.5 · 5 of 6 signals</div>
         </div>
         <div className="it">
           <div className="k">Claims</div>
@@ -414,7 +414,7 @@ export default async function WalletPage({ params }: PageProps) {
           <div className="sof-w-panel">
             <div className="sof-w-panel-h">
               <h3>Reputation</h3>
-              <span className="meta">v0 · 2 of 6 signals</span>
+              <span className="meta">v0.5 · 5 of 6 signals</span>
             </div>
             <div className="sof-w-gauge">
               <div className="ring">

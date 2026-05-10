@@ -1,30 +1,31 @@
-// Reputation v0 — minimal, transparent, derived purely from
-// indexed events. Two components: claim consistency (max 50)
-// and operator behavior (max 50). 100-point scale.
+// Reputation v0.5 — five components derived purely from
+// indexed events. C and O carry over from v0 (max 50 each);
+// new in v0.5: P (token-deployment trust, max 30),
+// R (tenure on the platform, max 20), A (activity diversity,
+// max 20). The raw sum can exceed 100; we cap at 100 so v0
+// callers see the same upper bound.
 //
-// Why so simple: the locked spec calls for six components
-// (C/O/P/R/A/D), but four of them need data we don't index yet:
-// wallet age (needs full tx-history walk), token-deployment
-// trust (needs mint authority + metadata audit signals),
-// snapshot consistency (needs cadence-vs-actual delta), and
-// activity diversity (needs holdings across many unrelated
-// refineries — devnet has 3 in total).
-//
-// v0 ships the components we *can* compute from the events
-// JSON. The breakdown shows exactly which signals contributed
-// so users see what is and isn't measured. v0.5 adds wallet
-// age once we wire the on-chain getSignaturesForAddress walk.
+// What's still missing for v1:
+//   - True wallet age (needs full getSignaturesForAddress walk
+//     to the wallet's first-ever tx; expensive without a
+//     dedicated cache). v0.5 uses "time since first SOF event"
+//     as a proxy.
+//   - Snapshot consistency (D component) — needs to compare
+//     each refinery's stated cadence to actual snapshot
+//     timestamps. Deferred.
+//   - Token deployment trust beyond the verified_deployer flag
+//     — needs per-mint metadata + audit signals. Deferred.
 
 import { loadEvents } from "./store";
 import type { ReputationTier } from "@/lib/mock-data";
 
 export interface ReputationSignal {
   /** One-letter component code, matches the docs. */
-  code: "C" | "O";
+  code: "C" | "O" | "P" | "R" | "A";
   label: string;
   /** Weight contributed by this signal, 0..max. */
   value: number;
-  /** Cap for this signal in the v0 scoring window. */
+  /** Cap for this signal in the v0.5 scoring window. */
   max: number;
   /** Short, human-readable line for the breakdown panel. */
   detail: string;
@@ -40,7 +41,10 @@ export interface ReputationResult {
     claimCount: number;
     distinctRefineriesClaimed: number;
     refineriesOperated: number;
+    verifiedDeployerCount: number;
     earlyClosures: number;
+    tenureDays: number;
+    distinctRefineriesAny: number;
     isOperator: boolean;
     isClaimer: boolean;
   };
@@ -123,7 +127,53 @@ export function computeReputation(walletPubkey: string): ReputationResult {
   }
   oValue = Math.max(0, Math.min(50, oValue));
 
-  const score = Math.max(0, Math.min(100, cValue + oValue));
+  // ── P — Token-deployment trust (max 30) ───
+  // +10 per refinery launched as the verified deployer of its
+  // token. Capped — three "real launches" hits max.
+  const verifiedDeployerCount = myLaunches.filter(
+    (e) => e.data.verified_deployer === true,
+  ).length;
+  const pValue = Math.min(30, verifiedDeployerCount * 10);
+
+  // ── R — Tenure on the platform (max 20) ───
+  // True wallet age would need a getSignaturesForAddress walk
+  // back to the first ever tx. v0.5 uses "time since the
+  // wallet first appeared in any indexed SOF event" as a
+  // proxy that costs nothing extra to compute.
+  const myEvents = events.filter((e) => e.wallet === walletPubkey);
+  let firstSeen: number | null = null;
+  for (const e of myEvents) {
+    if (e.blockTime === null) continue;
+    if (firstSeen === null || e.blockTime < firstSeen) firstSeen = e.blockTime;
+  }
+  const now = Math.floor(Date.now() / 1000);
+  const tenureDays =
+    firstSeen !== null ? Math.floor((now - firstSeen) / 86_400) : 0;
+  let rValue = 0;
+  if (tenureDays >= 7) rValue += 5;
+  if (tenureDays >= 30) rValue += 5;
+  if (tenureDays >= 90) rValue += 10;
+
+  // ── A — Activity diversity (max 20) ───
+  // Number of distinct refineries the wallet has touched —
+  // either claimed from or launched. Rewards spreading
+  // activity across the ecosystem instead of concentrating
+  // on one refinery.
+  const distinctAny = new Set<string>([
+    ...myClaims.map((e) => e.refinery).filter((r): r is string => Boolean(r)),
+    ...myLaunches.map((e) => e.data.refinery as string).filter(Boolean),
+  ]).size;
+  let aValue = 0;
+  if (distinctAny >= 2) aValue = 5;
+  if (distinctAny >= 3) aValue = 10;
+  if (distinctAny >= 5) aValue = 15;
+  if (distinctAny >= 8) aValue = 20;
+
+  // Composite score — raw sum capped at 100. The cap means a
+  // wallet maxing C+O alone still tops out at 100, but a
+  // diversified wallet can hit 100 with lower C/O.
+  const rawSum = cValue + oValue + pValue + rValue + aValue;
+  const score = Math.max(0, Math.min(100, rawSum));
   const tier = tierFor(score);
 
   const signals: ReputationSignal[] = [
@@ -151,6 +201,40 @@ export function computeReputation(walletPubkey: string): ReputationResult {
             ? `${myLaunches.length} launches · ${earlyClosures} early closure${earlyClosures === 1 ? "" : "s"}`
             : `${myLaunches.length} launches · zero early closures`,
     },
+    {
+      code: "P",
+      label: "Token deployment trust",
+      value: pValue,
+      max: 30,
+      detail:
+        verifiedDeployerCount === 0
+          ? myLaunches.length === 0
+            ? "no operator history"
+            : "operator launched without verified deployer flag"
+          : `${verifiedDeployerCount} refiner${verifiedDeployerCount === 1 ? "y" : "ies"} as verified deployer`,
+    },
+    {
+      code: "R",
+      label: "Platform tenure",
+      value: rValue,
+      max: 20,
+      detail:
+        tenureDays === 0
+          ? "no SOF activity indexed"
+          : `${tenureDays} day${tenureDays === 1 ? "" : "s"} since first SOF event`,
+    },
+    {
+      code: "A",
+      label: "Activity diversity",
+      value: aValue,
+      max: 20,
+      detail:
+        distinctAny === 0
+          ? "wallet has not touched any refinery"
+          : distinctAny === 1
+            ? "active at one refinery"
+            : `active across ${distinctAny} refineries`,
+    },
   ];
 
   return {
@@ -162,7 +246,10 @@ export function computeReputation(walletPubkey: string): ReputationResult {
       claimCount: myClaims.length,
       distinctRefineriesClaimed: distinctRefineries,
       refineriesOperated: myLaunches.length,
+      verifiedDeployerCount,
       earlyClosures,
+      tenureDays,
+      distinctRefineriesAny: distinctAny,
       isOperator: myLaunches.length > 0,
       isClaimer: myClaims.length > 0,
     },
