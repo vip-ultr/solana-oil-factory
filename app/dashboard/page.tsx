@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import {
   ButtonLink,
+  PendingIndexerBanner,
   ReputationChip,
   TokenMark,
   WalletPill,
@@ -18,6 +19,7 @@ export const metadata: Metadata = {
 export default function DashboardPage() {
   return (
     <>
+      <PendingIndexerBanner section="The dashboard" />
       <header className="sof-dh-hdr">
         <div>
           <h1>Dashboard</h1>

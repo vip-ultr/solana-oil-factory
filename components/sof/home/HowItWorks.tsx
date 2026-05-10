@@ -1,5 +1,6 @@
 import { StatusPill, VerifiedBadge, TokenMark, PoolBar } from "@/components/sof/primitives";
-import { MOCK_REFINERIES, formatTokens, snapshotStrategyLabel } from "@/lib/mock-data";
+import { formatTokens, snapshotStrategyLabel } from "@/lib/mock-data";
+import type { Refinery } from "@/lib/mock-data";
 
 const STEPS = [
   {
@@ -22,9 +23,17 @@ const STEPS = [
   },
 ];
 
-export function HowItWorks() {
-  const featured = MOCK_REFINERIES[0]; // BONK
-  const fillPercent = Math.round((featured.poolRemaining / featured.poolInitial) * 100);
+interface Props {
+  /** Real refinery to render in the demo card. Null hides the
+   *  card entirely — better than fabricating one. */
+  featured: Refinery | null;
+}
+
+export function HowItWorks({ featured }: Props) {
+  const fillPercent =
+    featured && featured.poolInitial > 0
+      ? Math.round((featured.poolRemaining / featured.poolInitial) * 100)
+      : 0;
 
   return (
     <section className="sof-home-s">
@@ -65,13 +74,14 @@ export function HowItWorks() {
             </div>
           </div>
 
-          <DemoRefineryCard />
+          {featured && <DemoRefineryCard />}
         </div>
       </div>
     </section>
   );
 
   function DemoRefineryCard() {
+    if (!featured) return null;
     return (
       <div className="sof-demo-card" aria-label={`Sample refinery — ${featured.tokenName}`}>
         <div className="head">
@@ -145,11 +155,11 @@ export function HowItWorks() {
               YOU CAN CLAIM
             </div>
             <div className="font-mono" style={{ fontSize: 18, fontWeight: 500, color: "var(--accent)", marginTop: 2 }}>
-              148.8 BONK
+              Connect to check
             </div>
           </div>
           <button type="button" className="sof-btn-claim">
-            Claim →
+            Open →
           </button>
         </div>
       </div>

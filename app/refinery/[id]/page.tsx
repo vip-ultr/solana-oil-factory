@@ -3,8 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Copy, ExternalLink, Share2, Star } from "lucide-react";
 import {
-  Banner,
   ButtonLink,
+  PendingIndexerBanner,
   ReputationChip,
   StatusPill,
   TokenMark,
@@ -14,46 +14,46 @@ import {
 import { EligibilityPanel } from "@/components/sof/refinery-detail/EligibilityPanel";
 import { PoolDrainChart } from "@/components/sof/refinery-detail/PoolDrainChart";
 import {
-  MOCK_REFINERIES,
   formatTokens,
   formatUsd,
   formatRelativeTime,
 } from "@/lib/mock-data";
+import { fetchRefinery } from "@/lib/onchain/refineries";
 
 interface PageProps {
   params: Promise<{ id: string }>;
 }
 
+// Always-fresh — refinery accounts can update on every claim,
+// deposit, or pause toggle. Caching would lie.
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { id } = await params;
-  const r = MOCK_REFINERIES.find((x) => x.id === id);
+  const r = await fetchRefinery(id);
   if (!r) return { title: "Refinery not found" };
   return {
     title: `${r.tokenName} (${r.tokenSymbol}) Refinery`,
-    description: `Claim ${r.tokenSymbol} from a verified refinery operated by ${r.operator}. Pool ${formatTokens(r.poolRemaining)} ${r.tokenSymbol} · ${r.holdersEligible.toLocaleString()} eligible holders.`,
+    description: `Claim ${r.tokenSymbol} from a refinery operated by ${r.operator}. Pool ${formatTokens(r.poolRemaining)} ${r.tokenSymbol} · ${r.holdersEligible.toLocaleString()} eligible holders.`,
   };
-}
-
-export function generateStaticParams() {
-  return MOCK_REFINERIES.map((r) => ({ id: r.id }));
 }
 
 export default async function RefineryPage({ params }: PageProps) {
   const { id } = await params;
-  const r = MOCK_REFINERIES.find((x) => x.id === id);
+  const r = await fetchRefinery(id);
   if (!r) notFound();
 
-  const poolPct = Math.round((r.poolRemaining / r.poolInitial) * 100);
-  const claimPct = Math.round((r.holdersClaimed / r.holdersEligible) * 100);
+  const poolPct =
+    r.poolInitial > 0 ? Math.round((r.poolRemaining / r.poolInitial) * 100) : 0;
+  const claimPct =
+    r.holdersEligible > 0
+      ? Math.round((r.holdersClaimed / r.holdersEligible) * 100)
+      : 0;
 
   return (
     <>
-      <Banner tone="amber" dismissible storageKey="sof-rd-snapshot">
-        <strong>Snapshot #8 in progress.</strong> Holders captured at slot{" "}
-        <span className="font-mono">298,442,019</span>. Claims for #8 will open in
-        ~3 minutes.
-      </Banner>
-
+      <PendingIndexerBanner section="The activity, snapshot history, top claimants, token info, and operator-history panels" />
       <div className="sof-rd-crumb">
         <Link href="/refineries">Refineries</Link>
         <span className="sep">/</span>
@@ -99,7 +99,7 @@ export default async function RefineryPage({ params }: PageProps) {
             <Star size={14} strokeWidth={1.6} />
           </button>
           <button type="button" className="sof-btn sof-btn-primary">
-            Claim 148.8 {r.tokenSymbol} →
+            Check eligibility →
           </button>
         </div>
       </header>

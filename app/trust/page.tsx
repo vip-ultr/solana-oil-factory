@@ -1,24 +1,35 @@
 import type { Metadata } from "next";
 import { cn } from "@/lib/cn";
+import { fetchTreasuryConfig } from "@/lib/onchain/treasury";
+import {
+  REFINERY_PROGRAM_ID,
+  SOLANA_CLUSTER,
+  explorerUrl,
+} from "@/lib/program";
 
 export const metadata: Metadata = {
   title: "Trust & status",
   description:
-    "Live system health, audit reports, on-chain program verification, and incident history. Updated every 10 seconds from production systems.",
+    "Live system health, on-chain program verification, deployed treasury config.",
 };
 
+// Live treasury data — re-fetch each view.
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 const SERVICES = [
-  { id: "indexer", nm: "Indexer", det: "Snapshot, claim, reputation streams", warns: [62], bads: [76] },
-  { id: "claim", nm: "Claim service", det: "Merkle proof generation, RPC submission", warns: [79], bads: [] },
-  { id: "graphql", nm: "GraphQL API", det: "Public read API · 10 req/s per key", warns: [84], bads: [] },
-  { id: "web", nm: "Web app", det: "solanaoilfactory.com · CDN-served", warns: [], bads: [] },
+  { id: "rpc", nm: "Public RPC", det: `api.${SOLANA_CLUSTER}.solana.com`, warns: [], bads: [] },
+  { id: "program", nm: "Refinery program", det: `Anchor 0.32 · ${SOLANA_CLUSTER}`, warns: [], bads: [] },
 ];
 
 const PROGRAMS = [
-  { nm: "refinery_core", v: "v2.1.0", id: "REFnRYcoeJGJfmDqBnXSnCjW3WpQzPxKE9NZ4mY3vU2", hash: "9k4Hx2eR…", framework: "Anchor 0.30" },
-  { nm: "refinery_claim", v: "v2.0.4", id: "CLAimrYM4kJ9d8K3qN7rT2vL5wXsP1zG6cBfHnEaUV8", hash: "3aXqL9m…", framework: "Anchor 0.30" },
-  { nm: "reputation_oracle", v: "v1.3.2", id: "REPute8jGpL5N2qY7bV9hX3kT1mR4cD6sA0wKfMnPxQz", hash: "7eR1Q4n…", framework: "Native Rust" },
-  { nm: "snapshot_indexer", v: "v2.0.1", id: "SNapdR4mHkY9jL3pV6tN8cQ2wXsZ1bF5eU7gK0aMxRyD", hash: "5kP9M2x…", framework: "Anchor 0.30" },
+  {
+    nm: "refinery",
+    v: "v0.1.0",
+    id: REFINERY_PROGRAM_ID,
+    hash: "—",
+    framework: "Anchor 0.32",
+  },
 ];
 
 const INCIDENTS = [
@@ -39,30 +50,78 @@ function HealthBars({ warns, bads }: { warns: number[]; bads: number[] }) {
   );
 }
 
-export default function TrustPage() {
+export default async function TrustPage() {
+  const cfg = await fetchTreasuryConfig();
+
   return (
     <>
       <header className="sof-tx-hdr">
         <h1>Trust &amp; status</h1>
         <p>
-          Live system health, audit reports, on-chain program verification,
-          and incident history. Updated every 10 seconds from production
-          systems.
+          Deployed program, live treasury config, on-chain
+          verification. The audit, full service health, and
+          incident-history sections below are placeholders until
+          we go to mainnet.
         </p>
       </header>
 
       <div className="sof-tx-body">
         <div className="sof-tx-banner">
-          <div className="dot" aria-hidden="true" />
+          <div
+            className="dot"
+            aria-hidden="true"
+            style={{ background: cfg?.paused ? "var(--warning)" : "var(--success)" }}
+          />
           <div>
-            <div className="nm">All systems operational</div>
+            <div className="nm">
+              {cfg
+                ? cfg.paused
+                  ? "Platform paused"
+                  : "Platform active"
+                : "Treasury not initialised"}
+            </div>
             <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>
-              Last incident <strong>14 days ago</strong> · Uptime{" "}
-              <strong>99.94%</strong> over 90 days
+              {cfg
+                ? `${cfg.refineriesLaunchedCount} refineries launched · pause-authority ${cfg.pauseAuthority.slice(0, 4)}…${cfg.pauseAuthority.slice(-4)}`
+                : `init_treasury hasn't been called on ${SOLANA_CLUSTER} yet`}
             </div>
           </div>
-          <div className="det">Devnet · Mainnet-beta · Slot 298,442,019</div>
+          <div className="det">{SOLANA_CLUSTER}</div>
         </div>
+
+        {cfg && (
+          <section className="sof-tx-section">
+            <h3>Treasury config · live from {SOLANA_CLUSTER}</h3>
+            <div className="sof-tx-audit">
+              <div>
+                <span className="lab">Launch fee</span>
+                <span className="v">
+                  {(cfg.launchFeeLamports / 1_000_000_000).toFixed(3)} SOL
+                </span>
+                <span className="det">
+                  Charged once per refinery, paid to fee_receiver_sol.
+                </span>
+              </div>
+              <div>
+                <span className="lab">Claim fee</span>
+                <span className="v">
+                  {(cfg.claimFeeLamports / 1_000_000_000).toFixed(4)} SOL
+                </span>
+                <span className="det">
+                  Per-claim platform fee. Indexer + program rent.
+                </span>
+              </div>
+              <div>
+                <span className="lab">Deposit fee</span>
+                <span className="v">{cfg.depositFeeBps / 100}%</span>
+                <span className="det">
+                  Bps of pool tokens at launch + every top-up. Auto-swapped
+                  to SOL via off-chain Jupiter cron.
+                </span>
+              </div>
+            </div>
+          </section>
+        )}
 
         <section className="sof-tx-section">
           <h3>Service health · last 90 days</h3>
@@ -90,7 +149,7 @@ export default function TrustPage() {
         </section>
 
         <section className="sof-tx-section">
-          <h3>Audit</h3>
+          <h3>Audit · v1.1 — pre-mainnet</h3>
           <div className="sof-tx-audit">
             <div>
               <span className="lab">Auditor</span>
@@ -127,7 +186,16 @@ export default function TrustPage() {
                   <span>{p.nm}</span>
                   <span className="v">✓ verified · {p.v}</span>
                 </div>
-                <div className="id">{p.id}</div>
+                <div className="id">
+                  <a
+                    href={explorerUrl(p.id, "address")}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{ color: "inherit" }}
+                  >
+                    {p.id}
+                  </a>
+                </div>
                 <div className="det">
                   <span>
                     Source: <strong>github.com/sof/programs</strong>

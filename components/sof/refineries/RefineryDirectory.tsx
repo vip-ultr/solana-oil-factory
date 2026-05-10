@@ -22,7 +22,6 @@ import {
   WalletPill,
 } from "@/components/sof/primitives";
 import {
-  MOCK_REFINERIES,
   formatTokens,
   formatUsd,
   formatRelativeTime,
@@ -49,7 +48,11 @@ const STATUS_TABS: { value: StatusFilter; label: string }[] = [
   { value: "operatorPaused", label: "Paused" },
 ];
 
-export function RefineryDirectory() {
+interface RefineryDirectoryProps {
+  refineries: Refinery[];
+}
+
+export function RefineryDirectory({ refineries }: RefineryDirectoryProps) {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [verifiedOnly, setVerifiedOnly] = useState(false);
@@ -59,22 +62,22 @@ export function RefineryDirectory() {
 
   const counts = useMemo(() => {
     const c: Record<StatusFilter, number> = {
-      all: MOCK_REFINERIES.length,
+      all: refineries.length,
       active: 0,
       closingSoon: 0,
       closed: 0,
       operatorPaused: 0,
       pendingSnapshot: 0,
     };
-    for (const r of MOCK_REFINERIES) {
+    for (const r of refineries) {
       c[r.status as StatusFilter] = (c[r.status as StatusFilter] ?? 0) + 1;
     }
     return c;
-  }, []);
+  }, [refineries]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    let rows = MOCK_REFINERIES.filter((r) => {
+    let rows = refineries.filter((r) => {
       if (statusFilter !== "all" && r.status !== statusFilter) return false;
       if (verifiedOnly && r.verification === "unverified") return false;
       if (r.operatorReputation < minRep) return false;
@@ -107,7 +110,7 @@ export function RefineryDirectory() {
       }
     });
     return rows;
-  }, [search, statusFilter, verifiedOnly, minRep, sort]);
+  }, [refineries, search, statusFilter, verifiedOnly, minRep, sort]);
 
   const sortLabel = SORT_OPTIONS.find((o) => o.value === sort)?.label ?? "Pool size";
 
@@ -261,7 +264,7 @@ export function RefineryDirectory() {
       <section className="sof-table-wrap">
         <div className="sof-meta-row">
           <span className="sel">
-            Showing {filtered.length} of {MOCK_REFINERIES.length} refineries
+            Showing {filtered.length} of {refineries.length} refineries
           </span>
           <span>
             Last updated{" "}
@@ -321,7 +324,7 @@ export function RefineryDirectory() {
                       No refineries match these filters.
                     </div>
                     <div className="muted" style={{ fontSize: 13, marginBottom: 12 }}>
-                      {MOCK_REFINERIES.length} refineries are indexed. Try
+                      {refineries.length} refineries are indexed. Try
                       clearing some filters.
                     </div>
                     <button

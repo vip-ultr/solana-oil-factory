@@ -89,6 +89,28 @@ export function WrongNetworkBanner({ onSwitch }: { onSwitch?: () => void }) {
   );
 }
 
+/**
+ * v1 marker for pages that need an off-chain indexer (leaderboard,
+ * dashboard activity feed, wallet history, reputation scores).
+ * The on-chain program is live; the aggregations needed to render
+ * those pages aren't.
+ */
+export function PendingIndexerBanner({ section }: { section?: string }) {
+  return (
+    <Banner
+      tone="amber"
+      dismissible
+      storageKey={`sof-pending-indexer-${section ?? "default"}`}
+      link={{ label: "Trust & status →", href: "/trust" }}
+    >
+      <strong>v1.1 — pending indexer.</strong>{" "}
+      {section
+        ? `${section} needs the off-chain indexer to compute. Numbers below are illustrative until that lands.`
+        : "This view needs the off-chain indexer. Numbers below are illustrative until it ships."}
+    </Banner>
+  );
+}
+
 /** Platform-wide pause banner — shown when treasury_config.paused is true. */
 export function PlatformPauseBanner({ message }: { message?: string }) {
   return (

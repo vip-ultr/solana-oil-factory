@@ -1,12 +1,22 @@
 import { ArrowRight } from "lucide-react";
 import { ButtonLink } from "@/components/sof/primitives";
 import { BarrelGauge } from "./BarrelGauge";
-import { MOCK_REFINERIES, MOCK_SYSTEM_STATS, formatTokens } from "@/lib/mock-data";
+import type { Refinery } from "@/lib/mock-data";
+import { formatTokens } from "@/lib/mock-data";
 
-export function HeroSection() {
-  const featured = MOCK_REFINERIES[0]; // BONK
-  const fillPercent = Math.round((featured.poolRemaining / featured.poolInitial) * 100);
-  const stats = MOCK_SYSTEM_STATS;
+interface HeroProps {
+  /** Top refinery to feature in the barrel gauge. Null when no
+   *  refinery has launched on this cluster yet. */
+  featured: Refinery | null;
+  /** Active refinery count from on-chain. */
+  activeCount: number;
+}
+
+export function HeroSection({ featured, activeCount }: HeroProps) {
+  const fillPercent =
+    featured && featured.poolInitial > 0
+      ? Math.round((featured.poolRemaining / featured.poolInitial) * 100)
+      : 0;
 
   return (
     <section className="sof-home-hero">
@@ -40,50 +50,82 @@ export function HeroSection() {
 
           <div className="sof-home-metric-strip">
             <span>
-              <b>{stats.refineriesActive}</b> active refineries
+              <b>{activeCount}</b> active refineries
             </span>
-            <span className="sep">·</span>
-            <span>
-              <b>1.84M</b> tokens distributed
-            </span>
-            <span className="sep">·</span>
-            <span>
-              <b>327</b> unique holders
-            </span>
-            <span className="sep">·</span>
-            <span>
-              <b>6</b> verified operators
-            </span>
+            {/* Aggregate counters (tokens distributed, unique
+                holders, verified operators) require an off-chain
+                indexer to compute across every claim and
+                refinery. Hidden until the indexer ships in v1.1
+                rather than fabricated. */}
           </div>
         </div>
 
-        <BarrelGauge
-          fillPercent={fillPercent}
-          arcLabel="POOL · BONK · REFINERY #1"
-          tags={[
-            {
-              position: "tl",
-              label: "POOL REMAINING",
-              value: `${formatTokens(featured.poolRemaining)} BONK`,
-            },
-            {
-              position: "tr",
-              label: `${fillPercent}%`,
-              pinLabel: "FILLED",
-              value: `of ${formatTokens(featured.poolInitial)} initial`,
-            },
-            {
-              position: "bl",
-              label: "HOLDERS CLAIMED",
-              value: `${featured.holdersClaimed.toLocaleString()} / ${featured.holdersEligible.toLocaleString()}`,
-            },
-            {
-              position: "br",
-              label: "NEXT SNAPSHOT",
-              value: "00:51:24",
-            },
-          ]}
-        />
+        {featured ? (
+          <BarrelGauge
+            fillPercent={fillPercent}
+            arcLabel={`POOL · ${featured.tokenSymbol} · FEATURED`}
+            tags={[
+              {
+                position: "tl",
+                label: "POOL REMAINING",
+                value: `${formatTokens(featured.poolRemaining)} ${featured.tokenSymbol}`,
+              },
+              {
+                position: "tr",
+                label: `${fillPercent}%`,
+                pinLabel: "FILLED",
+                value: `of ${formatTokens(featured.poolInitial)} initial`,
+              },
+              {
+                position: "bl",
+                label: "HOLDERS CLAIMED",
+                value:
+                  featured.holdersEligible > 0
+                    ? `${featured.holdersClaimed.toLocaleString()} / ${featured.holdersEligible.toLocaleString()}`
+                    : `${featured.holdersClaimed.toLocaleString()} so far`,
+              },
+              {
+                position: "br",
+                label:
+                  featured.claimWindowDaysLeft === null
+                    ? "WINDOW"
+                    : "WINDOW LEFT",
+                value:
+                  featured.claimWindowDaysLeft === null
+                    ? "Open-ended"
+                    : `${featured.claimWindowDaysLeft}d`,
+              },
+            ]}
+          />
+        ) : (
+          <BarrelGauge
+            fillPercent={0}
+            arcLabel="NO ACTIVE REFINERIES"
+            tags={[
+              {
+                position: "tl",
+                label: "POOL REMAINING",
+                value: "—",
+              },
+              {
+                position: "tr",
+                label: "0%",
+                pinLabel: "FILLED",
+                value: "no refinery yet",
+              },
+              {
+                position: "bl",
+                label: "HOLDERS CLAIMED",
+                value: "—",
+              },
+              {
+                position: "br",
+                label: "STATUS",
+                value: "Awaiting first launch",
+              },
+            ]}
+          />
+        )}
       </div>
     </section>
   );

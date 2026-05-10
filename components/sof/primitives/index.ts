@@ -1,7 +1,7 @@
 // Barrel export for primitive components shared across SOF pages.
 // Import as: `import { Button, StatusPill, ... } from "@/components/sof/primitives";`
 
-export { Banner, ServiceDegradedBanner, WrongNetworkBanner, PlatformPauseBanner } from "./Banner";
+export { Banner, ServiceDegradedBanner, WrongNetworkBanner, PlatformPauseBanner, PendingIndexerBanner } from "./Banner";
 export { Button, ButtonLink } from "./Button";
 export { Eyebrow } from "./Eyebrow";
 export { PoolBar } from "./PoolBar";

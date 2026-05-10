@@ -1,6 +1,6 @@
 import { ExternalLink } from "lucide-react";
 import { WalletPill } from "@/components/sof/primitives";
-import { MOCK_ACTIVITY, formatTokens, formatRelativeTime } from "@/lib/mock-data";
+import { formatTokens, formatRelativeTime } from "@/lib/mock-data";
 import type { ActivityEvent } from "@/lib/mock-data";
 
 function verbFor(kind: ActivityEvent["kind"]): string {
@@ -51,9 +51,42 @@ function Row({ event }: { event: ActivityEvent }) {
   );
 }
 
-export function ActivityTicker() {
+interface Props {
+  /** Events to scroll through. Empty (default) renders an
+   *  "indexer pending" placeholder instead of fake activity —
+   *  the live ticker needs an off-chain log indexer that v1
+   *  doesn't ship with. */
+  events?: ActivityEvent[];
+}
+
+export function ActivityTicker({ events = [] }: Props) {
+  if (events.length === 0) {
+    return (
+      <div className="sof-ticker" aria-label="Live activity feed (empty)">
+        <div className="sof-ticker-label">
+          <span className="live" aria-hidden="true" />
+          <span>LIVE · ACTIVITY</span>
+        </div>
+        <div className="sof-ticker-viewport">
+          <div
+            className="sof-ticker-track"
+            style={{
+              padding: "0 18px",
+              color: "var(--text-tertiary)",
+              fontSize: 12.5,
+            }}
+          >
+            Live activity feed lights up once the off-chain log
+            indexer is wired (v1.1). Refinery state is already
+            on-chain — see the directory for live pools.
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Doubled for seamless loop.
-  const doubled = [...MOCK_ACTIVITY, ...MOCK_ACTIVITY];
+  const doubled = [...events, ...events];
   return (
     <div className="sof-ticker" aria-label="Live activity feed">
       <div className="sof-ticker-label">

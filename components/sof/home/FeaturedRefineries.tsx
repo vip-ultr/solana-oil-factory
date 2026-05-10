@@ -5,16 +5,18 @@ import {
   VerifiedBadge,
 } from "@/components/sof/primitives";
 import { PoolBar } from "@/components/sof/primitives";
-import {
-  MOCK_REFINERIES,
-  formatTokens,
-  formatRelativeTime,
-} from "@/lib/mock-data";
+import { formatTokens, formatRelativeTime } from "@/lib/mock-data";
 import type { Refinery } from "@/lib/mock-data";
 
-export function FeaturedRefineries() {
-  // Hero card: BONK. Then JUP, WIF, POPCAT, PYTH.
-  const [hero, ...rest] = MOCK_REFINERIES.slice(0, 5);
+interface Props {
+  refineries: Refinery[];
+}
+
+export function FeaturedRefineries({ refineries }: Props) {
+  if (refineries.length === 0) return null;
+
+  // Hero card + up to 4 compact cards.
+  const [hero, ...rest] = refineries.slice(0, 5);
 
   return (
     <section className="sof-home-s">
@@ -26,10 +28,10 @@ export function FeaturedRefineries() {
           </div>
           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
             <span className="muted" style={{ fontSize: 13 }}>
-              Sorted by pool size · USD equivalent
+              Newest first · live from devnet
             </span>
             <ButtonLink href="/refineries" variant="secondary">
-              View all 12 →
+              View all {refineries.length} →
             </ButtonLink>
           </div>
         </div>
@@ -46,7 +48,8 @@ export function FeaturedRefineries() {
 }
 
 function HeroCard({ refinery: r }: { refinery: Refinery }) {
-  const fillPercent = Math.round((r.poolRemaining / r.poolInitial) * 100);
+  const fillPercent =
+    r.poolInitial > 0 ? Math.round((r.poolRemaining / r.poolInitial) * 100) : 0;
   return (
     <div className="sof-feat-card hero-card">
       <div className="head">
@@ -117,7 +120,7 @@ function HeroCard({ refinery: r }: { refinery: Refinery }) {
             href={`/refinery/${r.id}?action=claim`}
             variant="miniPrimary"
           >
-            Claim 148.8 {r.tokenSymbol}
+            Check eligibility
           </ButtonLink>
         </div>
       </div>
@@ -126,7 +129,8 @@ function HeroCard({ refinery: r }: { refinery: Refinery }) {
 }
 
 function CompactCard({ refinery: r }: { refinery: Refinery }) {
-  const fillPercent = Math.round((r.poolRemaining / r.poolInitial) * 100);
+  const fillPercent =
+    r.poolInitial > 0 ? Math.round((r.poolRemaining / r.poolInitial) * 100) : 0;
   const isClosing = r.status === "closingSoon";
   return (
     <div className="sof-feat-card">

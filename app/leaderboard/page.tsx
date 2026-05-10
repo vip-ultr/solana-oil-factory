@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ReputationChip } from "@/components/sof/primitives";
+import { PendingIndexerBanner, ReputationChip } from "@/components/sof/primitives";
 import { LeaderboardControls } from "@/components/sof/leaderboard/LeaderboardControls";
 import { cn } from "@/lib/cn";
 
@@ -49,6 +49,7 @@ const TREND_PATHS: Record<string, { d: string; stroke: string }> = {
 export default function LeaderboardPage() {
   return (
     <>
+      <PendingIndexerBanner section="The leaderboard" />
       <header className="sof-lb-hdr">
         <h1>Leaderboard</h1>
         <p>

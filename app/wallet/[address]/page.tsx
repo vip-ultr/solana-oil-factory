@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import {
   ButtonLink,
+  PendingIndexerBanner,
   StatusPill,
   TokenMark,
   VerifiedBadge,
@@ -35,6 +36,7 @@ export default async function WalletPage({ params }: PageProps) {
 
   return (
     <>
+      <PendingIndexerBanner section="Public wallet profiles" />
       <div className="sof-w-crumb">
         <Link href="/leaderboard">Leaderboard</Link> / Wallet
       </div>
