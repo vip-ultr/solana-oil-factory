@@ -28,6 +28,9 @@ export function getProgram(): Program<RefineryIdl> {
   if (_program) return _program;
 
   const connection = new Connection(SOLANA_RPC_URL, "confirmed");
+  // The main-entry `Wallet` export doesn't survive webpack's
+  // ESM/CJS dance ("Wallet is not a constructor" at runtime),
+  // so we go straight to the CJS NodeWallet path.
   const wallet = new NodeWallet(Keypair.generate());
   const provider = new AnchorProvider(connection, wallet, {
     commitment: "confirmed",
