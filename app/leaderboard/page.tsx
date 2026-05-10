@@ -1,7 +1,13 @@
 import type { Metadata } from "next";
-import { PendingIndexerBanner, ReputationChip } from "@/components/sof/primitives";
+import Link from "next/link";
+import { PendingIndexerBanner, ReputationChip, WalletPill } from "@/components/sof/primitives";
 import { LeaderboardControls } from "@/components/sof/leaderboard/LeaderboardControls";
 import { cn } from "@/lib/cn";
+import { topOperators } from "@/lib/indexer/aggregations";
+import { formatTokens } from "@/lib/mock-data";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export const metadata: Metadata = {
   title: "Leaderboard",
@@ -47,9 +53,14 @@ const TREND_PATHS: Record<string, { d: string; stroke: string }> = {
 };
 
 export default function LeaderboardPage() {
+  // Live aggregation from the indexer JSON.
+  const operators = topOperators(50);
+
   return (
     <>
-      <PendingIndexerBanner section="The leaderboard" />
+      {operators.length === 0 && (
+        <PendingIndexerBanner section="The leaderboard" />
+      )}
       <header className="sof-lb-hdr">
         <h1>Leaderboard</h1>
         <p>
@@ -175,46 +186,69 @@ export default function LeaderboardPage() {
             </tr>
           </thead>
           <tbody>
-            {ROWS.map((row) => {
-              const trend = TREND_PATHS[row.trend];
-              return (
-                <tr key={row.rank} className={cn(row.you && "you")}>
-                  <td className="rk">{row.rank}</td>
+            {operators.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={8}
+                  style={{
+                    padding: "32px 16px",
+                    color: "var(--text-tertiary)",
+                    fontSize: 13,
+                    textAlign: "center",
+                  }}
+                >
+                  No operator activity indexed yet on this cluster.
+                  Operators show up here automatically once they
+                  launch a refinery and holders start claiming.
+                </td>
+              </tr>
+            ) : (
+              operators.map((row) => (
+                <tr key={row.operator}>
+                  <td className="rk">
+                    {row.rank.toString().padStart(2, "0")}
+                  </td>
                   <td>
                     <div className="who">
-                      <div className={`av ${row.avClass}`} />
+                      <div className="av" aria-hidden="true" />
                       <div>
-                        <div className="nm">{row.name}</div>
-                        <div className="pl">{row.pl}</div>
+                        <Link
+                          href={`/wallet/${row.operator}`}
+                          className="nm"
+                          style={{ color: "inherit", textDecoration: "none" }}
+                        >
+                          <WalletPill address={row.operator} />
+                        </Link>
+                        <div className="pl">
+                          {row.refineryCount} refiner
+                          {row.refineryCount === 1 ? "y" : "ies"}
+                        </div>
                       </div>
                     </div>
                   </td>
                   <td>
-                    <ReputationChip score={row.rep} tier={row.repTier} />
+                    <span style={{ color: "var(--text-tertiary)", fontSize: 12 }}>
+                      v1.1
+                    </span>
                   </td>
-                  <td className="num">{row.distributed}</td>
-                  <td className="num">{row.holders}</td>
-                  <td className="num">{row.refineries}</td>
+                  <td className="num">
+                    {row.totalDistributed > 0
+                      ? formatTokens(row.totalDistributed)
+                      : "0"}
+                  </td>
+                  <td className="num">{row.uniqueHoldersServed}</td>
+                  <td className="num">{row.refineryCount}</td>
                   <td>
-                    <svg
-                      className="sof-lb-spark"
-                      viewBox="0 0 80 24"
-                      aria-hidden="true"
+                    <span
+                      style={{ color: "var(--text-tertiary)", fontSize: 11 }}
                     >
-                      <path
-                        d={trend.d}
-                        fill="none"
-                        stroke={
-                          row.you ? "var(--accent)" : trend.stroke
-                        }
-                        strokeWidth="1.4"
-                      />
-                    </svg>
+                      —
+                    </span>
                   </td>
-                  <td className={cn("num delta", row.deltaTone)}>{row.delta}</td>
+                  <td className="num delta">—</td>
                 </tr>
-              );
-            })}
+              ))
+            )}
           </tbody>
         </table>
       </div>

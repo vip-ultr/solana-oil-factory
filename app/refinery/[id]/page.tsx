@@ -19,7 +19,9 @@ import {
   formatRelativeTime,
 } from "@/lib/mock-data";
 import { fetchRefinery } from "@/lib/onchain/refineries";
+import { fetchSnapshots } from "@/lib/onchain/snapshots";
 import { buildActivityFeed } from "@/lib/indexer/ui";
+import { topClaimantsForRefinery } from "@/lib/indexer/aggregations";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -61,9 +63,16 @@ export default async function RefineryPage({ params }: PageProps) {
     limit: 8,
   });
 
+  // Snapshot history (on-chain) + top claimants (indexer
+  // aggregation) — fetched in parallel.
+  const [snapshots, topClaimants] = await Promise.all([
+    fetchSnapshots(id),
+    Promise.resolve(topClaimantsForRefinery(id, 7)),
+  ]);
+
   return (
     <>
-      <PendingIndexerBanner section="The activity, snapshot history, top claimants, token info, and operator-history panels" />
+      <PendingIndexerBanner section="The token-info panel and operator-history numbers" />
       <div className="sof-rd-crumb">
         <Link href="/refineries">Refineries</Link>
         <span className="sep">/</span>
@@ -235,89 +244,124 @@ export default async function RefineryPage({ params }: PageProps) {
             </div>
           </div>
 
-          {/* Snapshot history */}
+          {/* Snapshot history — live from on-chain Snapshot PDAs */}
           <div className="sof-rd-panel">
             <div className="sof-rd-panel-head">
               <h3>Snapshot history</h3>
-              <span className="meta">7 snapshots · hourly cadence</span>
+              <span className="meta">
+                {snapshots.length === 0
+                  ? "No snapshots yet"
+                  : `${snapshots.length} snapshot${snapshots.length === 1 ? "" : "s"}`}
+              </span>
             </div>
-            <table className="sof-rd-mtable">
-              <thead>
-                <tr>
-                  <th style={{ width: 60 }}>#</th>
-                  <th>Taken at</th>
-                  <th className="num">Holders</th>
-                  <th className="num">Eligible supply</th>
-                  <th>Merkle root</th>
-                </tr>
-              </thead>
-              <tbody>
-                {[
-                  { n: "07", t: "Dec 12 · 14:00 UTC", h: "6,201", e: "204,812", m: "5kP9…M2x4" },
-                  { n: "06", t: "Dec 12 · 13:00 UTC", h: "6,184", e: "203,990", m: "3hQz…J7t1" },
-                  { n: "05", t: "Dec 12 · 12:00 UTC", h: "6,142", e: "203,008", m: "8aT4…N9p2" },
-                  { n: "04", t: "Dec 12 · 11:00 UTC", h: "6,089", e: "201,544", m: "2bV8…K3w7" },
-                  { n: "03", t: "Dec 12 · 10:00 UTC", h: "6,012", e: "200,021", m: "9dF2…X1m6" },
-                  { n: "02", t: "Dec 12 · 09:00 UTC", h: "5,948", e: "198,772", m: "7eR1…Q4n8" },
-                  { n: "01", t: "Dec 12 · 08:00 UTC", h: "5,802", e: "196,401", m: "4cS6…L0v3" },
-                ].map((s) => (
-                  <tr key={s.n}>
-                    <td className="fade">{s.n}</td>
-                    <td>{s.t}</td>
-                    <td className="num">{s.h}</td>
-                    <td className="num">{s.e}</td>
-                    <td>
-                      <a className="sof-rd-snap-merkle">
-                        {s.m} <ExternalLink size={10} style={{ display: "inline-block" }} />
-                      </a>
-                    </td>
+            {snapshots.length === 0 ? (
+              <div
+                style={{
+                  padding: "20px 16px",
+                  color: "var(--text-tertiary)",
+                  fontSize: 12.5,
+                  lineHeight: 1.6,
+                }}
+              >
+                The platform snapshot authority hasn&apos;t published a
+                merkle root for this refinery yet. The first claim
+                window opens once snapshot #1 lands.
+              </div>
+            ) : (
+              <table className="sof-rd-mtable">
+                <thead>
+                  <tr>
+                    <th style={{ width: 60 }}>#</th>
+                    <th>Taken at</th>
+                    <th className="num">Holders</th>
+                    <th className="num">Eligible supply</th>
+                    <th>Merkle root</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {snapshots.map((s) => (
+                    <tr key={s.index}>
+                      <td className="fade">
+                        {s.index.toString().padStart(2, "0")}
+                      </td>
+                      <td>{new Date(s.takenAtUnix * 1000).toUTCString()}</td>
+                      <td className="num">{s.holderCount.toLocaleString()}</td>
+                      <td className="num">
+                        {formatTokens(s.totalEligibleBalance)}
+                      </td>
+                      <td>
+                        <a
+                          className="sof-rd-snap-merkle font-mono"
+                          href={`https://explorer.solana.com/address/${s.pda}?cluster=devnet`}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          {s.merkleRoot.slice(0, 8)}…
+                          {s.merkleRoot.slice(-4)}{" "}
+                          <ExternalLink
+                            size={10}
+                            style={{ display: "inline-block" }}
+                          />
+                        </a>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
 
-          {/* Top claimants */}
+          {/* Top claimants — live from indexer ClaimMade events */}
           <div className="sof-rd-panel">
             <div className="sof-rd-panel-head">
               <h3>Top claimants</h3>
               <span className="meta">By total claimed</span>
             </div>
-            <table className="sof-rd-mtable">
-              <thead>
-                <tr>
-                  <th style={{ width: 60 }}>#</th>
-                  <th>Wallet</th>
-                  <th className="num">Total claimed</th>
-                  <th className="num">Claims</th>
-                  <th>First claim</th>
-                </tr>
-              </thead>
-              <tbody>
-                {[
-                  { n: "01", w: "4Bsd…91jU", rep: 67, t: "84,000", c: "7", f: "Dec 5" },
-                  { n: "02", w: "RayLi…D9pT", rep: 71, t: "62,400", c: "7", f: "Dec 5" },
-                  { n: "03", w: "OrcaT…D7vM", rep: 64, t: "48,000", c: "7", f: "Dec 5" },
-                  { n: "04", w: "5jVq…78dM", rep: 71, t: "36,000", c: "6", f: "Dec 6" },
-                  { n: "05", w: "MndS…DwY3", rep: 62, t: "28,800", c: "6", f: "Dec 6" },
-                  { n: "06", w: "9wF7…3Lz8", rep: 51, t: "22,800", c: "5", f: "Dec 7" },
-                  { n: "07", w: "Hxk2…7gPZ", rep: 84, t: "18,400", c: "5", f: "Dec 7" },
-                ].map((row) => (
-                  <tr key={row.n}>
-                    <td className="fade">{row.n}</td>
-                    <td>
-                      <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                        <WalletPill address={row.w} />
-                        <ReputationChip score={row.rep} />
-                      </span>
-                    </td>
-                    <td className="num">{row.t}</td>
-                    <td className="num">{row.c}</td>
-                    <td className="fade">{row.f}</td>
+            {topClaimants.length === 0 ? (
+              <div
+                style={{
+                  padding: "20px 16px",
+                  color: "var(--text-tertiary)",
+                  fontSize: 12.5,
+                  lineHeight: 1.6,
+                }}
+              >
+                Top claimants will populate once the first claim
+                lands. Eligible wallets can claim once snapshot #1
+                is published.
+              </div>
+            ) : (
+              <table className="sof-rd-mtable">
+                <thead>
+                  <tr>
+                    <th style={{ width: 60 }}>#</th>
+                    <th>Wallet</th>
+                    <th className="num">Total claimed</th>
+                    <th className="num">Claims</th>
+                    <th>First claim</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {topClaimants.map((c) => (
+                    <tr key={c.holder}>
+                      <td className="fade">
+                        {c.rank.toString().padStart(2, "0")}
+                      </td>
+                      <td>
+                        <WalletPill address={c.holder} />
+                      </td>
+                      <td className="num">{formatTokens(c.totalClaimed)}</td>
+                      <td className="num">{c.claimCount}</td>
+                      <td className="fade">
+                        {c.firstClaimUnix
+                          ? new Date(c.firstClaimUnix * 1000).toLocaleDateString()
+                          : "—"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         </div>
 

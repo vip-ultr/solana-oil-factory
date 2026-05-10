@@ -9,10 +9,18 @@ import {
 } from "@/components/sof/primitives";
 import { WalletTabs } from "@/components/sof/wallet/WalletTabs";
 import { ClaimHeatmap } from "@/components/sof/wallet/ClaimHeatmap";
+import { fetchAllRefineries } from "@/lib/onchain/refineries";
+import { tokenMetaFor } from "@/lib/onchain/token-registry";
+import { loadEvents } from "@/lib/indexer/store";
+import { operatorStatsFor } from "@/lib/indexer/aggregations";
+import { formatTokens } from "@/lib/mock-data";
 
 interface PageProps {
   params: Promise<{ address: string }>;
 }
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { address } = await params;
@@ -34,9 +42,38 @@ export default async function WalletPage({ params }: PageProps) {
       ? `${address.slice(0, 4)}…${address.slice(-4)}`
       : address;
 
+  // Live indexer-derived data for this wallet.
+  const allEvents = loadEvents();
+  const claims = allEvents.filter(
+    (e) => e.eventName === "ClaimMade" && e.wallet === address,
+  );
+  const opStats = operatorStatsFor(address);
+
+  // Build a refinery PDA → token mint lookup from RefineryLaunched
+  // events so we can show token symbols on the claim rows.
+  const refineryMintMap = new Map<string, string>();
+  const refineryOperatorMap = new Map<string, string>();
+  for (const e of allEvents) {
+    if (e.eventName !== "RefineryLaunched") continue;
+    const ref = e.data.refinery as string | undefined;
+    const mint = e.data.token_mint as string | undefined;
+    const op = e.data.operator as string | undefined;
+    if (ref && mint) refineryMintMap.set(ref, mint);
+    if (ref && op) refineryOperatorMap.set(ref, op);
+  }
+
+  // Operated-refinery rows (live on-chain refinery accounts
+  // filtered by operator). `fetchAllRefineries` is cheap on
+  // devnet; bigger clusters would want a getProgramAccounts
+  // memcmp filter, deferred to v1.1.
+  const allRefineries = await fetchAllRefineries();
+  const operatedRefineries = allRefineries.filter(
+    (r) => refineryOperatorMap.get(r.id) === address,
+  );
+
   return (
     <>
-      <PendingIndexerBanner section="Public wallet profiles" />
+      <PendingIndexerBanner section="The reputation gauge + claim heatmap" />
       <div className="sof-w-crumb">
         <Link href="/leaderboard">Leaderboard</Link> / Wallet
       </div>
@@ -103,35 +140,41 @@ export default async function WalletPage({ params }: PageProps) {
         <div className="it">
           <div className="k">Reputation</div>
           <div className="v">
-            {REPUTATION}<small>Excellent</small>
+            <span style={{ color: "var(--text-tertiary)" }}>—</span>
+            <small>v1.1</small>
           </div>
-          <div className="sub" style={{ color: "var(--success)" }}>
-            +0.4 last claim
-          </div>
+          <div className="sub">Score lands with the indexer</div>
         </div>
         <div className="it">
-          <div className="k">Total claimed</div>
-          <div className="v">
-            $1,420<small>USD</small>
+          <div className="k">Claims</div>
+          <div className="v">{claims.length.toLocaleString()}</div>
+          <div className="sub">
+            {claims.length === 0 ? "no claims yet" : `since first claim`}
           </div>
-          <div className="sub">across 47 claims</div>
         </div>
         <div className="it">
           <div className="k">Refineries operated</div>
           <div className="v">
-            2<small>active</small>
+            {operatedRefineries.length}
+            {operatedRefineries.length > 0 && <small>active</small>}
           </div>
-          <div className="sub">$28K distributed</div>
+          <div className="sub">
+            {opStats
+              ? `${formatTokens(opStats.totalDistributed)} distributed`
+              : "—"}
+          </div>
         </div>
         <div className="it">
-          <div className="k">Holders served</div>
-          <div className="v">2,108</div>
-          <div className="sub">avg rep 78</div>
+          <div className="k">Unique holders served</div>
+          <div className="v">{opStats?.uniqueHoldersServed ?? 0}</div>
+          <div className="sub">across operated refineries</div>
         </div>
         <div className="it">
           <div className="k">Streak</div>
-          <div className="v">14 days</div>
-          <div className="sub">Last claim 2h ago</div>
+          <div className="v" style={{ color: "var(--text-tertiary)" }}>
+            —
+          </div>
+          <div className="sub">Daily-streak calc lands with v1.1</div>
         </div>
       </div>
 
@@ -139,52 +182,99 @@ export default async function WalletPage({ params }: PageProps) {
         <div className="sof-w-col-l">
           <div className="sof-w-panel">
             <WalletTabs />
-            <table className="sof-w-tbl">
-              <thead>
-                <tr>
-                  <th style={{ width: 50 }}>#</th>
-                  <th>Refinery</th>
-                  <th className="num">Amount</th>
-                  <th className="num">USD</th>
-                  <th>Snapshot</th>
-                  <th>When</th>
-                  <th>Tx</th>
-                </tr>
-              </thead>
-              <tbody>
-                {[
-                  { n: "47", mark: "bonk" as const, sym: "BONK", nm: "Bonk", amt: "148.8", usd: "$1.78", snap: "#7", when: "2h ago", tx: "4xK2…3hPq" },
-                  { n: "46", mark: "wif" as const, sym: "WIF", nm: "dogwifhat", amt: "88.4", usd: "$294.20", snap: "#3", when: "3h ago", tx: "9pL8…2sRq" },
-                  { n: "45", mark: "default" as const, sym: "PEPE", nm: "Pepe Coin", amt: "2,840.2", usd: "$42.18", snap: "#12", when: "1d ago", tx: "2bV8…K3w7" },
-                  { n: "44", mark: "jup" as const, sym: "JUP", nm: "Jupiter", amt: "12.4", usd: "$8.90", snap: "#1", when: "2d ago", tx: "5kP9…M2x4" },
-                  { n: "43", mark: "bonk" as const, sym: "BONK", nm: "Bonk", amt: "142.1", usd: "$1.71", snap: "#6", when: "2d ago", tx: "8aT4…N9p2" },
-                  { n: "42", mark: "bonk" as const, sym: "BONK", nm: "Bonk", amt: "138.8", usd: "$1.66", snap: "#5", when: "3d ago", tx: "3hQz…J7t1" },
-                  { n: "41", mark: "ray" as const, sym: "RAY", nm: "Raydium", amt: "8.2", usd: "$22.40", snap: "#2", when: "3d ago", tx: "7eR1…Q4n8" },
-                ].map((row) => (
-                  <tr key={row.n}>
-                    <td className="fade">{row.n}</td>
-                    <td>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <TokenMark variant={row.mark} symbol={row.sym} size={28} />
-                        <span className="font-display" style={{ fontWeight: 600 }}>
-                          {row.nm}
-                        </span>
-                        <span className="fade">{row.sym}</span>
-                      </div>
-                    </td>
-                    <td className="num">{row.amt}</td>
-                    <td className="num">{row.usd}</td>
-                    <td>{row.snap}</td>
-                    <td className="fade">{row.when}</td>
-                    <td>
-                      <a className="fade" style={{ cursor: "pointer" }}>
-                        {row.tx} ↗
-                      </a>
-                    </td>
+            {claims.length === 0 ? (
+              <div
+                style={{
+                  padding: "32px 20px",
+                  color: "var(--text-tertiary)",
+                  fontSize: 13,
+                  lineHeight: 1.6,
+                }}
+              >
+                This wallet hasn&apos;t claimed anywhere yet. Browse{" "}
+                <Link
+                  href="/refineries"
+                  style={{ color: "var(--accent)" }}
+                >
+                  open refineries
+                </Link>{" "}
+                — eligibility is auto-detected from holdings at snapshot time.
+              </div>
+            ) : (
+              <table className="sof-w-tbl">
+                <thead>
+                  <tr>
+                    <th style={{ width: 50 }}>#</th>
+                    <th>Refinery</th>
+                    <th className="num">Amount</th>
+                    <th>Snapshot</th>
+                    <th>When</th>
+                    <th>Tx</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {claims.map((c, i) => {
+                    const ref = c.refinery ?? "";
+                    const mint = ref ? refineryMintMap.get(ref) : undefined;
+                    const meta = mint
+                      ? tokenMetaFor(mint)
+                      : { symbol: "—", name: "Unknown", variant: "default" as const };
+                    const amount = Number(c.data.amount_claimed ?? 0);
+                    const snapshotIndex =
+                      typeof c.data.snapshot_index === "number"
+                        ? c.data.snapshot_index
+                        : typeof c.data.snapshot_index === "string"
+                          ? c.data.snapshot_index
+                          : "?";
+                    const when = c.blockTime
+                      ? new Date(c.blockTime * 1000).toLocaleString()
+                      : "—";
+                    return (
+                      <tr key={`${c.signature}-${c.logIndex}`}>
+                        <td className="fade">
+                          {(claims.length - i).toString().padStart(2, "0")}
+                        </td>
+                        <td>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 8,
+                            }}
+                          >
+                            <TokenMark
+                              variant={meta.variant}
+                              symbol={meta.symbol}
+                              size={28}
+                            />
+                            <span
+                              className="font-display"
+                              style={{ fontWeight: 600 }}
+                            >
+                              {meta.name}
+                            </span>
+                            <span className="fade">{meta.symbol}</span>
+                          </div>
+                        </td>
+                        <td className="num">{formatTokens(amount)}</td>
+                        <td>#{snapshotIndex ?? "?"}</td>
+                        <td className="fade">{when}</td>
+                        <td>
+                          <a
+                            className="fade"
+                            href={`https://explorer.solana.com/tx/${c.signature}?cluster=devnet`}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            {c.signature.slice(0, 4)}…{c.signature.slice(-4)} ↗
+                          </a>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
           </div>
 
           <div className="sof-w-panel">
@@ -209,53 +299,83 @@ export default async function WalletPage({ params }: PageProps) {
           <div className="sof-w-panel">
             <div className="sof-w-panel-h">
               <h3>Operated refineries</h3>
+              <span className="meta">
+                {operatedRefineries.length === 0
+                  ? "—"
+                  : `${operatedRefineries.length} on devnet`}
+              </span>
             </div>
-            <table className="sof-w-tbl">
-              <thead>
-                <tr>
-                  <th>Token</th>
-                  <th className="num">Pool</th>
-                  <th className="num">Distributed</th>
-                  <th className="num">Holders</th>
-                  <th>Status</th>
-                  <th>Launched</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <TokenMark variant="bonk" symbol="BONK" />
-                      <div>
-                        <div className="font-display" style={{ fontWeight: 600 }}>Bonk</div>
-                        <div className="fade">BONK</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="num">1.5M</td>
-                  <td className="num">$14,820</td>
-                  <td className="num">2,108</td>
-                  <td><StatusPill status="active" /></td>
-                  <td className="fade">Dec 5 · 7d ago</td>
-                </tr>
-                <tr>
-                  <td>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <TokenMark variant="wif" symbol="WIF" />
-                      <div>
-                        <div className="font-display" style={{ fontWeight: 600 }}>dogwifhat</div>
-                        <div className="fade">WIF</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="num">100K</td>
-                  <td className="num">$13,620</td>
-                  <td className="num">412</td>
-                  <td><StatusPill status="active" /></td>
-                  <td className="fade">Nov 28 · 12d ago</td>
-                </tr>
-              </tbody>
-            </table>
+            {operatedRefineries.length === 0 ? (
+              <div
+                style={{
+                  padding: "20px 16px",
+                  color: "var(--text-tertiary)",
+                  fontSize: 12.5,
+                  lineHeight: 1.6,
+                }}
+              >
+                This wallet hasn&apos;t operated a refinery on this
+                cluster.{" "}
+                <Link
+                  href="/refinery/launch"
+                  style={{ color: "var(--accent)" }}
+                >
+                  Launch one →
+                </Link>
+              </div>
+            ) : (
+              <table className="sof-w-tbl">
+                <thead>
+                  <tr>
+                    <th>Token</th>
+                    <th className="num">Pool remaining</th>
+                    <th className="num">Holders claimed</th>
+                    <th>Status</th>
+                    <th>Launched</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {operatedRefineries.map((rf) => (
+                    <tr key={rf.id}>
+                      <td>
+                        <Link
+                          href={`/refinery/${rf.id}`}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 10,
+                            color: "inherit",
+                            textDecoration: "none",
+                          }}
+                        >
+                          <TokenMark
+                            variant={rf.tokenMarkVariant}
+                            symbol={rf.tokenSymbol}
+                          />
+                          <div>
+                            <div
+                              className="font-display"
+                              style={{ fontWeight: 600 }}
+                            >
+                              {rf.tokenName}
+                            </div>
+                            <div className="fade">{rf.tokenSymbol}</div>
+                          </div>
+                        </Link>
+                      </td>
+                      <td className="num">{formatTokens(rf.poolRemaining)}</td>
+                      <td className="num">{rf.holdersClaimed}</td>
+                      <td>
+                        <StatusPill status={rf.status} />
+                      </td>
+                      <td className="fade">
+                        {new Date(rf.launchedAtIso).toLocaleDateString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         </div>
 
