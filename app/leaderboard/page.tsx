@@ -1,57 +1,222 @@
 import type { Metadata } from "next";
-import LeaderboardTable, { type LeaderboardEntry } from "@/components/LeaderboardTable";
-import { supabase } from "@/lib/supabase";
+import { ReputationChip } from "@/components/sof/primitives";
+import { LeaderboardControls } from "@/components/sof/leaderboard/LeaderboardControls";
+import { cn } from "@/lib/cn";
 
 export const metadata: Metadata = {
-  title: "Leaderboard — Solana Oil Factory",
-  description: "Top Solana wallets ranked by $CRUDE production",
+  title: "Leaderboard",
+  description:
+    "Operators ranked by reputation, distribution, and holders served. Computed from on-chain claim history, snapshot consistency, and operator behavior.",
 };
 
-export const revalidate = 60;
-
-async function getLeaderboard(): Promise<LeaderboardEntry[]> {
-  // try/catch around the whole call so build-time prerender survives missing env
-  // (e.g. SUPABASE_SERVICE_ROLE_KEY) — the page renders empty and ISR revalidates
-  // it later once env is in place. Real Supabase errors are still logged.
-  try {
-    const { data, error } = await supabase
-      .from("wallets")
-      .select("wallet_address, crude, bags_crude, total_crude, oil_units, barrels, prestige_title, last_updated")
-      .gt("total_crude", 0)
-      .order("total_crude", { ascending: false })
-      .limit(100);
-
-    if (error) {
-      console.error("[leaderboard page]", error.message);
-      return [];
-    }
-
-    return data ?? [];
-  } catch (err) {
-    console.error("[leaderboard page]", err instanceof Error ? err.message : err);
-    return [];
-  }
+interface Row {
+  rank: string;
+  name: string;
+  pl: string;
+  rep: number;
+  repTier: "excellent" | "good" | "neutral" | "risky" | "flagged";
+  distributed: string;
+  holders: string;
+  refineries: string;
+  trend: "up" | "down" | "flat";
+  delta: string;
+  deltaTone: "up" | "dn" | "";
+  avClass: "" | "b" | "c" | "d";
+  you?: boolean;
 }
 
-export default async function LeaderboardPage() {
-  const entries = await getLeaderboard();
+const ROWS: Row[] = [
+  { rank: "04", name: "Hxk2…7gPZ", pl: "Verified deployer", rep: 84, repTier: "excellent", distributed: "$112K", holders: "5,204", refineries: "2", trend: "up", delta: "+2", deltaTone: "up", avClass: "c" },
+  { rank: "05", name: "MndS…DwY3", pl: "Verified · 6 refineries", rep: 79, repTier: "excellent", distributed: "$98K", holders: "4,812", refineries: "6", trend: "up", delta: "+1", deltaTone: "up", avClass: "d" },
+  { rank: "06", name: "Pyth9…D7ax", pl: "Verified · 1 refinery", rep: 76, repTier: "excellent", distributed: "$84K", holders: "3,920", refineries: "1", trend: "flat", delta: "+0", deltaTone: "", avClass: "b" },
+  { rank: "07", name: "JitoSL…M9pq", pl: "CTO · 2 refineries", rep: 72, repTier: "excellent", distributed: "$71K", holders: "3,402", refineries: "2", trend: "down", delta: "−1", deltaTone: "dn", avClass: "" },
+  { rank: "08", name: "Drift…J3kL", pl: "Verified · 3 refineries", rep: 68, repTier: "good", distributed: "$58K", holders: "2,810", refineries: "3", trend: "up", delta: "+3", deltaTone: "up", avClass: "c" },
+  { rank: "09", name: "You · 4Bsd…91jU", pl: "Verified · 2 refineries", rep: 67, repTier: "good", distributed: "$28.4K", holders: "2,108", refineries: "2", trend: "up", delta: "+5", deltaTone: "up", avClass: "d", you: true },
+  { rank: "10", name: "RaydiumO…Lk2", pl: "CTO · 4 refineries", rep: 63, repTier: "good", distributed: "$22K", holders: "1,840", refineries: "4", trend: "flat", delta: "−2", deltaTone: "dn", avClass: "b" },
+  { rank: "11", name: "Mango…Q2dT", pl: "Verified · 1 refinery", rep: 61, repTier: "good", distributed: "$18K", holders: "1,408", refineries: "1", trend: "flat", delta: "+0", deltaTone: "", avClass: "" },
+  { rank: "12", name: "Tensor…Pq9Z", pl: "Verified · 2 refineries", rep: 58, repTier: "good", distributed: "$14K", holders: "1,182", refineries: "2", trend: "down", delta: "−4", deltaTone: "dn", avClass: "c" },
+  { rank: "13", name: "Bonk…E5kQ", pl: "CTO · 1 refinery", rep: 52, repTier: "neutral", distributed: "$11K", holders: "948", refineries: "1", trend: "up", delta: "+1", deltaTone: "up", avClass: "d" },
+  { rank: "14", name: "Marin…7uZP", pl: "Verified · 2 refineries", rep: 48, repTier: "neutral", distributed: "$8.4K", holders: "712", refineries: "2", trend: "flat", delta: "−1", deltaTone: "dn", avClass: "" },
+  { rank: "15", name: "Phoenix…J0dX", pl: "Verified · 1 refinery", rep: 42, repTier: "neutral", distributed: "$5.8K", holders: "488", refineries: "1", trend: "flat", delta: "+0", deltaTone: "", avClass: "b" },
+];
 
+const TREND_PATHS: Record<string, { d: string; stroke: string }> = {
+  up: { d: "M0,18 L10,16 L20,12 L30,14 L40,10 L50,8 L60,6 L70,4 L80,2", stroke: "var(--success)" },
+  down: { d: "M0,8 L10,10 L20,12 L30,8 L40,10 L50,12 L60,14 L70,16 L80,18", stroke: "var(--error)" },
+  flat: { d: "M0,12 L10,14 L20,12 L30,14 L40,12 L50,14 L60,12 L70,14 L80,12", stroke: "var(--text-tertiary)" },
+};
+
+export default function LeaderboardPage() {
   return (
-    <div className="page">
-      <main className="main">
-        <div className="lb-header">
-          <div className="barrel-hero-header">
-            <h2 className="barrel-hero-title">Global Leaderboard</h2>
-            <div className="barrel-hero-rule" />
+    <>
+      <header className="sof-lb-hdr">
+        <h1>Leaderboard</h1>
+        <p>
+          Reputation is computed from on-chain claim history, snapshot
+          consistency, and operator behavior. Higher reputation unlocks
+          features and signals trust to other holders.
+        </p>
+      </header>
+
+      <LeaderboardControls />
+
+      <div className="sof-lb-body">
+        {/* Podium */}
+        <div className="sof-lb-podium">
+          <div className="sof-lb-podium-card">
+            <div className="rank">
+              <b>#02</b> · Operator
+            </div>
+            <div className="who">
+              <div
+                className="av"
+                style={{ background: "linear-gradient(135deg,#3b82f6,#a855f7)" }}
+              />
+              <div>
+                <div className="nm">
+                  RayLi…D9pT <ReputationChip score={88} />
+                </div>
+                <div className="pl">Verified · 5 refineries</div>
+              </div>
+            </div>
+            <div className="stats">
+              <div>
+                <div className="k">Distributed</div>
+                <div className="v">$184K</div>
+              </div>
+              <div>
+                <div className="k">Holders</div>
+                <div className="v">8,420</div>
+              </div>
+            </div>
           </div>
-          <p className="lb-subtitle">
-            Wallets are ranked by CRUDE produced. <br />
-            Leaderboard is updated whenever a wallet joins the refinery.
-          </p>
+
+          <div className="sof-lb-podium-card first">
+            <span className="crown" aria-hidden="true">👑</span>
+            <div className="rank">
+              <b>#01</b> · Operator of the week
+            </div>
+            <div className="who">
+              <div
+                className="av"
+                style={{
+                  background: "linear-gradient(135deg,#fbbf24,#f97316)",
+                  width: 48,
+                  height: 48,
+                }}
+              />
+              <div>
+                <div className="nm" style={{ fontSize: 18 }}>
+                  5jVq…78dM <ReputationChip score={94} />
+                </div>
+                <div className="pl">
+                  Verified deployer · 3 refineries · 0 closed early
+                </div>
+              </div>
+            </div>
+            <div className="stats">
+              <div>
+                <div className="k">Distributed (7d)</div>
+                <div className="v" style={{ fontSize: 22, color: "#fbbf24" }}>
+                  $284K
+                </div>
+              </div>
+              <div>
+                <div className="k">Holders served</div>
+                <div className="v" style={{ fontSize: 22 }}>
+                  14,820
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="sof-lb-podium-card">
+            <div className="rank">
+              <b>#03</b> · Operator
+            </div>
+            <div className="who">
+              <div
+                className="av"
+                style={{ background: "linear-gradient(135deg,#22c55e,#0891b2)" }}
+              />
+              <div>
+                <div className="nm">
+                  OrcaT…D7vM <ReputationChip score={82} />
+                </div>
+                <div className="pl">Verified · 4 refineries</div>
+              </div>
+            </div>
+            <div className="stats">
+              <div>
+                <div className="k">Distributed</div>
+                <div className="v">$142K</div>
+              </div>
+              <div>
+                <div className="k">Holders</div>
+                <div className="v">6,118</div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <LeaderboardTable entries={entries} />
-      </main>
-    </div>
+        {/* Ranked table */}
+        <table className="sof-lb-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Operator</th>
+              <th>Reputation</th>
+              <th className="num">Distributed (7d)</th>
+              <th className="num">Holders</th>
+              <th className="num">Refineries</th>
+              <th>Trend</th>
+              <th className="num">Δ rank</th>
+            </tr>
+          </thead>
+          <tbody>
+            {ROWS.map((row) => {
+              const trend = TREND_PATHS[row.trend];
+              return (
+                <tr key={row.rank} className={cn(row.you && "you")}>
+                  <td className="rk">{row.rank}</td>
+                  <td>
+                    <div className="who">
+                      <div className={`av ${row.avClass}`} />
+                      <div>
+                        <div className="nm">{row.name}</div>
+                        <div className="pl">{row.pl}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <ReputationChip score={row.rep} tier={row.repTier} />
+                  </td>
+                  <td className="num">{row.distributed}</td>
+                  <td className="num">{row.holders}</td>
+                  <td className="num">{row.refineries}</td>
+                  <td>
+                    <svg
+                      className="sof-lb-spark"
+                      viewBox="0 0 80 24"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d={trend.d}
+                        fill="none"
+                        stroke={
+                          row.you ? "var(--accent)" : trend.stroke
+                        }
+                        strokeWidth="1.4"
+                      />
+                    </svg>
+                  </td>
+                  <td className={cn("num delta", row.deltaTone)}>{row.delta}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }

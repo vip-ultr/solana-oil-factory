@@ -4158,3 +4158,277 @@ table.sof-refineries tbody td.num {
   .sof-w-hdr .actions { width: 100%; margin-left: 0; }
   .sof-w-heatmap { grid-template-columns: repeat(26, 1fr); }
 }
+
+/* ============================================================
+ * LEADERBOARD (sof-lb-* prefix). 4 tabs · podium · ranked table.
+ * ============================================================ */
+
+.sof-lb-hdr { padding: 32px 48px 0; }
+.sof-lb-hdr h1 {
+  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-weight: 600;
+  font-size: 30px;
+  letter-spacing: -0.02em;
+  margin: 0 0 6px;
+}
+.sof-lb-hdr p {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin: 0;
+  max-width: 680px;
+}
+
+.sof-lb-tabs {
+  padding: 24px 48px 0;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  gap: 0;
+}
+.sof-lb-tab {
+  padding: 13px 22px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+}
+.sof-lb-tab:hover { color: var(--text-secondary); }
+.sof-lb-tab.on {
+  color: var(--text-primary);
+  border-bottom-color: var(--accent);
+}
+
+.sof-lb-toolbar {
+  padding: 16px 48px;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-elevated);
+  flex-wrap: wrap;
+}
+.sof-lb-toolbar .seg {
+  display: inline-flex;
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  padding: 3px;
+  gap: 1px;
+}
+.sof-lb-toolbar .seg button {
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  background: transparent;
+}
+.sof-lb-toolbar .seg button.on {
+  background: var(--bg-overlay);
+  color: var(--text-primary);
+}
+.sof-lb-toolbar .meta {
+  margin-left: auto;
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+.sof-lb-body { padding: 32px 48px; }
+
+.sof-lb-podium {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr 1fr;
+  gap: 18px;
+  margin-bottom: 32px;
+  align-items: end;
+}
+.sof-lb-podium-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 22px 22px 24px;
+  position: relative;
+  overflow: hidden;
+}
+.sof-lb-podium-card.first {
+  border-color: rgba(245, 166, 35, 0.5);
+  background: linear-gradient(
+    180deg,
+    rgba(245, 166, 35, 0.08),
+    rgba(245, 166, 35, 0) 60%
+  );
+}
+.sof-lb-podium-card .rank {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+.sof-lb-podium-card .rank b {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.sof-lb-podium-card.first .rank,
+.sof-lb-podium-card.first .rank b { color: #fbbf24; }
+.sof-lb-podium-card .who {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+}
+.sof-lb-podium-card .av {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), #7c3aed);
+  flex: none;
+}
+.sof-lb-podium-card .nm {
+  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.sof-lb-podium-card .pl {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 11.5px;
+  color: var(--text-tertiary);
+  margin-top: 1px;
+}
+.sof-lb-podium-card .stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 18px;
+}
+.sof-lb-podium-card .stats .k {
+  font-size: 10.5px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+}
+.sof-lb-podium-card .stats .v {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 18px;
+  color: var(--text-primary);
+  margin-top: 4px;
+}
+.sof-lb-podium-card .crown {
+  position: absolute;
+  top: 18px; right: 18px;
+  font-size: 22px;
+}
+
+.sof-lb-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13.5px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.sof-lb-table thead th {
+  text-align: left;
+  padding: 12px 22px;
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 10.5px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 500;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-elevated);
+}
+.sof-lb-table thead th.num { text-align: right; }
+.sof-lb-table tbody td {
+  padding: 14px 22px;
+  border-bottom: 1px solid var(--border-subtle);
+  vertical-align: middle;
+}
+.sof-lb-table tbody tr:last-child td { border-bottom: 0; }
+.sof-lb-table tbody tr:hover { background: var(--bg-overlay); }
+.sof-lb-table td.num {
+  text-align: right;
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+}
+.sof-lb-table .rk {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 13px;
+  color: var(--text-tertiary);
+  width: 50px;
+}
+.sof-lb-table tr.you {
+  background: rgba(245, 166, 35, 0.06);
+  border-left: 3px solid var(--accent);
+}
+.sof-lb-table tr.you td:first-child { padding-left: 19px; }
+.sof-lb-table tr.you .rk {
+  color: var(--accent);
+  font-weight: 600;
+}
+.sof-lb-table .who { display: flex; align-items: center; gap: 10px; }
+.sof-lb-table .who .av {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #22c55e, #0891b2);
+  flex: none;
+}
+.sof-lb-table .who .av.b {
+  background: linear-gradient(135deg, #f97316, #ec4899);
+}
+.sof-lb-table .who .av.c {
+  background: linear-gradient(135deg, #3b82f6, #a855f7);
+}
+.sof-lb-table .who .av.d {
+  background: linear-gradient(135deg, #ef4444, #f59e0b);
+}
+.sof-lb-table .who .nm {
+  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-weight: 600;
+  font-size: 13.5px;
+}
+.sof-lb-table .who .pl {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 1px;
+}
+.sof-lb-table .delta {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 11.5px;
+}
+.sof-lb-table .delta.up { color: var(--success); }
+.sof-lb-table .delta.dn { color: var(--error); }
+
+.sof-lb-spark {
+  display: inline-block;
+  width: 80px;
+  height: 24px;
+  vertical-align: middle;
+}
+
+@media (max-width: 1100px) {
+  .sof-lb-podium { grid-template-columns: 1fr; }
+  .sof-lb-podium .first { order: -1; }
+}
+@media (max-width: 680px) {
+  .sof-lb-hdr,
+  .sof-lb-tabs,
+  .sof-lb-toolbar,
+  .sof-lb-body { padding-left: 20px; padding-right: 20px; }
+  .sof-lb-table thead { display: none; }
+  .sof-lb-table tbody td { display: block; padding: 6px 22px; }
+  .sof-lb-table tbody tr {
+    display: block;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+}
