@@ -13,6 +13,10 @@ import { fetchAllRefineries } from "@/lib/onchain/refineries";
 import { tokenMetaFor } from "@/lib/onchain/token-registry";
 import { loadEvents } from "@/lib/indexer/store";
 import { operatorStatsFor } from "@/lib/indexer/aggregations";
+import {
+  computeReputation,
+  buildClaimHeatmap,
+} from "@/lib/indexer/reputation";
 import { formatTokens } from "@/lib/mock-data";
 
 interface PageProps {
@@ -31,9 +35,23 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-const REPUTATION = 84;
 const CIRCUMFERENCE = 2 * Math.PI * 74; // ~464.96
-const FILL_OFFSET = CIRCUMFERENCE * (1 - REPUTATION / 100); // ~74.4
+
+const TIER_LABEL: Record<string, string> = {
+  excellent: "Excellent",
+  good: "Good",
+  neutral: "Neutral",
+  risky: "Caution",
+  flagged: "Risk",
+};
+
+const TIER_INDEX: Record<string, number> = {
+  flagged: 0,
+  risky: 1,
+  neutral: 2,
+  good: 3,
+  excellent: 4,
+};
 
 export default async function WalletPage({ params }: PageProps) {
   const { address } = await params;
@@ -71,9 +89,17 @@ export default async function WalletPage({ params }: PageProps) {
     (r) => refineryOperatorMap.get(r.id) === address,
   );
 
+  // Reputation v0 + heatmap, both pure functions over the
+  // events JSON.
+  const reputation = computeReputation(address);
+  const heatmap = buildClaimHeatmap(address);
+  const fillOffset = CIRCUMFERENCE * (1 - reputation.score / 100);
+
   return (
     <>
-      <PendingIndexerBanner section="The reputation gauge + claim heatmap" />
+      {/* Reputation v0 + claim heatmap are now live. The
+          banner stays only when /wallet/[address] needs it for
+          a future signal we haven't wired yet — currently empty. */}
       <div className="sof-w-crumb">
         <Link href="/leaderboard">Leaderboard</Link> / Wallet
       </div>
@@ -140,10 +166,10 @@ export default async function WalletPage({ params }: PageProps) {
         <div className="it">
           <div className="k">Reputation</div>
           <div className="v">
-            <span style={{ color: "var(--text-tertiary)" }}>—</span>
-            <small>v1.1</small>
+            {reputation.score}
+            <small>{TIER_LABEL[reputation.tier] ?? reputation.tier}</small>
           </div>
-          <div className="sub">Score lands with the indexer</div>
+          <div className="sub">v0 · 2 of 6 signals</div>
         </div>
         <div className="it">
           <div className="k">Claims</div>
@@ -280,9 +306,14 @@ export default async function WalletPage({ params }: PageProps) {
           <div className="sof-w-panel">
             <div className="sof-w-panel-h">
               <h3>Claim activity · 53 weeks</h3>
-              <span className="meta">47 claims · longest streak 14 days</span>
+              <span className="meta">
+                {heatmap.totalClaims} claim
+                {heatmap.totalClaims === 1 ? "" : "s"}
+                {heatmap.longestStreakDays > 0 &&
+                  ` · longest streak ${heatmap.longestStreakDays} day${heatmap.longestStreakDays === 1 ? "" : "s"}`}
+              </span>
             </div>
-            <ClaimHeatmap address={address} />
+            <ClaimHeatmap counts={heatmap.counts} />
             <div className="sof-w-heatmap-legend">
               Less
               <div className="leg">
@@ -383,7 +414,7 @@ export default async function WalletPage({ params }: PageProps) {
           <div className="sof-w-panel">
             <div className="sof-w-panel-h">
               <h3>Reputation</h3>
-              <span className="meta">v2 · since Mar 2026</span>
+              <span className="meta">v0 · 2 of 6 signals</span>
             </div>
             <div className="sof-w-gauge">
               <div className="ring">
@@ -405,21 +436,26 @@ export default async function WalletPage({ params }: PageProps) {
                     strokeWidth="10"
                     strokeLinecap="round"
                     strokeDasharray={CIRCUMFERENCE.toFixed(2)}
-                    strokeDashoffset={FILL_OFFSET.toFixed(2)}
+                    strokeDashoffset={fillOffset.toFixed(2)}
                   />
                 </svg>
                 <div className="v">
-                  <span className="num">{REPUTATION}</span>
+                  <span className="num">{reputation.score}</span>
                   <span className="lab">/ 100</span>
                 </div>
               </div>
-              <div className="tier">Excellent</div>
+              <div className="tier">
+                {TIER_LABEL[reputation.tier] ?? reputation.tier}
+              </div>
               <div className="tier-bar">
-                <div />
-                <div />
-                <div />
-                <div className="on" />
-                <div />
+                {[0, 1, 2, 3, 4].map((idx) => (
+                  <div
+                    key={idx}
+                    className={
+                      idx === TIER_INDEX[reputation.tier] ? "on" : undefined
+                    }
+                  />
+                ))}
               </div>
               <div className="tier-labels">
                 <span>Risk</span>
@@ -430,19 +466,21 @@ export default async function WalletPage({ params }: PageProps) {
               </div>
             </div>
             <div className="sof-w-brk">
-              {[
-                { k: "Claim consistency", bar: 88, v: "+22" },
-                { k: "Operator behavior", bar: 92, v: "+24" },
-                { k: "Token deployment trust", bar: 80, v: "+18" },
-                { k: "Wallet age (380d)", bar: 60, v: "+12" },
-                { k: "Snapshot consistency", bar: 50, v: "+8" },
-              ].map((r) => (
-                <div key={r.k} className="sof-w-brk-row">
-                  <span className="k">{r.k}</span>
-                  <span className="bar">
-                    <i style={{ width: `${r.bar}%` }} />
+              {reputation.signals.map((s) => (
+                <div key={s.code} className="sof-w-brk-row">
+                  <span className="k">
+                    {s.code} · {s.label}
                   </span>
-                  <span className="v">{r.v}</span>
+                  <span className="bar">
+                    <i
+                      style={{
+                        width: `${(s.value / s.max) * 100}%`,
+                      }}
+                    />
+                  </span>
+                  <span className="v">
+                    {s.value}/{s.max}
+                  </span>
                 </div>
               ))}
               <div
@@ -459,12 +497,32 @@ export default async function WalletPage({ params }: PageProps) {
                   className="v"
                   style={{ color: "var(--accent)", fontSize: 14 }}
                 >
-                  84 / 100
+                  {reputation.score} / 100
                 </span>
               </div>
             </div>
-            <div style={{ padding: "0 20px 18px" }}>
-              <Link href="/reputation" style={{ color: "var(--accent)", fontSize: 12 }}>
+            <div
+              style={{
+                padding: "0 20px 6px",
+                fontSize: 11.5,
+                color: "var(--text-tertiary)",
+                lineHeight: 1.55,
+              }}
+            >
+              {reputation.signals.map((s) => (
+                <div key={s.code}>
+                  <strong style={{ color: "var(--text-secondary)" }}>
+                    {s.code}.
+                  </strong>{" "}
+                  {s.detail}
+                </div>
+              ))}
+            </div>
+            <div style={{ padding: "8px 20px 18px" }}>
+              <Link
+                href="/reputation"
+                style={{ color: "var(--accent)", fontSize: 12 }}
+              >
                 How is this calculated? →
               </Link>
             </div>
