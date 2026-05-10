@@ -4432,3 +4432,271 @@ table.sof-refineries tbody td.num {
     border-bottom: 1px solid var(--border-subtle);
   }
 }
+
+/* ============================================================
+ * LONG-FORM DOC PAGES (sof-doc-* prefix). Used by Reputation,
+ * Trust, Developers, Help articles, Legal — sidebar TOC + main
+ * column with sections.
+ * ============================================================ */
+
+.sof-doc {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 48px 32px 80px;
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 48px;
+}
+
+.sof-doc-toc {
+  position: sticky;
+  top: 24px;
+  align-self: start;
+  font-size: 12.5px;
+}
+.sof-doc-toc h6 {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 10.5px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin: 0 0 12px;
+}
+.sof-doc-toc ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.sof-doc-toc a {
+  color: var(--text-secondary);
+  padding: 5px 0 5px 12px;
+  display: block;
+  border-left: 2px solid transparent;
+}
+.sof-doc-toc a:hover { color: var(--text-primary); }
+.sof-doc-toc a.on {
+  color: var(--accent);
+  border-left-color: var(--accent);
+}
+
+.sof-doc-main { min-width: 0; }
+.sof-doc-hdr {
+  padding-bottom: 32px;
+  border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: 32px;
+}
+.sof-doc-hdr .meta {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+.sof-doc-hdr h1 {
+  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-size: 40px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 14px 0 14px;
+  line-height: 1.05;
+}
+.sof-doc-hdr .lead {
+  font-size: 16px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  max-width: 640px;
+}
+
+.sof-doc-main section {
+  margin-bottom: 48px;
+  scroll-margin-top: 24px;
+}
+.sof-doc-main h2 {
+  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0 0 16px;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.sof-doc-main h2 .nm {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+.sof-doc-main p {
+  font-size: 14.5px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin: 0 0 14px;
+}
+.sof-doc-main p b,
+.sof-doc-main p strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.sof-doc-main ul {
+  margin: 0 0 14px;
+  padding-left: 18px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  font-size: 14px;
+}
+.sof-doc-main ul li { margin-bottom: 6px; }
+.sof-doc-main code {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 12.5px;
+  background: var(--bg-input);
+  padding: 2px 6px;
+  border-radius: 3px;
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+}
+
+.sof-doc-formula {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 24px;
+  margin: 18px 0;
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--text-primary);
+  text-align: center;
+}
+.sof-doc-formula .v {
+  color: var(--accent);
+  font-weight: 600;
+}
+.sof-doc-formula .c { color: var(--text-tertiary); }
+
+.sof-doc-tiers {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 20px 0;
+}
+.sof-doc-tier {
+  padding: 18px 16px;
+  background: var(--bg-elevated);
+  border-right: 1px solid var(--border-subtle);
+  text-align: center;
+}
+.sof-doc-tier:last-child { border-right: 0; }
+.sof-doc-tier .top {
+  height: 4px;
+  border-radius: 2px;
+  margin-bottom: 14px;
+}
+.sof-doc-tier:nth-child(1) .top { background: var(--error); }
+.sof-doc-tier:nth-child(2) .top { background: var(--warning); }
+.sof-doc-tier:nth-child(3) .top { background: #a3a3a3; }
+.sof-doc-tier:nth-child(4) .top { background: var(--success); }
+.sof-doc-tier:nth-child(5) .top { background: #22c55e; }
+.sof-doc-tier .nm {
+  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+}
+.sof-doc-tier .rng {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 4px;
+}
+.sof-doc-tier .desc {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 8px;
+  line-height: 1.4;
+}
+
+.sof-doc-brk-tbl {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13.5px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 14px 0;
+}
+.sof-doc-brk-tbl thead th {
+  background: var(--bg-elevated);
+  text-align: left;
+  padding: 11px 16px;
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 10.5px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 500;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.sof-doc-brk-tbl thead th.num { text-align: right; }
+.sof-doc-brk-tbl tbody td {
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.sof-doc-brk-tbl tbody tr:last-child td { border-bottom: 0; }
+.sof-doc-brk-tbl td.num {
+  text-align: right;
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+}
+.sof-doc-brk-tbl td.pos {
+  color: var(--success);
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+}
+.sof-doc-brk-tbl td.neg {
+  color: var(--error);
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+}
+.sof-doc-brk-tbl tr:hover { background: var(--bg-overlay); }
+
+.sof-doc-callout {
+  padding: 18px 22px;
+  border-radius: 8px;
+  background: rgba(245, 166, 35, 0.06);
+  border: 1px solid rgba(245, 166, 35, 0.2);
+  margin: 18px 0;
+}
+.sof-doc-callout h4 {
+  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-size: 14px;
+  color: var(--accent);
+  margin: 0 0 6px;
+  font-weight: 600;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.sof-doc-callout p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+@media (max-width: 900px) {
+  .sof-doc {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    padding: 32px 24px;
+  }
+  .sof-doc-toc { position: static; }
+  .sof-doc-tiers { grid-template-columns: 1fr 1fr; }
+  .sof-doc-tier {
+    border-bottom: 1px solid var(--border-subtle);
+  }
+}
