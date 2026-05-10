@@ -88,8 +88,10 @@ export function Sidebar() {
         </span>
       </Link>
 
-      <NavGroup items={NAV_PRIMARY} pathname={pathname} />
-      <NavGroup items={NAV_SECONDARY} pathname={pathname} />
+      <div className="sof-sidebar-scroll">
+        <NavGroup items={NAV_PRIMARY} pathname={pathname} />
+        <NavGroup items={NAV_SECONDARY} pathname={pathname} />
+      </div>
 
       <div className="sof-sidebar-footer">
         <div className="sof-sb-foot-row" title="Solana Devnet">

@@ -491,7 +491,26 @@ button {
   display: flex;
   flex-direction: column;
   transition: width 150ms ease-out;
-  overflow: hidden;
+  /* hidden horizontally so the labels don't peek out at 64px;
+   * vertical overflow handled by the scroll region below. */
+  overflow-x: hidden;
+}
+
+/* Scrollable middle region — keeps logo pinned at the top and
+ * footer pinned at the bottom even on viewports too short to
+ * fit every nav item. Without this the Connect button at the
+ * bottom of the footer gets clipped by `overflow-x: hidden`
+ * because the sidebar can't scroll. */
+.sof-sidebar-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+.sof-sidebar-scroll::-webkit-scrollbar {
+  width: 0;
+  height: 0;
 }
 
 .sof-sidebar:hover,
