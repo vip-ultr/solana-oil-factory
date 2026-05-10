@@ -4700,3 +4700,289 @@ table.sof-refineries tbody td.num {
     border-bottom: 1px solid var(--border-subtle);
   }
 }
+
+/* ============================================================
+ * TRUST & STATUS (sof-tx-* prefix).
+ * ============================================================ */
+
+.sof-tx-hdr {
+  padding: 32px 48px 24px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.sof-tx-hdr h1 {
+  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-weight: 600;
+  font-size: 32px;
+  letter-spacing: -0.02em;
+  margin: 0 0 8px;
+}
+.sof-tx-hdr p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+  max-width: 640px;
+}
+
+.sof-tx-body {
+  padding: 32px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.sof-tx-banner {
+  padding: 18px 24px;
+  border-radius: 10px;
+  background: rgba(34, 197, 94, 0.06);
+  border: 1px solid rgba(34, 197, 94, 0.25);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.sof-tx-banner .dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--success);
+  box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.18);
+  flex: none;
+}
+.sof-tx-banner .nm {
+  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--success);
+}
+.sof-tx-banner .det {
+  margin-left: auto;
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 11.5px;
+  color: var(--text-tertiary);
+}
+
+.sof-tx-svc-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+.sof-tx-svc {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 18px 20px;
+}
+.sof-tx-svc-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 14px;
+  gap: 12px;
+}
+.sof-tx-svc-top .nm {
+  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+}
+.sof-tx-svc-top .det {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+.sof-tx-svc-top .ind {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 11px;
+  color: var(--success);
+}
+.sof-tx-svc-top .ind .d {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--success);
+}
+.sof-tx-bars {
+  display: grid;
+  grid-template-columns: repeat(90, 1fr);
+  gap: 1px;
+  height: 24px;
+}
+.sof-tx-bars > i {
+  background: var(--success);
+  border-radius: 1px;
+  opacity: 0.85;
+}
+.sof-tx-bars > i.warn { background: var(--warning); }
+.sof-tx-bars > i.bad { background: var(--error); }
+.sof-tx-svc .scale {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 9.5px;
+  color: var(--text-tertiary);
+  margin-top: 6px;
+}
+
+.sof-tx-section h3 {
+  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  margin: 0 0 14px;
+}
+
+.sof-tx-audit {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 24px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 24px;
+}
+.sof-tx-audit > div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.sof-tx-audit .lab {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 10.5px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+.sof-tx-audit .v {
+  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+}
+.sof-tx-audit .v.ok { color: var(--success); }
+.sof-tx-audit .det {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+.sof-tx-audit .pdf {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.sof-tx-programs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.sof-tx-prog {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 16px 18px;
+}
+.sof-tx-prog .nm {
+  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+.sof-tx-prog .nm .v {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 11px;
+  color: var(--success);
+}
+.sof-tx-prog .id {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 11.5px;
+  color: var(--text-tertiary);
+  margin-top: 6px;
+  word-break: break-all;
+}
+.sof-tx-prog .det {
+  display: flex;
+  gap: 14px;
+  margin-top: 10px;
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  flex-wrap: wrap;
+}
+.sof-tx-prog .det b {
+  color: var(--text-primary);
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+}
+
+.sof-tx-incidents {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.sof-tx-inc-row {
+  display: grid;
+  grid-template-columns: 120px 80px 1fr auto;
+  gap: 18px;
+  align-items: flex-start;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.sof-tx-inc-row:last-child { border-bottom: 0; }
+.sof-tx-inc-row .when {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 11.5px;
+  color: var(--text-tertiary);
+}
+.sof-tx-inc-row .sev {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 10.5px;
+  padding: 3px 8px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  align-self: start;
+}
+.sof-tx-inc-row .sev.minor {
+  background: rgba(245, 158, 11, 0.12);
+  color: #fbbf24;
+}
+.sof-tx-inc-row .sev.major {
+  background: rgba(239, 68, 68, 0.12);
+  color: var(--error);
+}
+.sof-tx-inc-row .sev.resolved {
+  background: rgba(34, 197, 94, 0.1);
+  color: var(--success);
+}
+.sof-tx-inc-row .body {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+.sof-tx-inc-row .body b {
+  color: var(--text-primary);
+  font-weight: 500;
+  display: block;
+  margin-bottom: 3px;
+}
+.sof-tx-inc-row .dur {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+@media (max-width: 900px) {
+  .sof-tx-svc-grid,
+  .sof-tx-programs { grid-template-columns: 1fr; }
+  .sof-tx-audit { grid-template-columns: 1fr; }
+}
+@media (max-width: 680px) {
+  .sof-tx-hdr,
+  .sof-tx-body { padding-left: 20px; padding-right: 20px; }
+  .sof-tx-inc-row { grid-template-columns: 1fr; }
+}
