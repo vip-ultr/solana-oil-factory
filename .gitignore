@@ -1,9 +1,15 @@
 # Build output
 .next/
 out/
+tsconfig.tsbuildinfo
 
 # Dependencies
 node_modules/
+
+# Local backups (don't commit binary archives)
+*.rar
+*.zip
+*.tar.gz
 
 # Environment variables — never commit these
 .env

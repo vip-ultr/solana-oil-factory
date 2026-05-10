@@ -1,203 +1,255 @@
-"use client";
-
-import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
-import { useWalletConnection } from "@solana/react-hooks";
-import { SiSolana } from "react-icons/si";
-import WalletConnectModal from "@/components/WalletConnectModal";
-
-interface LeaderboardEntry {
-  wallet_address: string;
-  total_crude: number;
-}
-
-const MEDALS = ["🥇", "🥈", "🥉"];
+import { ArrowRight, Sparkles } from "lucide-react";
 
 export default function HomePage() {
-  const router = useRouter();
-  const { connected } = useWalletConnection();
-
-  const [showConnectModal, setShowConnectModal] = useState(false);
-  const openConnectModal = useCallback(() => setShowConnectModal(true), []);
-  const closeConnectModal = useCallback(() => setShowConnectModal(false), []);
-
-  const [topWallets, setTopWallets] = useState<LeaderboardEntry[]>([]);
-
-  // Close connect modal when wallet connects
-  useEffect(() => {
-    if (connected) setShowConnectModal(false);
-  }, [connected]);
-
-  // Fetch top 3 leaderboard entries
-  useEffect(() => {
-    fetch("/api/leaderboard?limit=3")
-      .then((res) => res.json())
-      .then((json) => {
-        if (json.leaderboard) setTopWallets(json.leaderboard);
-      })
-      .catch(() => {});
-  }, []);
-
-  function handleEnterRefinery() {
-    router.push("/refinery");
-  }
-
   return (
-    <div className="page">
-      <main className="home-main">
+    <>
+      {/* Service-degraded banner placeholder — wired live in a follow-up */}
+      <div className="sof-banner amber" role="status" aria-live="polite">
+        <span className="dot" />
+        <span>
+          Devnet · Indexer is{" "}
+          <span className="font-mono" style={{ fontWeight: 500 }}>
+            2s
+          </span>{" "}
+          behind chain. Some data may be delayed.
+        </span>
+        <span className="spacer" />
+        <Link href="/trust" className="link">
+          Details →
+        </Link>
+      </div>
 
-        {/* ── 1. HERO ── */}
-        <section className="home-hero">
-          <h1 className="home-hero-title">Solana Oil Factory</h1>
-          <p className="home-hero-subtitle">Turn your wallet into an oil empire</p>
-          <p className="home-hero-desc">
-            Convert on-chain activity into oil, refine it into $CRUDE, and compete on the leaderboard.
-          </p>
-        </section>
+      {/* Hero */}
+      <section
+        style={{
+          padding: "48px 64px 40px",
+          borderBottom: "1px solid var(--border-subtle)",
+          position: "relative",
+          overflow: "hidden",
+        }}
+      >
+        <div
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            inset: 0,
+            backgroundImage:
+              "linear-gradient(var(--grid-line) 1px,transparent 1px),linear-gradient(90deg,var(--grid-line) 1px,transparent 1px)",
+            backgroundSize: "48px 48px",
+            maskImage:
+              "radial-gradient(ellipse 70% 60% at 75% 40%,#000 0%,transparent 75%)",
+            pointerEvents: "none",
+          }}
+        />
+        <div
+          style={{
+            position: "relative",
+            display: "grid",
+            gridTemplateColumns: "1.2fr .8fr",
+            gap: 48,
+            alignItems: "center",
+            maxWidth: 1280,
+          }}
+        >
+          <div>
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "5px 11px 5px 8px",
+                borderRadius: 9999,
+                background: "var(--bg-elevated)",
+                border: "1px solid var(--border-subtle)",
+                fontSize: 12,
+                color: "var(--text-secondary)",
+                marginBottom: 28,
+                fontWeight: 500,
+              }}
+            >
+              <Sparkles size={12} style={{ color: "var(--accent)" }} />
+              <span>
+                Permissionless Solana token distribution ·{" "}
+                <b style={{ color: "var(--text-primary)" }}>247 active</b>
+              </span>
+            </span>
 
-        {/* ── 2. ACTIVE REFINERIES ── */}
-        <section className="home-section">
-          <h2 className="home-section-title">Featured Refineries</h2>
-          <div className="home-section-rule" />
-          <div className="home-refineries-grid">
-            {/* Solana Refinery */}
-            <div className="home-refinery-card">
-              <div className="home-refinery-icon">
-                <SiSolana size={28} style={{ color: "var(--accent)" }} />
-              </div>
-              <h3 className="home-refinery-name">Solana Refinery</h3>
-              <p className="home-refinery-desc">Convert wallet activity into oil</p>
-              <Link href="/refinery" className="home-refinery-btn">Enter</Link>
+            <h1
+              className="font-display"
+              style={{
+                fontWeight: 600,
+                fontSize: 60,
+                lineHeight: 1.02,
+                letterSpacing: "-0.035em",
+                margin: "0 0 18px",
+                maxWidth: "14ch",
+              }}
+            >
+              Where real holders get{" "}
+              <em style={{ fontStyle: "normal", color: "var(--accent)" }}>
+                rewarded.
+              </em>
+            </h1>
+
+            <p
+              className="muted"
+              style={{
+                fontSize: 19,
+                lineHeight: 1.55,
+                maxWidth: "54ch",
+                margin: "0 0 36px",
+              }}
+            >
+              Solana Oil Factory is the reputation layer for Solana. Operators
+              distribute tokens to verified-active holders. Every refinery you
+              participate in builds your wallet&apos;s score, used by every
+              operator after you.
+            </p>
+
+            <div style={{ display: "flex", gap: 14, marginBottom: 28 }}>
+              <Link href="/refineries" className="sof-btn sof-btn-primary">
+                Browse refineries <ArrowRight size={16} />
+              </Link>
+              <Link href="/refinery/launch" className="sof-btn sof-btn-secondary">
+                Launch a refinery
+              </Link>
             </div>
 
-            {/* Bags Refinery */}
-            <div className="home-refinery-card">
-              <div className="home-refinery-icon">
-                <img src="/bags-icon.png" alt="Bags" className="home-refinery-logo" />
-              </div>
-              <h3 className="home-refinery-name">Bags Refinery</h3>
-              <p className="home-refinery-desc">Convert fee earnings into $CRUDE</p>
-              <Link href="/refinery" className="home-refinery-btn">Enter</Link>
+            <div
+              className="muted"
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                alignItems: "center",
+                gap: 20,
+                fontSize: 13,
+              }}
+            >
+              <span>
+                Powered by <b className="font-mono" style={{ color: "var(--text-primary)" }}>Helius</b>
+              </span>
+              <span style={{ color: "var(--text-disabled)" }}>·</span>
+              <span>
+                Audited by <b style={{ color: "var(--text-primary)" }}>OtterSec</b>
+              </span>
+              <span style={{ color: "var(--text-disabled)" }}>·</span>
+              <span>
+                <b className="font-mono" style={{ color: "var(--text-primary)" }}>1,247</b> wallets verified
+              </span>
+              <span style={{ color: "var(--text-disabled)" }}>·</span>
+              <span>
+                <b className="font-mono" style={{ color: "var(--text-primary)" }}>$284,200</b> distributed lifetime
+              </span>
             </div>
-
-            {/* Pump.fun — Coming Soon */}
-            <div className="home-refinery-card home-refinery-card--disabled">
-              <div className="home-refinery-icon">
-                <img src="/pumpfun-icon.png" alt="Pump.fun" className="home-refinery-logo" />
-              </div>
-              <h3 className="home-refinery-name">Pump.fun Refinery</h3>
-              <span className="home-refinery-btn home-refinery-btn--disabled">Coming Soon</span>
-            </div>
-
-            {/* Bonk.fun — Coming Soon */}
-            <div className="home-refinery-card home-refinery-card--disabled">
-              <div className="home-refinery-icon">
-                <img src="/bonkfun-icon.png" alt="Bonk.fun" className="home-refinery-logo" />
-              </div>
-              <h3 className="home-refinery-name">Bonk.fun Refinery</h3>
-              <span className="home-refinery-btn home-refinery-btn--disabled">Coming Soon</span>
-            </div>
-
-            {/* Candle — Coming Soon */}
-            <div className="home-refinery-card home-refinery-card--disabled">
-              <div className="home-refinery-icon">
-                <img src="/candle-icon.png" alt="Candle" className="home-refinery-logo" />
-              </div>
-              <h3 className="home-refinery-name">Candle Refinery</h3>
-              <span className="home-refinery-btn home-refinery-btn--disabled">Coming Soon</span>
-            </div>
-
-            {/* Believe — Coming Soon */}
-            {/* <div className="home-refinery-card home-refinery-card--disabled">
-              <div className="home-refinery-icon">
-                <img src="/believe-icon.png" alt="Believe" className="home-refinery-logo" />
-              </div>
-              <h3 className="home-refinery-name">Believe Refinery</h3>
-              <span className="home-refinery-btn home-refinery-btn--disabled">Coming Soon</span>
-            </div> */}
           </div>
-        </section>
 
-        {/* ── 3. ENTER REFINERY CTA ── */}
-        <div className="home-cta-divider">
-          <button onClick={handleEnterRefinery} className="home-hero-cta">
-            Enter Refinery
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M5 12h14" />
-              <path d="M12 5l7 7-7 7" />
-            </svg>
-          </button>
+          <div
+            style={{
+              position: "relative",
+              width: "100%",
+              aspectRatio: "1/1",
+              maxWidth: 300,
+              marginLeft: "auto",
+              display: "grid",
+              placeItems: "center",
+            }}
+          >
+            <div
+              aria-hidden="true"
+              style={{
+                position: "absolute",
+                inset: "28%",
+                borderRadius: "50%",
+                background:
+                  "radial-gradient(circle at 50% 50%, rgba(245,166,35,.20), transparent 65%)",
+                filter: "blur(8px)",
+              }}
+            />
+            <Image
+              src="/assets/barrel.png"
+              alt="Refinery barrel"
+              width={485}
+              height={780}
+              priority
+              style={{
+                position: "relative",
+                height: "38%",
+                width: "auto",
+                zIndex: 2,
+                filter: "drop-shadow(0 10px 16px rgba(0,0,0,.5))",
+              }}
+            />
+          </div>
         </div>
+      </section>
 
-        {/* ── 4. HOW IT WORKS ── */}
-        <section className="home-section">
-          <h2 className="home-section-title">How It Works</h2>
-          <div className="home-section-rule" />
-          <div className="home-steps">
-            <div className="home-step">
-              <div className="home-step-num">1</div>
-              <p className="home-step-label">Activity</p>
-              <svg className="home-step-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M5 12h14" />
-                <path d="M12 5l7 7-7 7" />
-              </svg>
-              <p className="home-step-result">Oil</p>
-            </div>
-            <div className="home-step">
-              <div className="home-step-num">2</div>
-              <p className="home-step-label">Refine</p>
-              <svg className="home-step-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M5 12h14" />
-                <path d="M12 5l7 7-7 7" />
-              </svg>
-              <p className="home-step-result">$CRUDE</p>
-            </div>
-            <div className="home-step">
-              <div className="home-step-num">3</div>
-              <p className="home-step-label">Compete</p>
-              <svg className="home-step-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M5 12h14" />
-                <path d="M12 5l7 7-7 7" />
-              </svg>
-              <p className="home-step-result">Leaderboard</p>
-            </div>
+      {/* Foundation status — temporary, removed once full home lands */}
+      <section
+        style={{
+          padding: "48px 64px",
+          borderBottom: "1px solid var(--border-subtle)",
+        }}
+      >
+        <div style={{ maxWidth: 1280 }}>
+          <p
+            className="font-mono"
+            style={{
+              fontSize: 11,
+              color: "var(--text-tertiary)",
+              textTransform: "uppercase",
+              letterSpacing: "0.12em",
+              margin: "0 0 14px",
+            }}
+          >
+            Build status
+          </p>
+          <h2
+            className="font-display"
+            style={{
+              fontSize: 28,
+              fontWeight: 600,
+              letterSpacing: "-0.02em",
+              margin: "0 0 12px",
+            }}
+          >
+            Foundation in place. Full pages landing next.
+          </h2>
+          <p className="muted" style={{ fontSize: 15, maxWidth: "60ch", margin: "0 0 24px" }}>
+            Design tokens, sidebar chrome, footer trust strip, and theme toggle
+            are wired. The full Home, Refineries directory, Single Refinery,
+            Launch wizard, Dashboard, and the rest of the 20 routes land in
+            subsequent commits.
+          </p>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <span className="sof-pill active">
+              <span className="led" />
+              Sidebar
+            </span>
+            <span className="sof-pill active">
+              <span className="led" />
+              Footer
+            </span>
+            <span className="sof-pill active">
+              <span className="led" />
+              Theme toggle (press T)
+            </span>
+            <span className="sof-pill active">
+              <span className="led" />
+              Design tokens (dark + light)
+            </span>
+            <span className="sof-pill closing">
+              <span className="led" />
+              Home content (in progress)
+            </span>
+            <span className="sof-pill paused">
+              <span className="led" />
+              13 more pages (queued)
+            </span>
           </div>
-        </section>
-
-        {/* ── 5. LEADERBOARD PREVIEW ── */}
-        <section className="home-section">
-          <h2 className="home-section-title">Top Refiners</h2>
-          <div className="home-section-rule" />
-          {topWallets.length > 0 ? (
-            <div className="home-lb-list">
-              {topWallets.map((entry, i) => (
-                <div key={entry.wallet_address} className={`home-lb-row home-lb-row--${i + 1}`}>
-                  <span className="home-lb-medal">{MEDALS[i]}</span>
-                  <span className="home-lb-addr">
-                    {entry.wallet_address.slice(0, 4)}...{entry.wallet_address.slice(-4)}
-                  </span>
-                  <span className="home-lb-crude">
-                    {entry.total_crude.toLocaleString()} $CRUDE
-                  </span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="home-lb-empty">Loading leaderboard...</p>
-          )}
-          <Link href="/leaderboard" className="home-lb-cta">
-            View Full Leaderboard
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M5 12h14" />
-              <path d="M12 5l7 7-7 7" />
-            </svg>
-          </Link>
-        </section>
-
-      </main>
-
-      <WalletConnectModal isOpen={showConnectModal} onClose={closeConnectModal} />
-    </div>
+        </div>
+      </section>
+    </>
   );
 }

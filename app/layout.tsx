@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { Space_Grotesk, Inter, JetBrains_Mono } from "next/font/google";
 import Providers from "./providers";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import { Sidebar } from "@/components/sof/Sidebar";
+import { Footer } from "@/components/sof/Footer";
+import { ThemeFab } from "@/components/sof/ThemeToggle";
 import "../styles/globals.css";
 
 const spaceGrotesk = Space_Grotesk({
@@ -22,59 +23,48 @@ const inter = Inter({
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "600"],
   variable: "--font-mono",
   display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Solana Oil Factory",
-  description: "Convert your Solana wallet activity into oil production",
+  metadataBase: new URL("https://solanaoilfactory.xyz"),
+  title: {
+    default: "Solana Oil Factory — Where real holders get rewarded.",
+    template: "%s · Solana Oil Factory",
+  },
+  description:
+    "Permissionless Solana token distribution. Operators distribute tokens to verified-active holders. Every refinery you participate in builds your wallet's reputation, used by every operator after you.",
   icons: {
     icon: "/logo.png",
     apple: "/logo.png",
+  },
+  openGraph: {
+    title: "Solana Oil Factory",
+    description: "Where real holders get rewarded.",
+    siteName: "Solana Oil Factory",
+    type: "website",
   },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className={`${spaceGrotesk.variable} ${inter.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning>
+    <html
+      lang="en"
+      data-theme="dark"
+      className={`${spaceGrotesk.variable} ${inter.variable} ${jetbrainsMono.variable}`}
+      suppressHydrationWarning
+    >
       <body>
-        {/* ── Splash screen — server-rendered, auto-fades via CSS ── */}
-        <div id="splash" aria-hidden="true">
-          <img src="/logo.png" alt="" width={72} height={72} />
-        </div>
-        <style>{`
-          #splash {
-            position: fixed;
-            inset: 0;
-            z-index: 9999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: var(--bg-base, #0a0a0a);
-            animation: splashOut 0.3s ease 4s forwards;
-          }
-          #splash img {
-            animation: splashPulse 1.5s ease-in-out infinite;
-            border-radius: 20px;
-          }
-          @keyframes splashPulse {
-            0%, 100% { opacity: 0.5; transform: scale(0.92); }
-            50% { opacity: 1; transform: scale(1.06); }
-          }
-          @keyframes splashOut {
-            to { opacity: 0; visibility: hidden; pointer-events: none; }
-          }
-        `}</style>
-
         <Providers>
-          <Navbar />
-          <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+          <Sidebar />
+          <main className="sof-main">
             {children}
-          </div>
+            <Footer />
+          </main>
+          <ThemeFab />
         </Providers>
-        <Footer />
       </body>
     </html>
   );
