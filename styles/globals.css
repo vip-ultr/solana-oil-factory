@@ -901,3 +901,870 @@ button {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ============================================================
+ * HOME PAGE — section-specific styles (sof-home-* prefix).
+ * Cohabits with shared primitives above. Other pages add their
+ * own prefixed namespace as they land.
+ * ============================================================ */
+
+.sof-home-hero {
+  padding: 48px 64px 40px;
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.sof-home-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(
+    ellipse 70% 60% at 75% 40%,
+    #000 0%,
+    transparent 75%
+  );
+  pointer-events: none;
+}
+
+.sof-home-hero-grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 48px;
+  align-items: center;
+  max-width: 1280px;
+}
+
+.sof-home-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 11px 5px 8px;
+  border-radius: 9999px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 28px;
+  font-weight: 500;
+}
+.sof-home-eyebrow .pulse {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 0 rgba(245, 166, 35, 0.5);
+  animation: sof-pulse 2.4s infinite;
+}
+.sof-home-eyebrow b {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+@keyframes sof-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(245, 166, 35, 0.5); }
+  70% { box-shadow: 0 0 0 8px rgba(245, 166, 35, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(245, 166, 35, 0); }
+}
+
+.sof-home-h1 {
+  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-weight: 600;
+  font-size: 60px;
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  margin: 0 0 18px;
+  max-width: 14ch;
+}
+.sof-home-h1 em {
+  font-style: normal;
+  color: var(--accent);
+}
+
+.sof-home-sub {
+  font-size: 19px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+  max-width: 54ch;
+  margin: 0 0 36px;
+}
+
+.sof-home-cta {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  margin-bottom: 28px;
+}
+
+.sof-home-metric-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 20px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.sof-home-metric-strip b {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+.sof-home-metric-strip .sep {
+  color: var(--text-disabled);
+}
+
+/* Barrel gauge */
+.sof-barrel-stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  max-width: 300px;
+  margin-left: auto;
+  display: grid;
+  place-items: center;
+}
+.sof-barrel-stage::before {
+  content: "";
+  position: absolute;
+  inset: 28%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(245, 166, 35, 0.2),
+    transparent 65%
+  );
+  filter: blur(8px);
+}
+.sof-barrel-stage img.sof-barrel {
+  position: relative;
+  height: 38%;
+  width: auto;
+  z-index: 2;
+  filter: drop-shadow(0 10px 16px rgba(0, 0, 0, 0.5));
+}
+.sof-gauge-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 3;
+  pointer-events: none;
+}
+.sof-gauge-fill {
+  stroke-dasharray: 880;
+  stroke-dashoffset: 880;
+  animation: sof-gauge-fill-83 900ms cubic-bezier(0.2, 0.7, 0.2, 1) 200ms forwards;
+}
+@keyframes sof-gauge-fill-83 {
+  to {
+    stroke-dashoffset: 150;
+  } /* ~880 × (1 - 0.83) */
+}
+.sof-tag {
+  position: absolute;
+  z-index: 4;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  padding: 6px 9px;
+  border-radius: 5px;
+  font-size: 9px;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.sof-tag b {
+  color: var(--text-primary);
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.sof-tag .pin {
+  color: var(--accent);
+}
+.sof-tag.tl { top: 2%; left: -14%; }
+.sof-tag.tr { top: 12%; right: -16%; }
+.sof-tag.bl { bottom: 12%; left: -16%; }
+.sof-tag.br { bottom: 2%; right: -14%; }
+
+/* Trust strip */
+.sof-home-trust-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.sof-home-trust-strip > div {
+  padding: 18px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.sof-home-trust-strip > div + div {
+  border-left: 1px solid var(--border-subtle);
+}
+.sof-home-trust-strip svg {
+  width: 18px;
+  height: 18px;
+  color: var(--text-tertiary);
+  flex: none;
+}
+.sof-home-trust-strip b {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+/* Sections (s = generic content section) */
+.sof-home-s {
+  padding: 80px 64px;
+  border-bottom: 1px solid var(--border-subtle);
+  max-width: 100%;
+}
+.sof-home-s.elevated {
+  background: var(--bg-elevated);
+}
+.sof-home-s .inner {
+  max-width: 1280px;
+}
+.sof-home-section-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 32px;
+  margin-bottom: 40px;
+  flex-wrap: wrap;
+}
+.sof-home-section-head h2 {
+  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-weight: 600;
+  font-size: 36px;
+  letter-spacing: -0.02em;
+  margin: 0;
+  line-height: 1.05;
+}
+.sof-home-section-head .lead {
+  color: var(--text-secondary);
+  max-width: 48ch;
+  font-size: 15px;
+}
+.sof-home-section-head .meta {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-bottom: 10px;
+}
+
+/* How it works */
+.sof-how-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 64px;
+  align-items: start;
+}
+.sof-how-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.sof-step {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: 20px;
+  padding: 24px 0;
+  border-top: 1px solid var(--border-subtle);
+}
+.sof-step:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+.sof-step .num {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  letter-spacing: 0.12em;
+  padding-top: 4px;
+}
+.sof-step h3 {
+  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-weight: 600;
+  font-size: 22px;
+  margin: 0 0 8px;
+  letter-spacing: -0.01em;
+}
+.sof-step p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 14.5px;
+  line-height: 1.6;
+}
+.sof-step .meta-row {
+  display: flex;
+  gap: 14px;
+  margin-top: 14px;
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  flex-wrap: wrap;
+}
+.sof-step .meta-row span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.sof-step .meta-row .dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+/* Demo card (sample refinery on right of How It Works) */
+.sof-demo-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.02), 0 2px 6px rgba(0, 0, 0, 0.25);
+  position: relative;
+}
+.sof-demo-card .head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border-subtle);
+  gap: 12px;
+}
+.sof-demo-card .name {
+  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+}
+.sof-demo-card .sym {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-top: 1px;
+}
+.sof-demo-card .body {
+  padding: 20px;
+}
+.sof-demo-card .bar-row {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 12px;
+  margin-top: 10px;
+}
+.sof-demo-card .bar-row .l { color: var(--text-tertiary); }
+.sof-demo-card .bar-row .r { color: var(--text-primary); }
+.sof-demo-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-top: 1px solid var(--border-subtle);
+  margin-top: 20px;
+}
+.sof-demo-stats > div { padding: 14px 16px 4px 0; }
+.sof-demo-stats > div:nth-child(odd) { border-right: 1px solid var(--border-subtle); }
+.sof-demo-stats > div:nth-child(even) { padding-left: 16px; padding-right: 0; }
+.sof-demo-stats > div:nth-child(n + 3) {
+  border-top: 1px solid var(--border-subtle);
+  margin-top: 8px;
+  padding-top: 14px;
+}
+.sof-demo-stats .k {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.sof-demo-stats .v {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 18px;
+  color: var(--text-primary);
+  margin-top: 4px;
+}
+.sof-demo-stats .v small {
+  font-family: var(--font-body, "Inter"), sans-serif;
+  font-size: 12px;
+  color: var(--text-tertiary);
+  font-weight: 400;
+  margin-left: 6px;
+}
+.sof-demo-card .foot {
+  padding: 14px 20px;
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--bg-base);
+}
+.sof-btn-claim {
+  background: var(--accent);
+  color: #1a1208;
+  padding: 9px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.sof-btn-claim:hover {
+  background: var(--accent-hover);
+}
+
+/* Ticker */
+.sof-ticker {
+  border-bottom: 1px solid var(--border-subtle);
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-elevated);
+  display: flex;
+  align-items: stretch;
+  height: 56px;
+  overflow: hidden;
+}
+.sof-ticker-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 22px;
+  border-right: 1px solid var(--border-subtle);
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-tertiary);
+  flex: none;
+}
+.sof-ticker-label .live {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--error);
+  box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6);
+  animation: sof-pulse-red 1.6s infinite;
+}
+@keyframes sof-pulse-red {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
+  70% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+.sof-ticker-viewport {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.sof-ticker-track {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  width: max-content;
+  animation: sof-scroll 90s linear infinite;
+  will-change: transform;
+}
+.sof-ticker:hover .sof-ticker-track {
+  animation-play-state: paused;
+}
+@keyframes sof-scroll {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(-50%, 0, 0); }
+}
+.sof-tk-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 26px;
+  font-size: 13px;
+  flex: none;
+  border-right: 1px solid var(--border-subtle);
+  height: 100%;
+}
+.sof-tk-row .verb { color: var(--text-secondary); }
+.sof-tk-row .amt {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+.sof-tk-row .tok {
+  color: var(--accent);
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-weight: 500;
+}
+.sof-tk-row .ago {
+  color: var(--text-tertiary);
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 11px;
+}
+
+/* Featured refineries grid */
+.sof-feat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-auto-rows: min-content;
+  gap: 16px;
+}
+.sof-feat-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: border-color 150ms, transform 150ms;
+}
+.sof-feat-card:hover {
+  border-color: var(--border-strong);
+  transform: translateY(-2px);
+}
+.sof-feat-card.hero-card {
+  grid-column: span 2;
+  grid-row: span 2;
+}
+.sof-feat-card .head {
+  padding: 18px 18px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+.sof-feat-card .h-l {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.sof-feat-card .h-l .name {
+  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+}
+.sof-feat-card .h-l .sym {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 1px;
+}
+.sof-feat-card .pillrow {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+.sof-feat-card .body {
+  padding: 0 18px 16px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.sof-kv {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  padding: 6px 0;
+}
+.sof-kv .k { color: var(--text-tertiary); }
+.sof-kv .v {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  color: var(--text-primary);
+}
+.sof-kv .v small {
+  font-family: var(--font-body, "Inter"), sans-serif;
+  color: var(--text-tertiary);
+  margin-left: 4px;
+  font-size: 11px;
+}
+.sof-feat-card .foot {
+  margin-top: auto;
+  padding: 12px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-base);
+}
+.sof-foot-meta {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+.sof-feat-card.hero-card .body { padding: 0 24px 20px; }
+.sof-feat-card.hero-card .head { padding: 22px 24px 16px; }
+.sof-feat-card.hero-card .head .name { font-size: 20px; }
+.sof-pool-block {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 24px;
+  align-items: end;
+  padding: 18px 0 0;
+}
+.sof-pool-num {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 36px;
+  letter-spacing: -0.01em;
+  font-weight: 500;
+  line-height: 1;
+}
+.sof-pool-num small {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  font-weight: 400;
+  display: block;
+  margin-top: 6px;
+  letter-spacing: 0;
+  font-family: var(--font-body, "Inter"), sans-serif;
+}
+.sof-spark { height: 60px; width: 140px; }
+.sof-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-top: 1px solid var(--border-subtle);
+  margin-top: 16px;
+}
+.sof-meta-grid > div {
+  padding: 14px 0;
+  border-right: 1px solid var(--border-subtle);
+  padding-right: 16px;
+}
+.sof-meta-grid > div + div { padding-left: 16px; }
+.sof-meta-grid > div:last-child { border-right: 0; padding-right: 0; }
+.sof-meta-grid .k {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-tertiary);
+}
+.sof-meta-grid .v {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 14px;
+  color: var(--text-primary);
+  margin-top: 6px;
+}
+
+/* Reputation explainer */
+.sof-rep-grid {
+  display: grid;
+  grid-template-columns: 0.85fr 1.15fr;
+  gap: 64px;
+  align-items: center;
+}
+.sof-rep-card {
+  background: var(--bg-base);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 28px;
+  position: relative;
+  overflow: hidden;
+}
+.sof-rep-card .top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.sof-rep-score {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.sof-rep-score .num {
+  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-weight: 600;
+  font-size: 64px;
+  line-height: 1;
+  color: var(--rep-excellent);
+  letter-spacing: -0.03em;
+}
+.sof-rep-score .out {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 14px;
+  color: var(--text-tertiary);
+}
+.sof-rep-score .tier {
+  font-size: 13px;
+  color: var(--rep-excellent);
+  font-weight: 500;
+}
+.sof-rep-trend { height: 60px; width: 160px; }
+
+.sof-signals {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-top: 16px;
+}
+.sof-signal {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 16px;
+  align-items: center;
+  padding: 11px 0;
+  border-top: 1px solid var(--border-subtle);
+  font-size: 13px;
+}
+.sof-signal:first-child { border-top: 0; }
+.sof-signal .nm { color: var(--text-secondary); }
+.sof-signal .vl {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  color: var(--text-primary);
+}
+.sof-sigbar {
+  width: 80px;
+  height: 4px;
+  background: var(--bg-input);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+.sof-sigbar > i {
+  display: block;
+  height: 100%;
+  background: var(--rep-excellent);
+  border-radius: 9999px;
+}
+
+.sof-rep-copy h2 {
+  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-size: 40px;
+  line-height: 1.05;
+  margin: 0 0 18px;
+  letter-spacing: -0.025em;
+  font-weight: 600;
+}
+.sof-rep-copy p {
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--text-secondary);
+  margin: 0 0 18px;
+  max-width: 50ch;
+}
+.sof-tier-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-top: 24px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.sof-tier-row {
+  display: grid;
+  grid-template-columns: 8px 1fr auto;
+  align-items: center;
+  gap: 14px;
+  padding: 11px 16px;
+  border-top: 1px solid var(--border-subtle);
+  font-size: 13px;
+}
+.sof-tier-row:first-child { border-top: 0; }
+.sof-tier-row .swatch {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.sof-tier-row .nm {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+.sof-tier-row .rg {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  color: var(--text-tertiary);
+  font-size: 12px;
+}
+
+/* FAQ */
+.sof-faq {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border-top: 1px solid var(--border-subtle);
+}
+.sof-faq details {
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 22px 0;
+  cursor: pointer;
+}
+.sof-faq summary {
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-weight: 500;
+  font-size: 18px;
+}
+.sof-faq summary::-webkit-details-marker { display: none; }
+.sof-faq summary .icn {
+  width: 24px;
+  height: 24px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  color: var(--text-tertiary);
+  transition: transform 200ms ease-out, color 150ms;
+}
+.sof-faq details[open] summary .icn {
+  transform: rotate(45deg);
+  color: var(--accent);
+}
+.sof-faq details[open] summary { color: var(--accent); }
+.sof-faq .answer {
+  margin-top: 14px;
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--text-secondary);
+  max-width: 72ch;
+}
+.sof-faq .answer code {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 13px;
+  background: var(--bg-elevated);
+  padding: 1px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--border-subtle);
+}
+
+/* Responsive collapse */
+@media (max-width: 1100px) {
+  .sof-home-hero { padding: 56px 32px 40px; }
+  .sof-home-hero-grid { grid-template-columns: 1fr; gap: 40px; }
+  .sof-barrel-stage { max-width: 360px; margin: 0; }
+  .sof-home-h1 { font-size: 56px; }
+  .sof-home-s { padding: 64px 32px; }
+  .sof-how-grid { grid-template-columns: 1fr; gap: 48px; }
+  .sof-feat-grid { grid-template-columns: repeat(2, 1fr); }
+  .sof-feat-card.hero-card { grid-column: span 2; grid-row: auto; }
+  .sof-rep-grid { grid-template-columns: 1fr; gap: 48px; }
+  .sof-home-trust-strip { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 640px) {
+  .sof-home-hero { padding: 40px 20px 32px; }
+  .sof-home-h1 { font-size: 42px; }
+  .sof-home-sub { font-size: 16px; }
+  .sof-home-s { padding: 48px 20px; }
+  .sof-home-section-head { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .sof-home-section-head h2 { font-size: 28px; }
+  .sof-feat-grid { grid-template-columns: 1fr; }
+  .sof-feat-card.hero-card { grid-column: span 1; }
+  .sof-home-trust-strip { grid-template-columns: 1fr; }
+  .sof-home-trust-strip > div + div {
+    border-left: 0;
+    border-top: 1px solid var(--border-subtle);
+  }
+}
