@@ -19,6 +19,7 @@ import {
   formatRelativeTime,
 } from "@/lib/mock-data";
 import { fetchRefinery } from "@/lib/onchain/refineries";
+import { buildActivityFeed } from "@/lib/indexer/ui";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -50,6 +51,15 @@ export default async function RefineryPage({ params }: PageProps) {
     r.holdersEligible > 0
       ? Math.round((r.holdersClaimed / r.holdersEligible) * 100)
       : 0;
+
+  // Live recent-claims feed for this refinery, sourced from the
+  // indexer JSON. Returns 0 rows for fresh refineries — the
+  // empty-state branch below handles that.
+  const recentClaims = buildActivityFeed({
+    refinery: id,
+    eventName: "ClaimMade",
+    limit: 8,
+  });
 
   return (
     <>
@@ -181,37 +191,47 @@ export default async function RefineryPage({ params }: PageProps) {
             <PoolDrainChart />
           </div>
 
-          {/* Recent claims */}
+          {/* Recent claims — live from the indexer */}
           <div className="sof-rd-panel">
             <div className="sof-rd-panel-head">
               <h3>Recent claims</h3>
               <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
                 <span className="meta">{r.holdersClaimed.toLocaleString()} total</span>
-                <a className="sof-rd-ext" style={{ fontSize: 11.5 }}>
-                  View all <ExternalLink size={10} />
-                </a>
               </div>
             </div>
             <div>
-              {[
-                { w: "Hxk2…7gPZ", a: "148.8", ago: "2m ago" },
-                { w: "4Bsd…91jU", a: "12,000", ago: "5m ago" },
-                { w: "9wF7…3Lz8", a: "3,840", ago: "8m ago" },
-                { w: "2zKp…hH4M", a: "1,420", ago: "12m ago" },
-                { w: "8zZb…3Ksn", a: "22,000", ago: "14m ago" },
-                { w: "Pyth9…D7ax", a: "5,100", ago: "19m ago" },
-                { w: "6FdN…XnQ2", a: "88", ago: "22m ago" },
-                { w: "RayLi…D9pT", a: "412", ago: "35m ago" },
-              ].map((c) => (
-                <div key={c.w + c.ago} className="sof-rd-feed-row">
-                  <WalletPill address={c.w} />
-                  <span className="amt">{c.a}</span>
-                  <span className="ago">{c.ago}</span>
-                  <a className="lnk" aria-label="View transaction">
-                    <ExternalLink size={11} />
-                  </a>
+              {recentClaims.length === 0 ? (
+                <div
+                  style={{
+                    padding: "20px 16px",
+                    color: "var(--text-tertiary)",
+                    fontSize: 12.5,
+                    lineHeight: 1.6,
+                  }}
+                >
+                  No claims yet. Connect a wallet eligible for the latest
+                  snapshot and it&apos;ll show up here.
                 </div>
-              ))}
+              ) : (
+                recentClaims.map((c) => (
+                  <div key={c.id} className="sof-rd-feed-row">
+                    <WalletPill address={c.wallet} />
+                    <span className="amt">
+                      {c.amount !== undefined ? formatTokens(c.amount) : "—"}
+                    </span>
+                    <span className="ago">{formatRelativeTime(c.agoSeconds)}</span>
+                    <a
+                      className="lnk"
+                      aria-label="View transaction"
+                      href={`https://explorer.solana.com/tx/${c.id.split("-")[0]}?cluster=devnet`}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <ExternalLink size={11} />
+                    </a>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 

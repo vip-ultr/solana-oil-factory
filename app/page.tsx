@@ -6,6 +6,7 @@ import { FeaturedRefineries } from "@/components/sof/home/FeaturedRefineries";
 import { ReputationExplainer } from "@/components/sof/home/ReputationExplainer";
 import { FaqSection } from "@/components/sof/home/FaqSection";
 import { fetchAllRefineries } from "@/lib/onchain/refineries";
+import { buildActivityFeed } from "@/lib/indexer/ui";
 
 // Always fresh — the home page surfaces the most recent refinery
 // and live counters; caching would lie when a refinery launches.
@@ -18,13 +19,14 @@ export default async function HomePage() {
   const activeCount = refineries.filter(
     (r) => r.status === "active" || r.status === "closingSoon",
   ).length;
+  const activity = buildActivityFeed({ limit: 30 });
 
   return (
     <>
       <HeroSection featured={featured} activeCount={activeCount} />
       <TrustStrip />
       <HowItWorks featured={featured} />
-      <ActivityTicker />
+      <ActivityTicker events={activity} />
       <FeaturedRefineries refineries={refineries} />
       <ReputationExplainer />
       <FaqSection />

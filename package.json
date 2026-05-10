@@ -7,7 +7,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "indexer": "tsx scripts/indexer.cts",
+    "indexer:loop": "tsx scripts/indexer.cts -- --loop"
   },
   "keywords": [],
   "author": "",
@@ -49,6 +51,7 @@
     "autoprefixer": "^10.4.27",
     "postcss": "^8.5.8",
     "tailwindcss": "^4.2.1",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   }
 }
