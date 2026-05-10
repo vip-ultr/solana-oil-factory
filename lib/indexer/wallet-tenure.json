@@ -1,3 +1,9 @@
 {
-  "wallets": {}
+  "wallets": {
+    "57CY8LCq65ahQqouXtPUqGx1B8qgQeg3VjEgt9tQAqsV": {
+      "firstTxUnix": 1772375952,
+      "partial": false,
+      "updatedAt": "2026-05-10T15:55:39.102Z"
+    }
+  }
 }
