@@ -97,7 +97,13 @@ export function Sidebar() {
             <span className="v">Devnet</span>
           </span>
         </div>
-        <button type="button" className="sof-connect-btn">
+        <button
+          type="button"
+          className="sof-connect-btn"
+          onClick={() =>
+            dispatchEvent(new CustomEvent("sof:open-connect"))
+          }
+        >
           <span className="ic">
             <Wallet strokeWidth={1.8} aria-hidden="true" />
           </span>
