@@ -1,9 +1,9 @@
 {
   "cursor": {
     "programId": "2tPLLPQeLLNL4UDBbeagSUAABJcB3fHGTJaLGEzrx3rE",
-    "lastSignature": "2d7VRFNTRpTTaYVHkohgPpECxBmiV2rmNo15GLXMETLRTfWbXJyxkmCZ5v6eMMppShjnCUDtogAVqvYsdDihq9Kz",
-    "lastSlot": 461434807,
-    "updatedAt": "2026-05-10T21:04:06.647Z"
+    "lastSignature": "2mP3J7x462mCLDmS7oqkmzyKYsCxybL72sYGEjNucx7F7BqNxqN2j4jGT6RdfUFDiMBzAgR2gzXhP6CKEjEYvVyE",
+    "lastSlot": 461481720,
+    "updatedAt": "2026-05-10T22:01:40.973Z"
   },
   "events": [
     {
@@ -141,6 +141,25 @@
         "now_paused": false
       },
       "refinery": "4sSGPKDAuWHqstyaxwi3r87iRyCswFETaezrz7VoahNR",
+      "wallet": "Af5bTkfT7wW8UTEcaJHWB9vmkBmpPB8P9UGzwifBci7H"
+    },
+    {
+      "signature": "2mP3J7x462mCLDmS7oqkmzyKYsCxybL72sYGEjNucx7F7BqNxqN2j4jGT6RdfUFDiMBzAgR2gzXhP6CKEjEYvVyE",
+      "logIndex": 46,
+      "slot": 461481720,
+      "blockTime": 1778449830,
+      "eventName": "RefineryLaunched",
+      "data": {
+        "refinery": "CBJbB11AcZjNxoGdwPqaXbXwhhkqjE4qjP2Bv4vvfgCM",
+        "operator": "Af5bTkfT7wW8UTEcaJHWB9vmkBmpPB8P9UGzwifBci7H",
+        "token_mint": "CfvmsrhEwNhkA9gWRaov3pnLq3QZktgPmBbEN3VgV4Mv",
+        "pool_initial": "10000000000000000",
+        "claim_rate_basis": "1000",
+        "claim_window_end": "1778536230",
+        "verified_deployer": true,
+        "epoch": 0
+      },
+      "refinery": "CBJbB11AcZjNxoGdwPqaXbXwhhkqjE4qjP2Bv4vvfgCM",
       "wallet": "Af5bTkfT7wW8UTEcaJHWB9vmkBmpPB8P9UGzwifBci7H"
     }
   ]
