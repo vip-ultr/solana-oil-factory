@@ -1,27 +1,20 @@
 import Image from "next/image";
-import Link from "next/link";
 import { ArrowRight, Sparkles } from "lucide-react";
+import {
+  ButtonLink,
+  Eyebrow,
+  ServiceDegradedBanner,
+  StatusPill,
+} from "@/components/sof/primitives";
+import { MOCK_SYSTEM_STATS, formatUsd } from "@/lib/mock-data";
 
 export default function HomePage() {
+  const stats = MOCK_SYSTEM_STATS;
+
   return (
     <>
-      {/* Service-degraded banner placeholder — wired live in a follow-up */}
-      <div className="sof-banner amber" role="status" aria-live="polite">
-        <span className="dot" />
-        <span>
-          Devnet · Indexer is{" "}
-          <span className="font-mono" style={{ fontWeight: 500 }}>
-            2s
-          </span>{" "}
-          behind chain. Some data may be delayed.
-        </span>
-        <span className="spacer" />
-        <Link href="/trust" className="link">
-          Details →
-        </Link>
-      </div>
+      <ServiceDegradedBanner lagSeconds={stats.indexerLagSeconds} />
 
-      {/* Hero */}
       <section
         style={{
           padding: "48px 64px 40px",
@@ -43,6 +36,7 @@ export default function HomePage() {
             pointerEvents: "none",
           }}
         />
+
         <div
           style={{
             position: "relative",
@@ -72,7 +66,9 @@ export default function HomePage() {
               <Sparkles size={12} style={{ color: "var(--accent)" }} />
               <span>
                 Permissionless Solana token distribution ·{" "}
-                <b style={{ color: "var(--text-primary)" }}>247 active</b>
+                <strong style={{ color: "var(--text-primary)" }}>
+                  {stats.refineriesActive} active
+                </strong>
               </span>
             </span>
 
@@ -109,12 +105,12 @@ export default function HomePage() {
             </p>
 
             <div style={{ display: "flex", gap: 14, marginBottom: 28 }}>
-              <Link href="/refineries" className="sof-btn sof-btn-primary">
+              <ButtonLink href="/refineries" variant="primary">
                 Browse refineries <ArrowRight size={16} />
-              </Link>
-              <Link href="/refinery/launch" className="sof-btn sof-btn-secondary">
+              </ButtonLink>
+              <ButtonLink href="/refinery/launch" variant="secondary">
                 Launch a refinery
-              </Link>
+              </ButtonLink>
             </div>
 
             <div
@@ -128,19 +124,38 @@ export default function HomePage() {
               }}
             >
               <span>
-                Powered by <b className="font-mono" style={{ color: "var(--text-primary)" }}>Helius</b>
+                Powered by{" "}
+                <strong
+                  className="font-mono"
+                  style={{ color: "var(--text-primary)", fontWeight: 500 }}
+                >
+                  Helius
+                </strong>
               </span>
               <span style={{ color: "var(--text-disabled)" }}>·</span>
               <span>
-                Audited by <b style={{ color: "var(--text-primary)" }}>OtterSec</b>
+                Audited by{" "}
+                <strong style={{ color: "var(--text-primary)" }}>OtterSec</strong>
               </span>
               <span style={{ color: "var(--text-disabled)" }}>·</span>
               <span>
-                <b className="font-mono" style={{ color: "var(--text-primary)" }}>1,247</b> wallets verified
+                <strong
+                  className="font-mono"
+                  style={{ color: "var(--text-primary)", fontWeight: 500 }}
+                >
+                  {stats.walletsVerified.toLocaleString("en-US")}
+                </strong>{" "}
+                wallets verified
               </span>
               <span style={{ color: "var(--text-disabled)" }}>·</span>
               <span>
-                <b className="font-mono" style={{ color: "var(--text-primary)" }}>$284,200</b> distributed lifetime
+                <strong
+                  className="font-mono"
+                  style={{ color: "var(--text-primary)", fontWeight: 500 }}
+                >
+                  {formatUsd(stats.lifetimeDistributedUsd)}
+                </strong>{" "}
+                distributed lifetime
               </span>
             </div>
           </div>
@@ -169,7 +184,7 @@ export default function HomePage() {
             />
             <Image
               src="/assets/barrel.png"
-              alt="Refinery barrel"
+              alt=""
               width={485}
               height={780}
               priority
@@ -193,60 +208,34 @@ export default function HomePage() {
         }}
       >
         <div style={{ maxWidth: 1280 }}>
-          <p
-            className="font-mono"
-            style={{
-              fontSize: 11,
-              color: "var(--text-tertiary)",
-              textTransform: "uppercase",
-              letterSpacing: "0.12em",
-              margin: "0 0 14px",
-            }}
-          >
-            Build status
-          </p>
+          <Eyebrow>Build status</Eyebrow>
           <h2
             className="font-display"
             style={{
               fontSize: 28,
               fontWeight: 600,
               letterSpacing: "-0.02em",
-              margin: "0 0 12px",
+              margin: "12px 0",
             }}
           >
             Foundation in place. Full pages landing next.
           </h2>
-          <p className="muted" style={{ fontSize: 15, maxWidth: "60ch", margin: "0 0 24px" }}>
-            Design tokens, sidebar chrome, footer trust strip, and theme toggle
-            are wired. The full Home, Refineries directory, Single Refinery,
-            Launch wizard, Dashboard, and the rest of the 20 routes land in
-            subsequent commits.
+          <p
+            className="muted"
+            style={{ fontSize: 15, maxWidth: "60ch", margin: "0 0 24px" }}
+          >
+            Design tokens, sidebar chrome, footer trust strip, theme toggle,
+            shared primitives, and the typed mock-data layer are wired. The
+            full Home, Refineries directory, Single Refinery, Launch wizard,
+            Dashboard, and the rest of the 20 routes land in subsequent
+            commits.
           </p>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <span className="sof-pill active">
-              <span className="led" />
-              Sidebar
-            </span>
-            <span className="sof-pill active">
-              <span className="led" />
-              Footer
-            </span>
-            <span className="sof-pill active">
-              <span className="led" />
-              Theme toggle (press T)
-            </span>
-            <span className="sof-pill active">
-              <span className="led" />
-              Design tokens (dark + light)
-            </span>
-            <span className="sof-pill closing">
-              <span className="led" />
-              Home content (in progress)
-            </span>
-            <span className="sof-pill paused">
-              <span className="led" />
-              13 more pages (queued)
-            </span>
+            <StatusPill status="active" />
+            <StatusPill status="pendingSnapshot" />
+            <StatusPill status="closingSoon" />
+            <StatusPill status="operatorPaused" />
+            <StatusPill status="closed" />
           </div>
         </div>
       </section>
