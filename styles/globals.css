@@ -3371,3 +3371,406 @@ table.sof-refineries tbody td.num {
   .sof-lw-row-3 { grid-template-columns: 1fr; }
   .sof-lw-rev-list { grid-template-columns: 1fr; }
 }
+
+/* ============================================================
+ * DASHBOARD (sof-dh-* prefix). 3 tabs (Operator / Holder /
+ * Developer) shown all-stacked per the locked design.
+ * ============================================================ */
+
+.sof-dh-hdr {
+  padding: 32px 48px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.sof-dh-hdr h1 {
+  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-weight: 600;
+  font-size: 30px;
+  letter-spacing: -0.02em;
+  margin: 0 0 6px;
+}
+.sof-dh-hdr .who {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  flex-wrap: wrap;
+}
+
+.sof-dh-tabs {
+  padding: 24px 48px 0;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  gap: 0;
+  align-items: flex-end;
+}
+.sof-dh-tab {
+  padding: 13px 22px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+}
+.sof-dh-tab .badge {
+  background: var(--bg-input);
+  color: var(--text-tertiary);
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 10.5px;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+.sof-dh-tab:hover { color: var(--text-secondary); }
+.sof-dh-tab.on {
+  color: var(--text-primary);
+  border-bottom-color: var(--accent);
+}
+.sof-dh-tab.on .badge {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+.sof-dh-body { padding: 32px 48px; }
+
+.sof-dh-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.sof-dh-kpi {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 18px 20px;
+}
+.sof-dh-kpi .k {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 10.5px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+.sof-dh-kpi .v {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 26px;
+  color: var(--text-primary);
+  margin-top: 8px;
+  letter-spacing: -0.01em;
+}
+.sof-dh-kpi .v small {
+  font-family: var(--font-body, "Inter"), sans-serif;
+  font-size: 12px;
+  color: var(--text-tertiary);
+  font-weight: 400;
+  margin-left: 4px;
+}
+.sof-dh-kpi .delta {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 11.5px;
+  margin-top: 6px;
+}
+.sof-dh-kpi .delta.up { color: var(--success); }
+.sof-dh-kpi .delta.dn { color: var(--error); }
+
+.sof-dh-panel {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+.sof-dh-panel-h {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.sof-dh-panel-h h3 {
+  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  margin: 0;
+}
+.sof-dh-panel-h .meta {
+  font-size: 11.5px;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+}
+
+.sof-dh-op-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13px;
+}
+.sof-dh-op-table thead th {
+  text-align: left;
+  padding: 11px 20px;
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 10.5px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 500;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.sof-dh-op-table thead th.num { text-align: right; }
+.sof-dh-op-table tbody td {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border-subtle);
+  vertical-align: middle;
+}
+.sof-dh-op-table tbody tr:last-child td { border-bottom: 0; }
+.sof-dh-op-table tbody tr:hover { background: var(--bg-overlay); }
+.sof-dh-op-table td.num {
+  text-align: right;
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 12.5px;
+}
+.sof-dh-op-table .pill {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 10.5px;
+  padding: 3px 8px;
+  border-radius: 3px;
+  letter-spacing: 0.06em;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.sof-dh-op-table .pill.live {
+  background: rgba(34, 197, 94, 0.12);
+  color: #4ade80;
+}
+.sof-dh-op-table .pill.paused {
+  background: rgba(59, 130, 246, 0.12);
+  color: #60a5fa;
+}
+.sof-dh-op-table .pill.closing {
+  background: rgba(245, 158, 11, 0.12);
+  color: #fbbf24;
+}
+
+.sof-dh-actions { display: inline-flex; gap: 6px; }
+.sof-dh-actions button {
+  padding: 5px 9px;
+  border-radius: 4px;
+  border: 1px solid var(--border-subtle);
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  background: transparent;
+}
+.sof-dh-actions button:hover {
+  border-color: var(--text-secondary);
+  color: var(--text-primary);
+}
+.sof-dh-actions button.danger {
+  color: var(--error);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+.sof-dh-actions button.danger:hover {
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.sof-dh-split {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+}
+
+.sof-dh-mini-svg { width: 100%; height: 140px; display: block; }
+
+.sof-dh-feed { display: flex; flex-direction: column; }
+.sof-dh-feed-item {
+  display: grid;
+  grid-template-columns: 24px 1fr auto;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 11px 20px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.sof-dh-feed-item:last-child { border-bottom: 0; }
+.sof-dh-feed-item .ic {
+  width: 24px; height: 24px;
+  border-radius: 5px;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 11px;
+  flex: none;
+}
+.sof-dh-feed-item .ic.green {
+  background: rgba(34, 197, 94, 0.12);
+  color: #4ade80;
+}
+.sof-dh-feed-item .ic.amber {
+  background: rgba(245, 158, 11, 0.12);
+  color: #fbbf24;
+}
+.sof-dh-feed-item .ic.blue {
+  background: rgba(59, 130, 246, 0.12);
+  color: #60a5fa;
+}
+.sof-dh-feed-item .body {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+.sof-dh-feed-item .body b {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+.sof-dh-feed-item .body .when {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  display: block;
+  margin-top: 2px;
+}
+.sof-dh-feed-item .amt {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-align: right;
+  flex: none;
+}
+
+.sof-dh-cc-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto auto;
+  gap: 18px;
+  align-items: center;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.sof-dh-cc-row:last-child { border-bottom: 0; }
+.sof-dh-cc-row .nm {
+  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+}
+.sof-dh-cc-row .sym {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 11.5px;
+  color: var(--text-tertiary);
+  margin-left: 6px;
+}
+.sof-dh-cc-row .amt {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+.sof-dh-cc-row .usd {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  display: block;
+  margin-top: 2px;
+}
+.sof-dh-cc-row .when {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 11.5px;
+  color: var(--text-tertiary);
+  width: 120px;
+  text-align: right;
+}
+.sof-dh-cc-row .lnk {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  text-align: right;
+  cursor: pointer;
+}
+
+.sof-dh-api-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 20px;
+}
+.sof-dh-api-card h4 {
+  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-size: 14px;
+  margin: 0 0 8px;
+  font-weight: 600;
+}
+.sof-dh-api-card p {
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.55;
+  margin: 0 0 16px;
+}
+.sof-dh-code {
+  background: #0a0a0a;
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  padding: 14px 16px;
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 12px;
+  color: #a3e635;
+  line-height: 1.6;
+  overflow-x: auto;
+  white-space: pre;
+}
+.sof-dh-code .com { color: #737373; }
+.sof-dh-code .key { color: #60a5fa; }
+.sof-dh-code .str { color: #fbbf24; }
+
+.sof-dh-key-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  margin-bottom: 8px;
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 12px;
+}
+.sof-dh-key-row .id { color: var(--text-tertiary); }
+.sof-dh-key-row .val { color: var(--text-primary); }
+.sof-dh-key-row .ud { font-size: 10.5px; color: var(--text-tertiary); }
+.sof-dh-usage-bar {
+  height: 6px;
+  background: var(--bg-input);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+.sof-dh-usage-bar > i {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  border-radius: 3px;
+}
+
+@media (max-width: 1100px) {
+  .sof-dh-kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .sof-dh-split { grid-template-columns: 1fr; }
+}
+@media (max-width: 680px) {
+  .sof-dh-hdr,
+  .sof-dh-tabs,
+  .sof-dh-body { padding-left: 20px; padding-right: 20px; }
+  .sof-dh-tabs { overflow-x: auto; scrollbar-width: none; }
+  .sof-dh-tabs::-webkit-scrollbar { display: none; }
+  .sof-dh-kpi-grid { grid-template-columns: 1fr; }
+  .sof-dh-cc-row { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .sof-dh-cc-row .when,
+  .sof-dh-cc-row .lnk { display: none; }
+}
