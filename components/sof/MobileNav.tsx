@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
-  BarChart3,
   Building2,
   Code2,
   Factory,
@@ -35,13 +34,11 @@ type NavLink = {
 const NAV_PRIMARY: NavLink[] = [
   { key: "home", label: "Home", href: "/", match: "exact" },
   { key: "refineries", label: "Refineries", href: "/refineries", match: "prefix" },
-  { key: "leaderboard", label: "Leaderboard", href: "/leaderboard", match: "prefix" },
   { key: "launch", label: "Launch refinery", href: "/refinery/launch", match: "prefix" },
 ];
 
 const NAV_WALLET: NavLink[] = [
   { key: "dashboard", label: "Dashboard", href: "/dashboard", match: "prefix" },
-  { key: "launchpad", label: "Launchpad refining", href: "/launchpad", match: "prefix" },
   { key: "profile", label: "Profile", href: "/wallet", match: "prefix" },
 ];
 
@@ -215,10 +212,8 @@ function DrawerGroup({
 const ICON_FOR: Record<string, React.ReactNode> = {
   home: <Home size={16} strokeWidth={1.6} aria-hidden="true" />,
   refineries: <Building2 size={16} strokeWidth={1.6} aria-hidden="true" />,
-  leaderboard: <BarChart3 size={16} strokeWidth={1.6} aria-hidden="true" />,
   launch: <Factory size={16} strokeWidth={1.6} aria-hidden="true" />,
   dashboard: <LayoutDashboard size={16} strokeWidth={1.6} aria-hidden="true" />,
-  launchpad: <Factory size={16} strokeWidth={1.6} aria-hidden="true" />,
   profile: <User size={16} strokeWidth={1.6} aria-hidden="true" />,
   reputation: <Star size={16} strokeWidth={1.6} aria-hidden="true" />,
   trust: <Shield size={16} strokeWidth={1.6} aria-hidden="true" />,
@@ -278,7 +273,7 @@ function ConnectControl() {
 
 /**
  * Bottom tab bar shown on viewports < 768px. Four quick targets:
- * Home, Refineries, Dashboard, Leaderboard. Sticky to viewport
+ * Home, Refineries, Launch, Dashboard. Sticky to viewport
  * bottom; the layout reserves 64px of bottom padding for it.
  */
 export function MobileTabBar() {
@@ -299,17 +294,17 @@ export function MobileTabBar() {
       match: "prefix",
     },
     {
+      key: "launch",
+      label: "Launch",
+      href: "/refinery/launch",
+      icon: <Factory size={18} strokeWidth={1.6} aria-hidden="true" />,
+      match: "prefix",
+    },
+    {
       key: "dashboard",
       label: "Dashboard",
       href: "/dashboard",
       icon: <LayoutDashboard size={18} strokeWidth={1.6} aria-hidden="true" />,
-      match: "prefix",
-    },
-    {
-      key: "leaderboard",
-      label: "Leaderboard",
-      href: "/leaderboard",
-      icon: <BarChart3 size={18} strokeWidth={1.6} aria-hidden="true" />,
       match: "prefix",
     },
   ];

@@ -118,7 +118,10 @@ export function AdminClient() {
   }
 
   return (
-    <div style={{ maxWidth: 720, margin: "0 auto", padding: "32px 16px" }}>
+    <div
+      className="sof-admin-page"
+      style={{ maxWidth: 720, margin: "0 auto" }}
+    >
       <header style={{ marginBottom: 24 }}>
         <h1 style={{ fontSize: 28, fontWeight: 600, letterSpacing: "-0.02em" }}>
           Admin

@@ -43,12 +43,11 @@ If a feature doesn't map to *"distribute tokens to verified holders + build cros
 
 ---
 
-## The Three Refinery Surfaces
+## The Refinery Surface
 
 | Surface | What it is | Status |
 |---|---|---|
-| **Token refineries** | Operator launches a refinery for any Solana token. Holders claim pro-rata against on-chain snapshots. **Headline feature.** | ✅ Live on devnet |
-| **Launchpad refining** | Personal $CRUDE flow at `/launchpad` — wallet activity + Bags swap fees → $CRUDE token. The legacy product, kept as a secondary surface. | ✅ Live |
+| **Token refineries** | Operator launches a refinery for any Solana token. Holders claim pro-rata against on-chain snapshots. | ✅ Live on devnet |
 | **Per-launchpad views** | `/refineries` filtered by source launchpad (Bags, Pump, Bonk, Candle). Aggregates refineries for tokens that graduated from each. | 🔜 Indexer work |
 
 ---
@@ -100,8 +99,6 @@ node = sha256(0x01 || min(left, right) || max(left, right))
 | `/refineries` | Directory: filter by status / verification / reputation, sort, **export CSV** |
 | `/refinery/[id]` | Detail page: pool, snapshot history, top claimants, **claim panel**, operator actions |
 | `/refinery/launch` | Multi-step launch wizard |
-| `/launchpad` | Personal $CRUDE refining (legacy surface) |
-| `/leaderboard` | Operator board ↔ $CRUDE-earner board (tabbed) |
 | `/dashboard` | Connected-wallet snapshot — my refineries, activity, claims, reputation |
 | `/wallet/[address]` | Public profile — claim history, refineries operated, reputation breakdown |
 | `/reputation` | v1 reputation explainer (6 signals, capped at 100) |
@@ -148,7 +145,7 @@ Logic lives in `lib/indexer/reputation.ts`. Recomputed nightly by the indexer cr
 | Wallet | `@solana/web3.js` + `@solana/react-hooks` + `@wallet-standard/app` |
 | Anchor | `@coral-xyz/anchor` 0.32 |
 | Token metadata | Metaplex Token Metadata Program (logos auto-resolved) |
-| Database | Supabase (PostgreSQL) — leaderboard + Bags-stream balances |
+| Database | Supabase (PostgreSQL) — auxiliary data / Bags-stream balances |
 | Indexer | GitHub Actions cron → `lib/indexer/*.json` snapshots committed to repo |
 | External APIs | Helius (transactions), Bags API v2 (fee positions) |
 | Deployment | Vercel |
@@ -164,8 +161,6 @@ app/
   refineries/                 Token-refinery directory (filters, CSV export)
   refinery/[id]/              Refinery detail (claim, operator actions, snapshots)
   refinery/launch/            Multi-step launch wizard
-  launchpad/                  Legacy $CRUDE personal-refining surface
-  leaderboard/                Operators ⇄ $CRUDE earners tab switcher
   dashboard/                  Connected-wallet live data
   wallet/[address]/           Public wallet profile (SSR)
   reputation/                 Reputation v1 explainer
@@ -179,8 +174,7 @@ app/
     reputation/route.ts       GET — recompute / fetch per-wallet score
     treasury/route.ts         GET — live treasury_config
     rpc/route.ts              POST — Helius RPC proxy (origin-allowlisted)
-    refine/, bags-refine/     Launchpad $CRUDE flow endpoints
-    leaderboard/, wallet/     Supabase-backed reads
+    wallet/                   Supabase-backed wallet reads (auxiliary)
 
 components/sof/
   primitives/                 Buttons, badges, status pills, TokenMark (Metaplex logo)
@@ -188,8 +182,6 @@ components/sof/
   refinery-launch/            LaunchWizard
   refineries/                 RefineryDirectory (filters, sort, CSV)
   dashboard/                  DashboardClient (live SIWS-gated)
-  launchpad/                  RefineCard, CrudeLeaderboard, LaunchpadFeed, prestige
-  leaderboard/                LeaderboardSwitcher (tabs)
   admin/                      AdminClient (authority rotation form)
   wallet/                     WalletTabs, ClaimHeatmap, profile sections
   modals/                     ConnectModal, CommandPalette, ChromeOverlay
@@ -224,7 +216,7 @@ lib/
 
 ## Local Development
 
-**Prerequisites:** Node.js 20+, [Helius API key](https://helius.dev), [Supabase project](https://supabase.com), optional [Bags API key](https://dev.bags.fm) for the launchpad surface.
+**Prerequisites:** Node.js 20+, [Helius API key](https://helius.dev), optional [Supabase project](https://supabase.com) for auxiliary wallet reads.
 
 ```bash
 git clone https://github.com/vip-ultr/solana-oil-factory.git
@@ -250,12 +242,9 @@ HELIUS_API_KEY=your-helius-key
 # Same-origin is always allowed. Useful for staging / preview deployments.
 # RPC_ALLOWED_ORIGINS=https://staging.solanaoilfactory.xyz,https://preview-xyz.vercel.app
 
-# === Supabase (legacy launchpad + leaderboard) ===
+# === Supabase (optional — auxiliary wallet reads) ===
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-
-# === Bags (optional — launchpad surface) ===
-BAGS_API_KEY=your-bags-api-key
 ```
 
 ```bash

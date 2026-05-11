@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 import {
   Home,
   Building2,
-  BarChart3,
   Factory,
   LayoutDashboard,
   User,
@@ -15,7 +14,6 @@ import {
   Code2,
   HelpCircle,
   Wallet,
-  Flame,
   LogOut,
 } from "lucide-react";
 import { useWalletConnection } from "@solana/react-hooks";
@@ -36,8 +34,6 @@ type NavItem = {
 const NAV_PRIMARY: NavItem[] = [
   { key: "home", label: "Home", href: "/", Icon: Home, match: "exact" },
   { key: "refineries", label: "Refineries", href: "/refineries", Icon: Building2, match: "prefix" },
-  { key: "launchpad", label: "Launchpad refining", href: "/launchpad", Icon: Flame, match: "prefix" },
-  { key: "leaderboard", label: "Leaderboard", href: "/leaderboard", Icon: BarChart3, match: "prefix" },
   { key: "launch", label: "Launch refinery", href: "/refinery/launch", Icon: Factory, match: "prefix" },
 ];
 

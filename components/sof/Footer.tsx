@@ -32,9 +32,6 @@ export function Footer() {
               <Link href="/refineries">Refineries</Link>
             </li>
             <li>
-              <Link href="/leaderboard">Leaderboard</Link>
-            </li>
-            <li>
               <Link href="/refinery/launch">Launch refinery</Link>
             </li>
             <li>

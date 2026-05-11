@@ -106,7 +106,7 @@ export default async function WalletPage({ params }: PageProps) {
           banner stays only when /wallet/[address] needs it for
           a future signal we haven't wired yet — currently empty. */}
       <div className="sof-w-crumb">
-        <Link href="/leaderboard">Leaderboard</Link> / Wallet
+        <Link href="/refineries">Refineries</Link> / Wallet
       </div>
 
       <header className="sof-w-hdr">

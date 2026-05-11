@@ -26,17 +26,17 @@ export default function NotFound() {
         </div>
         <div className="sof-nf-suggest">
           <div className="ttl">You might be looking for</div>
-          <Link href="/refinery/ref-bonk">
-            <span>BONK Refinery</span>
-            <span className="det">Active · 2d 14h left</span>
+          <Link href="/refineries">
+            <span>Refineries directory</span>
+            <span className="det">Filter live refineries on devnet</span>
           </Link>
-          <Link href="/leaderboard">
-            <span>Operator leaderboard</span>
-            <span className="det">1,047 ranked</span>
+          <Link href="/dashboard">
+            <span>My dashboard</span>
+            <span className="det">My refineries · claims · reputation</span>
           </Link>
           <Link href="/help">
-            <span>Help · &quot;Why did my claim fail?&quot;</span>
-            <span className="det">142 articles</span>
+            <span>Help center</span>
+            <span className="det">FAQ and walkthroughs</span>
           </Link>
         </div>
       </div>

@@ -127,14 +127,6 @@ export function CommandPalette({ open, onClose }: Props) {
       onPick: () => router.push("/refineries"),
     });
     list.push({
-      key: "act-leaderboard",
-      group: "Quick actions",
-      label: <>View leaderboard</>,
-      kbd: "⌘B",
-      iconText: "★",
-      onPick: () => router.push("/leaderboard"),
-    });
-    list.push({
       key: "act-theme",
       group: "Quick actions",
       label: <>Toggle light / dark theme</>,

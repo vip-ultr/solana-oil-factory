@@ -61,8 +61,8 @@ export interface OperatorRow {
 
 /**
  * Aggregate operator stats across every refinery they've
- * launched. Drives /leaderboard. Sorted by total distributed
- * (a holders-claimed × per-claim-amount sum, in base units).
+ * launched. Sorted by total distributed (a holders-claimed ×
+ * per-claim-amount sum, in base units).
  */
 export function topOperators(limit: number = 50): OperatorRow[] {
   const events = loadEvents();
