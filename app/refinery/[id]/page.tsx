@@ -77,27 +77,18 @@ export default async function RefineryPage({ params }: PageProps) {
   // Live recent-claims feed for this refinery, sourced from the
   // indexer JSON. Returns 0 rows for fresh refineries — the
   // empty-state branch below handles that.
-  const recentClaims = buildActivityFeed({
-    refinery: id,
-    eventName: "ClaimMade",
-    limit: 8,
-  });
-
-  // Snapshot history (on-chain) + top claimants (indexer
-  // aggregation) + token-mint metadata + treasury config —
-  // fetched in parallel.
-  const [snapshots, topClaimants, mintInfo, treasury] = await Promise.all([
+  const [recentClaims, snapshots, topClaimants, mintInfo, treasury] = await Promise.all([
+    buildActivityFeed({ refinery: id, eventName: "ClaimMade", limit: 8 }),
     fetchSnapshots(id),
-    Promise.resolve(topClaimantsForRefinery(id, 7)),
+    topClaimantsForRefinery(id, 7),
     r.tokenMintFull ? fetchMint(r.tokenMintFull) : Promise.resolve(null),
     fetchTreasuryConfig(),
   ]);
 
-  // Operator stats from indexer + reputation v0 score.
-  const operatorStats = r.operatorFull
-    ? operatorStatsFor(r.operatorFull)
-    : null;
-  const operatorRep = r.operatorFull ? computeReputation(r.operatorFull) : null;
+  const [operatorStats, operatorRep] = await Promise.all([
+    r.operatorFull ? operatorStatsFor(r.operatorFull) : Promise.resolve(null),
+    r.operatorFull ? computeReputation(r.operatorFull) : Promise.resolve(null),
+  ]);
 
   return (
     <>

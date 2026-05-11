@@ -19,7 +19,7 @@ export default async function HomePage() {
   const activeCount = refineries.filter(
     (r) => r.status === "active" || r.status === "closingSoon",
   ).length;
-  const activity = buildActivityFeed({ limit: 30 });
+  const activity = await buildActivityFeed({ limit: 30 });
 
   return (
     <>

@@ -19,7 +19,7 @@ export async function GET(request: Request) {
     );
   }
   try {
-    const result = computeReputation(wallet);
+    const result = await computeReputation(wallet);
     return NextResponse.json(result);
   } catch (err) {
     return NextResponse.json(

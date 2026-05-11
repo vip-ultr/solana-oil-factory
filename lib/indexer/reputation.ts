@@ -17,6 +17,8 @@
 //     — needs per-mint metadata + audit signals. Deferred.
 
 import { loadEvents } from "./store";
+// Note: loadEvents is now async — computeReputation and
+// buildClaimHeatmap are async functions in Phase 2b.
 import tenureCache from "./wallet-tenure.json";
 import type { ReputationTier } from "@/lib/mock-data";
 
@@ -69,13 +71,36 @@ function tierFor(score: number): ReputationTier {
   return "flagged";
 }
 
-export function computeReputation(walletPubkey: string): ReputationResult {
-  const events = loadEvents();
+export async function computeReputation(walletPubkey: string): Promise<ReputationResult> {
+  // Two targeted queries instead of a full table scan:
+  //   1. All events where wallet = address (covers C, O, P, R, A)
+  //   2. SnapshotSubmitted for refineries this wallet operates (covers D)
+  const walletEvents = await loadEvents({ wallet: walletPubkey });
+
+  // For the D (snapshot consistency) component we also need
+  // SnapshotSubmitted events for operated refineries, which have
+  // wallet = snapshot_authority (not the operator). Collect those
+  // refinery PDAs from the launch events first, then query.
+  const operatedRefineries = new Set<string>(
+    walletEvents
+      .filter((e) => e.eventName === "RefineryLaunched")
+      .map((e) => e.data.refinery as string)
+      .filter(Boolean),
+  );
+  const snapshotEvents =
+    operatedRefineries.size > 0
+      ? await Promise.all(
+          [...operatedRefineries].map((ref) =>
+            loadEvents({ refinery: ref, eventName: "SnapshotSubmitted" }),
+          ),
+        ).then((arrays) => arrays.flat())
+      : [];
+
+  // Merge into a single events array for the computation below.
+  const events = [...walletEvents, ...snapshotEvents];
 
   // ── Claim signals ───
-  const myClaims = events.filter(
-    (e) => e.eventName === "ClaimMade" && e.wallet === walletPubkey,
-  );
+  const myClaims = walletEvents.filter((e) => e.eventName === "ClaimMade");
   const distinctRefineries = new Set(
     myClaims.map((e) => e.refinery).filter((r): r is string => Boolean(r)),
   ).size;
@@ -91,14 +116,10 @@ export function computeReputation(walletPubkey: string): ReputationResult {
   cValue = Math.min(50, cValue);
 
   // ── Operator signals ───
-  const myLaunches = events.filter(
-    (e) =>
-      e.eventName === "RefineryLaunched" &&
-      e.data.operator === walletPubkey,
-  );
-  const myCloses = events.filter(
-    (e) => e.eventName === "RefineryClosed" && e.wallet === walletPubkey,
-  );
+  // walletEvents is already filtered to wallet=address; for
+  // RefineryLaunched the decoder sets wallet=operator, so this is correct.
+  const myLaunches = walletEvents.filter((e) => e.eventName === "RefineryLaunched");
+  const myCloses   = walletEvents.filter((e) => e.eventName === "RefineryClosed");
 
   // "Early closure" = a RefineryClosed event whose refinery
   // also has a RefineryLaunched with a non-zero claim_window_end
@@ -149,10 +170,9 @@ export function computeReputation(walletPubkey: string): ReputationResult {
   // walked by scripts/wallet-tenure.cts) when present;
   // otherwise falls back to "time since first SOF event".
   const cached = TENURE.wallets[walletPubkey];
-  const myEvents = events.filter((e) => e.wallet === walletPubkey);
   let firstSeen: number | null = cached?.firstTxUnix ?? null;
   if (firstSeen === null) {
-    for (const e of myEvents) {
+    for (const e of walletEvents) {
       if (e.blockTime === null) continue;
       if (firstSeen === null || e.blockTime < firstSeen) firstSeen = e.blockTime;
     }
@@ -356,15 +376,16 @@ export function computeReputation(walletPubkey: string): ReputationResult {
  * for the heatmap. Anchored to the current week, walking back
  * 53 weeks. Returns counts in row-major order (week × day).
  */
-export function buildClaimHeatmap(walletPubkey: string): {
+export async function buildClaimHeatmap(walletPubkey: string): Promise<{
   /** counts[week][dayOfWeek 0=Sun..6=Sat] */
   counts: number[][];
   totalClaims: number;
   longestStreakDays: number;
-} {
-  const events = loadEvents().filter(
-    (e) => e.eventName === "ClaimMade" && e.wallet === walletPubkey,
-  );
+}> {
+  const events = await loadEvents({
+    wallet:    walletPubkey,
+    eventName: "ClaimMade",
+  });
 
   const weeks = 53;
   const days = 7;

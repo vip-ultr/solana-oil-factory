@@ -1,36 +1,14 @@
-// Read-side persistence for the indexer.
+// Read-side persistence for the indexer — Phase 2b.
 //
-// Phase 2a is intentionally minimalist — events live in a single
-// committed JSON file at lib/indexer/events.json. The indexer
-// script (run-once or loop) updates the file via fs writes; the
-// frontend reads the bundled JSON import below — webpack inlines
-// it into the Vercel deploy artifact, which works in every
-// runtime including edge + serverless. Direct fs reads in serverless
-// don't see non-code files, hence this split.
+// Events are queried from Supabase instead of the bundled events.json.
+// All functions are async; callers (server components, API routes)
+// must await them.
 //
-// The writer lives in `store.node.ts` and is only imported by
-// `scripts/indexer.cts`. Phase 2b will swap both for a real DB.
+// The legacy events.json is kept on disk as a fallback for local dev
+// without a Supabase connection, but is no longer imported here.
 
-import type { IndexedEvent, IndexerSnapshot } from "./types";
-import bundled from "./events.json";
-
-const EMPTY: IndexerSnapshot = {
-  cursor: {
-    programId: "2tPLLPQeLLNL4UDBbeagSUAABJcB3fHGTJaLGEzrx3rE",
-    lastSignature: null,
-    lastSlot: null,
-    updatedAt: new Date(0).toISOString(),
-  },
-  events: [],
-};
-
-export function loadSnapshot(): IndexerSnapshot {
-  return (bundled as unknown as IndexerSnapshot) ?? structuredClone(EMPTY);
-}
-
-export function loadEvents(): IndexedEvent[] {
-  return loadSnapshot().events;
-}
+import { supabase } from "@/lib/supabase";
+import type { EventName, IndexedEvent } from "./types";
 
 export interface EventQuery {
   refinery?: string;
@@ -39,25 +17,47 @@ export interface EventQuery {
   limit?: number;
 }
 
-export function queryEvents(q: EventQuery = {}): IndexedEvent[] {
-  const all = loadEvents();
-  const limit = q.limit ?? 50;
-  const names = Array.isArray(q.eventName)
-    ? new Set(q.eventName)
-    : q.eventName
-      ? new Set([q.eventName])
-      : null;
+function toIndexedEvent(row: Record<string, unknown>): IndexedEvent {
+  return {
+    signature:  row.signature  as string,
+    logIndex:   row.log_index  as number,
+    slot:       row.slot       as number,
+    blockTime:  row.block_time as number | null,
+    eventName:  row.event_name as EventName,
+    data:       row.data       as Record<string, unknown>,
+    refinery:   row.refinery   as string | null,
+    wallet:     row.wallet     as string | null,
+  };
+}
 
-  let filtered = all;
-  if (q.refinery) filtered = filtered.filter((e) => e.refinery === q.refinery);
-  if (q.wallet) filtered = filtered.filter((e) => e.wallet === q.wallet);
-  if (names) filtered = filtered.filter((e) => names.has(e.eventName));
+/**
+ * Load events from Supabase, optionally filtered. Pushes all
+ * predicates to SQL so only the relevant rows cross the wire.
+ * Results are newest-first (slot DESC, log_index DESC).
+ */
+export async function loadEvents(filter: EventQuery = {}): Promise<IndexedEvent[]> {
+  let q = supabase
+    .from("events")
+    .select("signature, log_index, slot, block_time, event_name, data, refinery, wallet")
+    .order("slot",      { ascending: false })
+    .order("log_index", { ascending: false });
 
-  // Newest-first by slot then logIndex.
-  filtered = [...filtered].sort((a, b) => {
-    if (b.slot !== a.slot) return b.slot - a.slot;
-    return b.logIndex - a.logIndex;
-  });
+  if (filter.refinery)   q = q.eq("refinery", filter.refinery);
+  if (filter.wallet)     q = q.eq("wallet",   filter.wallet);
+  if (filter.eventName) {
+    const names = Array.isArray(filter.eventName)
+      ? filter.eventName
+      : [filter.eventName];
+    q = q.in("event_name", names);
+  }
+  if (filter.limit) q = q.limit(filter.limit);
 
-  return filtered.slice(0, limit);
+  const { data, error } = await q;
+  if (error) throw error;
+  return (data ?? []).map(toIndexedEvent);
+}
+
+/** Alias kept for call-sites that don't pass a filter. */
+export async function queryEvents(q: EventQuery = {}): Promise<IndexedEvent[]> {
+  return loadEvents(q);
 }

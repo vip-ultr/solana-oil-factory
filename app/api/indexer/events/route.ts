@@ -1,4 +1,4 @@
-// Server-side passthrough for the bundled indexer events JSON.
+// Server-side passthrough for indexer events (Phase 2b: Supabase).
 // Used by client surfaces (dashboard, wallet profile activity)
 // that need to filter by wallet / refinery / event name without
 // importing server-only modules.
@@ -23,7 +23,7 @@ export async function GET(request: Request) {
 
   try {
     if (shape === "activity") {
-      const events = buildActivityFeed({
+      const events = await buildActivityFeed({
         refinery,
         wallet,
         eventName: eventName as never,
@@ -31,7 +31,7 @@ export async function GET(request: Request) {
       });
       return NextResponse.json({ events });
     }
-    const events = queryEvents({
+    const events = await queryEvents({
       refinery,
       wallet,
       eventName,

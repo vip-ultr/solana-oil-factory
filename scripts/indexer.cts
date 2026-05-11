@@ -1,9 +1,9 @@
-// Refinery program indexer — Phase 2a.
+// Refinery program indexer — Phase 2b.
 //
 // Walks getSignaturesForAddress(PROGRAM_ID), pulls every tx that
 // hasn't been indexed yet, parses anchor `emit!` events from the
-// log stream, and writes them to lib/indexer/events.json. Idempotent
-// — re-runs only fetch new signatures past the cursor.
+// log stream, and writes them to Supabase. Idempotent — re-runs
+// only fetch new signatures past the stored cursor.
 //
 // Usage:
 //   pnpm indexer            # run-once, exits when caught up
@@ -11,11 +11,12 @@
 
 import { Connection, PublicKey } from "@solana/web3.js";
 import {
-  loadSnapshotFromDisk as loadSnapshot,
-  saveSnapshot,
+  loadCursor,
+  saveCursor,
+  insertEvents,
 } from "../lib/indexer/store.node";
 import { decodeTransactionEvents } from "../lib/indexer/decoder";
-import type { IndexedEvent } from "../lib/indexer/types";
+import type { IndexedEvent, IndexerCursor } from "../lib/indexer/types";
 
 const PROGRAM_ID_STR =
   process.env.NEXT_PUBLIC_REFINERY_PROGRAM_ID ??
@@ -28,9 +29,7 @@ const RPC =
   "https://api.devnet.solana.com";
 
 const POLL_INTERVAL_MS = 10_000;
-/** Per-page size for getSignaturesForAddress. RPC max is 1000. */
 const PAGE_LIMIT = 100;
-/** Tx fetch concurrency — keep low to stay under public-RPC limits. */
 const TX_CONCURRENCY = 4;
 
 interface RunOpts {
@@ -41,7 +40,7 @@ async function main() {
   const args = new Set(process.argv.slice(2));
   const opts: RunOpts = { loop: args.has("--loop") };
 
-  console.log(`==> indexer starting`);
+  console.log(`==> indexer starting (phase 2b — Supabase)`);
   console.log(`    program:   ${PROGRAM_ID_STR}`);
   console.log(`    rpc:       ${RPC}`);
   console.log(`    mode:      ${opts.loop ? "loop" : "run-once"}`);
@@ -64,12 +63,9 @@ async function main() {
 }
 
 async function runOnce(connection: Connection): Promise<number> {
-  const snap = loadSnapshot();
-  const cursor = snap.cursor.lastSignature;
+  const cursor = await loadCursor();
+  const lastSig = cursor.lastSignature;
 
-  // Walk signatures backwards in time (newest first), stopping
-  // at the cursor. We reverse before processing so events end up
-  // in chronological order in the JSON.
   const collected: Array<{ signature: string; slot: number }> = [];
   let before: string | undefined = undefined;
 
@@ -81,9 +77,8 @@ async function runOnce(connection: Connection): Promise<number> {
     if (page.length === 0) break;
 
     for (const entry of page) {
-      if (cursor && entry.signature === cursor) {
-        // Hit the previous cursor — stop walking.
-        return await processAndPersist(connection, snap, collected.reverse());
+      if (lastSig && entry.signature === lastSig) {
+        return await processAndPersist(connection, cursor, collected.reverse());
       }
       if (entry.err) continue;
       collected.push({ signature: entry.signature, slot: entry.slot });
@@ -91,35 +86,29 @@ async function runOnce(connection: Connection): Promise<number> {
 
     before = page[page.length - 1].signature;
 
-    // Safety cap — first-time backfill on a noisy program could
-    // pull thousands of pages. Devnet refinery program has < 50
-    // tx so this won't trip in practice.
     if (collected.length > 50_000) {
       console.warn("==> collected > 50k signatures, stopping pagination");
       break;
     }
   }
 
-  return await processAndPersist(connection, snap, collected.reverse());
+  return await processAndPersist(connection, cursor, collected.reverse());
 }
 
 async function processAndPersist(
   connection: Connection,
-  snap: ReturnType<typeof loadSnapshot>,
+  cursor: IndexerCursor,
   newest: Array<{ signature: string; slot: number }>,
 ): Promise<number> {
   if (newest.length === 0) {
-    snap.cursor.updatedAt = new Date().toISOString();
-    saveSnapshot(snap);
+    await saveCursor({ ...cursor, updatedAt: new Date().toISOString() });
     return 0;
   }
 
   const newEvents: IndexedEvent[] = [];
-  let lastSig = snap.cursor.lastSignature;
-  let lastSlot = snap.cursor.lastSlot ?? 0;
+  let lastSig  = cursor.lastSignature;
+  let lastSlot = cursor.lastSlot ?? 0;
 
-  // Bounded-concurrency tx fetch. Solana public RPC tolerates
-  // ~10/s; we use 4 to leave headroom.
   for (let i = 0; i < newest.length; i += TX_CONCURRENCY) {
     const batch = newest.slice(i, i + TX_CONCURRENCY);
     const txs = await Promise.all(
@@ -133,9 +122,9 @@ async function processAndPersist(
 
     for (let j = 0; j < batch.length; j++) {
       const sig = batch[j];
-      const tx = txs[j];
+      const tx  = txs[j];
       if (!tx) continue;
-      const logs = tx.meta?.logMessages ?? [];
+      const logs   = tx.meta?.logMessages ?? [];
       const events = decodeTransactionEvents(
         sig.signature,
         sig.slot,
@@ -143,40 +132,24 @@ async function processAndPersist(
         logs,
       );
       newEvents.push(...events);
-      // Only advance the cursor when we actually decoded events —
-      // otherwise a tx with no events or a decoder bug silently
-      // skips the cursor past good data, breaking the next run.
       if (events.length > 0) {
-        lastSig = sig.signature;
+        lastSig  = sig.signature;
         lastSlot = sig.slot;
       }
     }
   }
 
-  // Dedupe — re-runs that span the cursor boundary can re-collect
-  // a tx already in the file. Key on (signature, logIndex).
-  const seen = new Set<string>(
-    snap.events.map((e) => `${e.signature}:${e.logIndex}`),
-  );
-  const fresh = newEvents.filter((e) => {
-    const key = `${e.signature}:${e.logIndex}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
+  // insertEvents deduplicates via ON CONFLICT DO NOTHING, so no
+  // local seen-set is needed here. The DB is the source of truth.
+  await insertEvents(newEvents);
+  await saveCursor({
+    programId:     cursor.programId,
+    lastSignature: lastSig,
+    lastSlot:      lastSlot,
+    updatedAt:     new Date().toISOString(),
   });
 
-  snap.events = [...snap.events, ...fresh];
-  // Keep events sorted by (slot ASC, logIndex ASC).
-  snap.events.sort((a, b) => {
-    if (a.slot !== b.slot) return a.slot - b.slot;
-    return a.logIndex - b.logIndex;
-  });
-  snap.cursor.lastSignature = lastSig;
-  snap.cursor.lastSlot = lastSlot;
-  snap.cursor.updatedAt = new Date().toISOString();
-  saveSnapshot(snap);
-
-  return fresh.length;
+  return newEvents.length;
 }
 
 function sleep(ms: number): Promise<void> {

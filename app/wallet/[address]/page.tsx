@@ -17,6 +17,7 @@ import { fetchAllRefineries } from "@/lib/onchain/refineries";
 import { tokenMetaFor } from "@/lib/onchain/token-registry";
 import { loadEvents } from "@/lib/indexer/store";
 import { operatorStatsFor } from "@/lib/indexer/aggregations";
+// loadEvents is used inline below for targeted wallet/launch queries
 import {
   computeReputation,
   buildClaimHeatmap,
@@ -65,39 +66,32 @@ export default async function WalletPage({ params }: PageProps) {
       ? `${address.slice(0, 4)}…${address.slice(-4)}`
       : address;
 
-  // Live indexer-derived data for this wallet.
-  const allEvents = loadEvents();
-  const claims = allEvents.filter(
-    (e) => e.eventName === "ClaimMade" && e.wallet === address,
-  );
-  const opStats = operatorStatsFor(address);
+  // Parallel fetch: wallet-specific events, all launches (for mint
+  // map), operator stats, reputation, heatmap, and on-chain data.
+  const [claims, launches, opStats, reputation, heatmap, allRefineries] =
+    await Promise.all([
+      loadEvents({ wallet: address, eventName: "ClaimMade" }),
+      loadEvents({ eventName: "RefineryLaunched" }),
+      operatorStatsFor(address),
+      computeReputation(address),
+      buildClaimHeatmap(address),
+      fetchAllRefineries(),
+    ]);
 
-  // Build a refinery PDA → token mint lookup from RefineryLaunched
-  // events so we can show token symbols on the claim rows.
-  const refineryMintMap = new Map<string, string>();
+  // Build refinery → mint/operator maps from launch events.
+  const refineryMintMap     = new Map<string, string>();
   const refineryOperatorMap = new Map<string, string>();
-  for (const e of allEvents) {
-    if (e.eventName !== "RefineryLaunched") continue;
-    const ref = e.data.refinery as string | undefined;
+  for (const e of launches) {
+    const ref  = e.data.refinery   as string | undefined;
     const mint = e.data.token_mint as string | undefined;
-    const op = e.data.operator as string | undefined;
+    const op   = e.data.operator   as string | undefined;
     if (ref && mint) refineryMintMap.set(ref, mint);
-    if (ref && op) refineryOperatorMap.set(ref, op);
+    if (ref && op)   refineryOperatorMap.set(ref, op);
   }
 
-  // Operated-refinery rows (live on-chain refinery accounts
-  // filtered by operator). `fetchAllRefineries` is cheap on
-  // devnet; bigger clusters would want a getProgramAccounts
-  // memcmp filter, deferred to v1.1.
-  const allRefineries = await fetchAllRefineries();
   const operatedRefineries = allRefineries.filter(
     (r) => refineryOperatorMap.get(r.id) === address,
   );
-
-  // Reputation v0 + heatmap, both pure functions over the
-  // events JSON.
-  const reputation = computeReputation(address);
-  const heatmap = buildClaimHeatmap(address);
   const fillOffset = CIRCUMFERENCE * (1 - reputation.score / 100);
 
   return (

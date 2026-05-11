@@ -8,8 +8,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "indexer": "tsx scripts/indexer.cts",
-    "indexer:loop": "tsx scripts/indexer.cts -- --loop",
+    "indexer": "tsx --env-file=.env.local scripts/indexer.cts",
+    "indexer:loop": "tsx --env-file=.env.local scripts/indexer.cts -- --loop",
     "wallet-tenure": "tsx scripts/wallet-tenure.cts"
   },
   "keywords": [],
