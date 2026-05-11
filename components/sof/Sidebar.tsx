@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { useWalletConnection } from "@solana/react-hooks";
 import { useSiws } from "@/components/sof/SiwsProvider";
+import { ThemeToggle } from "@/components/sof/ThemeToggle";
 import { cn } from "@/lib/cn";
 import type { ComponentType, SVGProps } from "react";
 
@@ -103,6 +104,9 @@ export function Sidebar() {
             <span className="k">NETWORK</span>
             <span className="v">Devnet</span>
           </span>
+        </div>
+        <div className="sof-sb-theme">
+          <ThemeToggle />
         </div>
         <ConnectControl />
       </div>

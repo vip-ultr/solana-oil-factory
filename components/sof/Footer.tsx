@@ -1,6 +1,5 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ThemeToggle } from "./ThemeToggle";
 
 export function Footer() {
   return (
@@ -110,7 +109,6 @@ export function Footer() {
           © 2026 Solana Oil Factory · Not financial advice · Operators are
           independent and unaffiliated with the platform.
         </span>
-        <ThemeToggle />
       </div>
     </footer>
   );
