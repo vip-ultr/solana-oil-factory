@@ -471,29 +471,50 @@ function Row({ r }: { r: Refinery }) {
       </td>
       <td>
         <div className="sof-pool-cell">
-          <div className="sof-pool-vals">
-            <span className="a">{formatTokens(r.poolRemaining)}</span>
-            <span className="b">{formatUsd(r.poolRemainingUsd)}</span>
-          </div>
-          <div className={cn("sof-pool-bar-thin", poolBarTone)}>
-            <div className="fill" style={{ transform: `scaleX(${poolPct / 100})` }} />
-          </div>
-          <span className="sof-pct">{poolPct}% of initial</span>
+          {r.poolInitial > 0 ? (
+            <>
+              <div className="sof-pool-vals">
+                <span className="a">{formatTokens(r.poolRemaining)}</span>
+                {r.poolRemainingUsd > 0 && (
+                  <span className="b">{formatUsd(r.poolRemainingUsd)}</span>
+                )}
+              </div>
+              <div className={cn("sof-pool-bar-thin", poolBarTone)}>
+                <div className="fill" style={{ transform: `scaleX(${poolPct / 100})` }} />
+              </div>
+              <span className="sof-pct">{poolPct}% of initial</span>
+            </>
+          ) : (
+            <span className="a" style={{ color: "var(--text-tertiary)" }}>—</span>
+          )}
         </div>
       </td>
       <td className="num">
         <div className="sof-rate-cell">
-          <span className="a">{formatTokens(r.claimRatePer1Pct)}</span>
-          <span className="b">
-            {/* USD-per-1%-rate not in mock; derive from pool USD per 1% supply */}
-            {formatUsd((r.poolUsd / 100))}
-          </span>
+          {r.claimRatePer1Pct > 0 ? (
+            <>
+              <span className="a">{formatTokens(r.claimRatePer1Pct)}</span>
+              {r.poolUsd > 0 && (
+                <span className="b">{formatUsd(r.poolUsd / 100)}</span>
+              )}
+            </>
+          ) : (
+            <span className="a" style={{ color: "var(--text-tertiary)" }}>—</span>
+          )}
         </div>
       </td>
       <td>
         <div className="sof-snap-cell">
-          <span className="a">{formatRelativeTime(r.snapshotAgeSeconds)}</span>
-          <span className="b">{r.holdersEligible.toLocaleString()} holders</span>
+          <span className="a">
+            {r.snapshotAgeSeconds > 0
+              ? formatRelativeTime(r.snapshotAgeSeconds)
+              : "No snapshot yet"}
+          </span>
+          <span className="b">
+            {r.holdersEligible > 0
+              ? `${r.holdersEligible.toLocaleString()} holders`
+              : "—"}
+          </span>
         </div>
       </td>
       <td>

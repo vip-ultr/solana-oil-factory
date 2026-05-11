@@ -41,7 +41,6 @@ export function HowItWorks({ featured }: Props) {
         <div className="sof-how-grid">
           <div>
             <div className="sof-home-section-head" style={{ display: "block", marginBottom: 32 }}>
-              <div className="meta">§01 / How it works</div>
               <h2 className="font-display" style={{ fontSize: 36, fontWeight: 600, letterSpacing: "-0.02em", margin: 0, lineHeight: 1.05 }}>
                 Three primitives.
                 <br />

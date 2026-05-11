@@ -85,8 +85,10 @@ export function ActivityTicker({ events = [] }: Props) {
     );
   }
 
-  // Doubled for seamless loop.
-  const doubled = [...events, ...events];
+  // Render two copies of the event list so the CSS marquee can
+  // loop seamlessly without a visible jump. The second copy is
+  // purely decorative — screen readers only need to know about
+  // the unique set, hence aria-hidden on the duplicate.
   return (
     <div className="sof-ticker" aria-label="Live activity feed">
       <div className="sof-ticker-label">
@@ -95,9 +97,14 @@ export function ActivityTicker({ events = [] }: Props) {
       </div>
       <div className="sof-ticker-viewport">
         <div className="sof-ticker-track">
-          {doubled.map((e, i) => (
-            <Row key={`${e.id}-${i}`} event={e} />
+          {events.map((e) => (
+            <Row key={`a-${e.id}`} event={e} />
           ))}
+          <div aria-hidden="true" style={{ display: "contents" }}>
+            {events.map((e) => (
+              <Row key={`b-${e.id}`} event={e} />
+            ))}
+          </div>
         </div>
       </div>
     </div>

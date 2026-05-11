@@ -178,7 +178,8 @@ button {
 @media (max-width: 768px) {
   .sof-main {
     margin-left: 0;
-    padding-bottom: 64px; /* room for mobile bottom nav */
+    padding-top: 56px; /* mobile top bar */
+    padding-bottom: 64px; /* mobile bottom tab bar */
   }
 }
 
@@ -6420,4 +6421,237 @@ table.sof-refineries tbody td.num {
   font-size: 12.5px;
   font-weight: 500;
   color: var(--text-primary);
+}
+
+/* ---------- MOBILE NAV ---------- */
+/* Desktop sidebar hides under 768px; the MobileTopBar +
+ * MobileTabBar take over. */
+.sof-mobile-topbar,
+.sof-mobile-tabs,
+.sof-mobile-scrim,
+.sof-mobile-drawer {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .sof-sidebar {
+    display: none;
+  }
+
+  .sof-mobile-topbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 56px;
+    z-index: 70;
+    background: var(--bg-elevated);
+    border-bottom: 1px solid var(--border-subtle);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 14px;
+  }
+  .sof-mobile-topbar .lg {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-primary);
+    text-decoration: none;
+    font-family: var(--font-display, sans-serif);
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: 0.005em;
+  }
+  .sof-mobile-burger {
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    border-radius: 8px;
+    border: 1px solid var(--border-subtle);
+    background: transparent;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: background 150ms ease-out;
+  }
+  .sof-mobile-burger:hover {
+    background: var(--bg-overlay);
+  }
+
+  .sof-mobile-scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 79;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 150ms ease-out;
+  }
+  .sof-mobile-scrim.on {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .sof-mobile-drawer {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    width: min(280px, 80vw);
+    z-index: 80;
+    background: var(--bg-elevated);
+    border-left: 1px solid var(--border-subtle);
+    transform: translateX(100%);
+    transition: transform 150ms ease-out;
+    overflow-y: auto;
+  }
+  .sof-mobile-drawer.on {
+    transform: translateX(0);
+  }
+  .sof-mobile-drawer .hdr {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .sof-mobile-drawer .hdr .brand {
+    font-family: var(--font-display, sans-serif);
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-primary);
+  }
+  .sof-mobile-drawer .hdr .x {
+    width: 32px;
+    height: 32px;
+    display: grid;
+    place-items: center;
+    border-radius: 6px;
+    background: transparent;
+    border: 1px solid var(--border-subtle);
+    color: var(--text-secondary);
+    cursor: pointer;
+  }
+  .sof-mobile-drawer .hdr .x:hover {
+    color: var(--text-primary);
+    background: var(--bg-overlay);
+  }
+  .sof-mobile-drawer .grp {
+    padding: 14px 12px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .sof-mobile-drawer .grp .lab {
+    font-family: var(--font-mono, monospace);
+    font-size: 10.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    padding: 4px 10px 8px;
+  }
+  .sof-mobile-drawer .itm {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 10px;
+    border-radius: 6px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 14px;
+    min-height: 44px;
+    transition: background 150ms ease-out, color 150ms ease-out;
+  }
+  .sof-mobile-drawer .itm:hover {
+    background: var(--bg-overlay);
+    color: var(--text-primary);
+  }
+  .sof-mobile-drawer .itm.on {
+    background: var(--bg-overlay);
+    color: var(--accent);
+  }
+  .sof-mobile-drawer .ft {
+    margin-top: auto;
+    border-top: 1px solid var(--border-subtle);
+    padding: 14px 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .sof-mobile-drawer .ft .row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: var(--text-tertiary);
+    font-size: 12px;
+  }
+  .sof-mobile-drawer .ft .net {
+    font-family: var(--font-mono, monospace);
+    letter-spacing: 0.04em;
+  }
+
+  .sof-mobile-connect {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-overlay);
+    color: var(--text-primary);
+    font-size: 13px;
+    min-height: 44px;
+    cursor: pointer;
+  }
+  .sof-mobile-connect.warn {
+    color: var(--warning);
+    border-color: rgba(245, 158, 11, 0.4);
+  }
+  .sof-mobile-connect.on {
+    color: var(--accent);
+  }
+  .sof-mobile-connect .lo {
+    background: transparent;
+    border: none;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    padding: 4px 6px;
+  }
+  .sof-mobile-connect .lo:hover {
+    color: var(--error);
+  }
+
+  .sof-mobile-tabs {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    z-index: 70;
+    background: var(--bg-elevated);
+    border-top: 1px solid var(--border-subtle);
+  }
+  .sof-mobile-tabs .tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 11px;
+    transition: color 150ms ease-out;
+  }
+  .sof-mobile-tabs .tab.on {
+    color: var(--accent);
+  }
+  .sof-mobile-tabs .tab span {
+    line-height: 1;
+  }
 }

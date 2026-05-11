@@ -15,16 +15,19 @@ interface Props {
 export function FeaturedRefineries({ refineries }: Props) {
   if (refineries.length === 0) return null;
 
-  // Hero card + up to 4 compact cards.
-  const [hero, ...rest] = refineries.slice(0, 5);
+  // Prefer a refinery that actually has a populated pool for the hero
+  // slot — featuring an empty refinery (0 of 0 initial) looks like the
+  // site is broken. Falls back to the first refinery if none qualify.
+  const populated = refineries.filter((r) => r.poolInitial > 0);
+  const ordered = populated.length > 0 ? populated : refineries;
+  const [hero, ...rest] = ordered.slice(0, 5);
 
   return (
     <section className="sof-home-s">
       <div className="inner">
         <div className="sof-home-section-head">
           <div>
-            <div className="meta">§02 / Live refineries</div>
-            <h2 className="font-display">Featured.</h2>
+            <h2 className="font-display">Featured refineries</h2>
           </div>
           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
             <span className="muted" style={{ fontSize: 13 }}>
@@ -80,23 +83,38 @@ function HeroCard({ refinery: r }: { refinery: Refinery }) {
               POOL REMAINING
             </div>
             <div className="sof-pool-num">
-              {formatTokens(r.poolRemaining)}
-              <small>
-                {r.tokenSymbol} · {fillPercent}% of {formatTokens(r.poolInitial)} initial
-              </small>
+              {r.poolInitial > 0 ? (
+                <>
+                  {formatTokens(r.poolRemaining)}
+                  <small>
+                    {r.tokenSymbol} · {fillPercent}% of{" "}
+                    {formatTokens(r.poolInitial)} initial
+                  </small>
+                </>
+              ) : (
+                <span style={{ color: "var(--text-tertiary)" }}>—</span>
+              )}
             </div>
           </div>
-          <Sparkline />
+          {r.poolInitial > 0 && <Sparkline />}
         </div>
 
         <div className="sof-meta-grid">
           <div>
             <div className="k">Claim rate</div>
-            <div className="v">{formatTokens(r.claimRatePer1Pct)} / 1%</div>
+            <div className="v">
+              {r.claimRatePer1Pct > 0
+                ? `${formatTokens(r.claimRatePer1Pct)} / 1%`
+                : "—"}
+            </div>
           </div>
           <div>
             <div className="k">Eligible</div>
-            <div className="v">{r.holdersEligible.toLocaleString()} wallets</div>
+            <div className="v">
+              {r.holdersEligible > 0
+                ? `${r.holdersEligible.toLocaleString()} wallets`
+                : "—"}
+            </div>
           </div>
           <div>
             <div className="k">Closes</div>
@@ -160,12 +178,20 @@ function CompactCard({ refinery: r }: { refinery: Refinery }) {
         <div className="sof-kv">
           <span className="k">Pool</span>
           <span className="v">
-            {formatTokens(r.poolRemaining)} <small>{r.tokenSymbol}</small>
+            {r.poolInitial > 0 ? (
+              <>
+                {formatTokens(r.poolRemaining)} <small>{r.tokenSymbol}</small>
+              </>
+            ) : (
+              <span style={{ color: "var(--text-tertiary)" }}>—</span>
+            )}
           </span>
         </div>
         <div className="sof-kv">
           <span className="k">Rate / 1%</span>
-          <span className="v">{formatTokens(r.claimRatePer1Pct)}</span>
+          <span className="v">
+            {r.claimRatePer1Pct > 0 ? formatTokens(r.claimRatePer1Pct) : "—"}
+          </span>
         </div>
         <div className="sof-kv">
           <span className="k">{isClosing ? "Closes in" : "Snapshot"}</span>
@@ -175,12 +201,16 @@ function CompactCard({ refinery: r }: { refinery: Refinery }) {
           >
             {isClosing
               ? `${r.claimWindowDaysLeft}d`
-              : formatRelativeTime(r.snapshotAgeSeconds)}
+              : r.snapshotAgeSeconds > 0
+                ? formatRelativeTime(r.snapshotAgeSeconds)
+                : "—"}
           </span>
         </div>
-        <div style={{ marginTop: 10 }}>
-          <PoolBar remaining={r.poolRemaining} initial={r.poolInitial} />
-        </div>
+        {r.poolInitial > 0 && (
+          <div style={{ marginTop: 10 }}>
+            <PoolBar remaining={r.poolRemaining} initial={r.poolInitial} />
+          </div>
+        )}
       </div>
 
       <div className="foot">

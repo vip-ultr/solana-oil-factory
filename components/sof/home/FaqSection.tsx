@@ -58,8 +58,7 @@ export function FaqSection() {
           style={{ marginBottom: 24 }}
         >
           <div>
-            <div className="meta">§04 / Common questions</div>
-            <h2 className="font-display">FAQ.</h2>
+            <h2 className="font-display">Common questions</h2>
           </div>
           <Link href="/help" className="sof-btn-mini ghost">
             Visit help center →

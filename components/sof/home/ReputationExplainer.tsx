@@ -89,18 +89,6 @@ export function ReputationExplainer() {
           </div>
 
           <div className="sof-rep-copy">
-            <div
-              className="font-mono"
-              style={{
-                fontSize: 11,
-                color: "var(--text-tertiary)",
-                textTransform: "uppercase",
-                letterSpacing: "0.12em",
-                marginBottom: 14,
-              }}
-            >
-              §03 / Reputation is the moat
-            </div>
             <h2>
               Reputation is built
               <br />

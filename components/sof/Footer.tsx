@@ -7,27 +7,11 @@ export function Footer() {
     <footer className="sof-footer">
       <div className="sof-foot-trust">
         <span className="led" aria-hidden="true" />
-        <b>All systems operational</b>
+        <b>Devnet</b>
         <span className="sep">·</span>
-        <span>
-          Indexer{" "}
-          <b className="font-mono" style={{ color: "var(--success)" }}>
-            2s
-          </b>{" "}
-          behind
-        </span>
+        <span>Audit pending</span>
         <span className="sep">·</span>
-        <span>
-          Devnet · Slot <span className="font-mono">298,442,019</span>
-        </span>
-        <span className="sep">·</span>
-        <span>
-          Audit by <b>OtterSec</b> · Mar 2026
-        </span>
-        <span className="sep">·</span>
-        <span>
-          Programs <b>verified</b> on-chain
-        </span>
+        <span>Not financial advice</span>
       </div>
 
       <div className="sof-foot-grid">
@@ -38,7 +22,7 @@ export function Footer() {
           </div>
           <p>
             Verifiable on-chain claim infrastructure for Solana token operators.
-            Open-source, audited, non-custodial.
+            Non-custodial · live on devnet · audit pending.
           </p>
         </div>
 

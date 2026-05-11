@@ -149,34 +149,45 @@ export default async function TrustPage() {
         </section>
 
         <section className="sof-tx-section">
-          <h3>Audit · v1.1 — pre-mainnet</h3>
+          <h3>Audit · pending</h3>
           <div className="sof-tx-audit">
             <div>
               <span className="lab">Auditor</span>
-              <span className="v">OtterSec</span>
+              <span
+                className="v"
+                style={{ color: "var(--text-tertiary)" }}
+              >
+                Not yet engaged
+              </span>
               <span className="det">
-                Independent firm · 2 senior reviewers · 6-week engagement
+                Mainnet engagement starts after the on-chain feature
+                freeze. Auditor selection is in progress.
               </span>
             </div>
             <div>
               <span className="lab">Released</span>
-              <span className="v">Mar 12 2026</span>
+              <span
+                className="v"
+                style={{ color: "var(--text-tertiary)" }}
+              >
+                Pre-mainnet only
+              </span>
               <span className="det">
-                Programs unchanged since · all findings{" "}
-                <strong style={{ color: "var(--success)" }}>resolved</strong>
+                Devnet program is live and observable; mainnet ships after
+                the external audit lands.
               </span>
             </div>
             <div>
               <span className="lab">Findings</span>
-              <span className="v ok">0 critical · 0 high</span>
-              <span className="det">
-                3 medium and 8 informational, all addressed pre-release.
-              </span>
               <span
-                className="pdf"
+                className="v"
                 style={{ color: "var(--text-tertiary)" }}
               >
-                Full PDF report ships with the v1.0 mainnet audit
+                —
+              </span>
+              <span className="det">
+                The full PDF report will be published here when the audit
+                completes.
               </span>
             </div>
           </div>
