@@ -5,13 +5,15 @@
 <h1 align="center">Solana Oil Factory</h1>
 
 <p align="center">
-  Turn your Solana wallet activity into oil. Refine it. Climb the leaderboard.
+  A permissionless token-distribution platform on Solana.<br />
+  Operators launch refineries · holders claim pro-rata · everyone builds reputation.
 </p>
 
 <p align="center">
   <a href="https://solanaoilfactory.xyz">Live App</a> &middot;
-  <a href="#how-it-works">How It Works</a> &middot;
-  <a href="#refineries">Refineries</a> &middot;
+  <a href="#what-it-is">What It Is</a> &middot;
+  <a href="#the-three-refinery-surfaces">Refinery Surfaces</a> &middot;
+  <a href="#on-chain-program">Program</a> &middot;
   <a href="#tech-stack">Tech Stack</a> &middot;
   <a href="#local-development">Run Locally</a>
 </p>
@@ -20,110 +22,119 @@
   <img src="https://img.shields.io/badge/Next.js-15-black?style=flat-square&logo=next.js" />
   <img src="https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react" />
   <img src="https://img.shields.io/badge/TypeScript-5.9-3178C6?style=flat-square&logo=typescript" />
-  <img src="https://img.shields.io/badge/Solana-Mainnet-9945FF?style=flat-square&logo=solana" />
+  <img src="https://img.shields.io/badge/Anchor-0.32-512BD4?style=flat-square" />
+  <img src="https://img.shields.io/badge/Solana-Devnet-9945FF?style=flat-square&logo=solana" />
 </p>
 
 ---
 
-## How It Works
+## What It Is
 
-| Step | What Happens |
-|------|-------------|
-| **Connect** | Link your Solana wallet |
-| **Verify** | Sign a message to prove ownership (free, no transaction) |
-| **Extract** | Scan your on-chain transactions and convert them into oil units |
-| **Refine** | Start a timed refine session to convert oil into **$CRUDE** |
-| **Compete** | Appear on the global leaderboard ranked by total $CRUDE |
-| **Share** | Post your prestige title and refinery stats to X or other social media handles
+Sol Oil Factory is **token-distribution infrastructure** for Solana. Any operator can launch a "refinery" — a reward pool that pays out an SPL token to verified on-chain holders based on Merkle-tree snapshots of their balances.
 
-### Oil Math
+The differentiator is **cross-refinery reputation**. Every claim, every launch, every snapshot signs the same on-chain identity. Over time, the platform's two scarcest assets — real holders and trustworthy operators — find each other.
 
-```
-1 transaction   =  1 oil unit
-50 oil units    =  1 barrel
-10 oil units    =  1 $CRUDE  (cap: 15,000 per session)
-```
+- ❌ NOT a token launchpad. We don't mint tokens; we distribute existing ones.
+- ❌ NOT a DEX. We don't facilitate trading.
+- ❌ NOT custodial. Operator deposits sit in a program-owned PDA escrow.
+- ❌ NOT a yield farm. Rewards are pre-deposited, not generated.
 
-> A wallet with 2,140 transactions = 42 barrels + 214 $CRUDE = title: **Pipeline Operator**
+If a feature doesn't map to *"distribute tokens to verified holders + build cross-refinery reputation,"* it's out of scope.
 
 ---
 
-## Refineries
+## The Three Refinery Surfaces
 
-The app is built around a **multi-source refinery system** — each integration produces $CRUDE from a different type of on-chain activity.
-
-| Refinery | Status | Source |
+| Surface | What it is | Status |
 |---|---|---|
-| Solana Refinery | ✅ Active | All Solana wallet transactions |
-| Bags Refinery | ✅ Active | Bags platform fee earnings |
-| Pump.fun Refinery | 🔜 Soon | Pump.fun trading activity |
-| Bonk.fun Refinery | 🔜 Soon | Bonk.fun activity |
-| Candle Refinery | 🔜 Soon | Candle protocol integration |
-<!-- | Believe Refinery | 🔜 Soon | Believe protocol activity | -->
-
-### Timed Refinement
-
-Refining isn't instant. A session locks your $CRUDE for a duration proportional to your transaction count — minimum 30 minutes, up to 6 hours. You can pay **0.002 SOL** to skip the timer instantly.
-
-### Bags Refinery
-
-Bags claimable fee positions are converted at `1 SOL = 1,000 $CRUDE`. This output is tracked separately and combined with your Solana Refinery $CRUDE to form your total.
+| **Token refineries** | Operator launches a refinery for any Solana token. Holders claim pro-rata against on-chain snapshots. **Headline feature.** | ✅ Live on devnet |
+| **Launchpad refining** | Personal $CRUDE flow at `/launchpad` — wallet activity + Bags swap fees → $CRUDE token. The legacy product, kept as a secondary surface. | ✅ Live |
+| **Per-launchpad views** | `/refineries` filtered by source launchpad (Bags, Pump, Bonk, Candle). Aggregates refineries for tokens that graduated from each. | 🔜 Indexer work |
 
 ---
 
-## Prestige Titles
+## On-Chain Program
 
-25 ranks based on your total $CRUDE balance.
+**Devnet Program ID:** `2tPLLPQeLLNL4UDBbeagSUAABJcB3fHGTJaLGEzrx3rE`
+**Repo:** [`vip-ultr/sol-oilfactory-program`](https://github.com/vip-ultr/sol-oilfactory-program) (private during devnet)
+**Framework:** Anchor 0.32
 
-| $CRUDE | Title |
+### Instructions
+
+| Instruction | Caller | Effect |
+|---|---|---|
+| `init_treasury` | Program upgrade authority (one-shot) | Sets admin / snapshot authority / pause authority + fee schedule |
+| `init_refinery` | Operator | Deposits pool tokens to escrow PDA + pays 0.1 SOL launch fee + 1% deposit fee |
+| `deposit` | Operator | Tops up an existing refinery's pool |
+| `submit_snapshot` | Snapshot authority | Publishes a Merkle root + holder count for the next snapshot index |
+| `claim` | Holder | Verifies Merkle proof + transfers pro-rata share + creates ClaimReceipt for replay protection |
+| `withdraw` | Operator | Pulls from the pool (lock-gated: window must be closed + 7-day cooldown) |
+| `close_refinery` | Operator | Terminal — refunds remaining pool to operator |
+| `toggle_operator_pause` | Operator | Per-refinery pause |
+| `toggle_platform_pause` | Pause authority | Global emergency pause |
+| `update_rate` | Operator | Advances refinery to a new epoch with new params |
+| `rotate_authority` | Admin | Rotates snapshot / pause / admin keys |
+
+### Snapshot + Claim Mechanics
+
+1. Operator deposits tokens. Pool sits in `escrow_authority` PDA-owned ATA.
+2. Snapshot authority runs `getProgramAccounts` for the mint, builds a Merkle tree over `(holder, balance)` leaves, submits the root on-chain.
+3. Holder pulls the leaf list (cached client-side post-snapshot), regenerates the Merkle proof for their own pubkey, and submits `claim`.
+4. Program verifies: proof root matches the snapshot, balance leaf hashes correctly, no prior `ClaimReceipt` PDA exists for `(refinery, holder, snapshot_index)`, and the pool can cover the pro-rata share capped at `per_claim_cap_bps`.
+5. Tokens transfer escrow → holder ATA, claim receipt is created, holder pays 0.001 SOL claim fee.
+
+### Merkle Leaf Format (locked at Q-2)
+
+```
+leaf = sha256(0x00 || pubkey_32 || balance_le_u64)
+node = sha256(0x01 || min(left, right) || max(left, right))
+```
+
+---
+
+## Product Surfaces
+
+| Route | Purpose |
 |---|---|
-| 0 | Dry Well |
-| 1 – 9 | Mud Digger |
-| 10 – 24 | Roughneck |
-| 25 – 49 | Backyard Driller |
-| 50 – 99 | Pump Jockey |
-| 100 – 249 | Pipeline Walker |
-| 250 – 499 | Tool Pusher |
-| 500 – 999 | Lease Operator |
-| 1,000 – 2,499 | District Foreman |
-| 2,500 – 4,999 | Production Superintendent |
-| 5,000 – 9,999 | Oil Magnate |
-| 10,000 – 24,999 | Petroleum Baron |
-| 25,000 – 49,999 | Industry Tycoon |
-| 50,000+ | Refinery Lord → Supreme PetroLord |
+| `/` | Marketing landing + featured refineries |
+| `/refineries` | Directory: filter by status / verification / reputation, sort, **export CSV** |
+| `/refinery/[id]` | Detail page: pool, snapshot history, top claimants, **claim panel**, operator actions |
+| `/refinery/launch` | Multi-step launch wizard |
+| `/launchpad` | Personal $CRUDE refining (legacy surface) |
+| `/leaderboard` | Operator board ↔ $CRUDE-earner board (tabbed) |
+| `/dashboard` | Connected-wallet snapshot — my refineries, activity, claims, reputation |
+| `/wallet/[address]` | Public profile — claim history, refineries operated, reputation breakdown |
+| `/reputation` | v1 reputation explainer (6 signals, capped at 100) |
+| `/trust` | On-chain program list + audit status |
+| `/admin` | Treasury authority rotation (gated to `treasury_config.admin`) |
+| `/developers` | Preview SDK / API portal (ships with v1.1) |
 
 ---
 
-## Features
+## Wallet & Auth Flow
 
-### Barrel Visualization
-- Up to **15 animated barrels** on desktop, **10 on mobile**
-- Each barrel shows a live **oil level gauge**
-- Barrel fills are **deterministic per wallet** using a seeded RNG — consistent on every reload
-- Barrels beyond the display cap show a **stacked overflow indicator**
-- The barrel section is **collapsible** with a smooth CSS grid-row animation
+1. **Connect** — wallet-standard discovery (Phantom / Solflare / Backpack auto-detect).
+2. **Sign-In With Solana (SIWS)** — free signature challenge proves wallet ownership. Payload + JWT-style claim live in localStorage for 7 days.
+3. **Sign transactions** — when a write is needed, the adapter routes the prompt to the exact wallet the user picked (matched by `connector.name`, not just pubkey, so multi-extension users don't get the wrong popup).
 
-### Production Stats
-- Production stats appear **first** — left on desktop, top on mobile — for each refinery
-- Per-refinery $CRUDE breakdown — see exactly how much each source contributes
-- Total $CRUDE highlighted with accent styling once revealed
-- Prestige Title badge displayed after claiming
+No funds move at connect. All transactions are explicitly approved per-action.
 
-### Leaderboard
-- Global top wallets ranked by $CRUDE
-- Shows rank, wallet, $CRUDE, oil units, barrels, and prestige title
-- Prestige badge stacks below address on mobile — no horizontal scroll
-- Wallet address tooltip links to Solscan
+---
 
-### Wallet Search & Public Profiles
-- Look up any Solana address without connecting a wallet
-- Full profile page at `/wallet/[address]` — production stats, rank, and share button
+## Reputation v1
 
-### UI & Theming
-- **Light and dark mode** with full CSS variable theming
-- **Responsive layout** — desktop, tablet, and mobile breakpoints throughout
-- **Mobile bottom navigation bar** for Refinery, Leaderboard, and Profile
-- **Desktop navbar** with profile link
+Six on-chain signals, each capped, summing to a 0–100 score:
+
+| Signal | What it measures |
+|---|---|
+| **C — claims** | Total successful claims |
+| **O — operator** | Refineries launched + fully distributed |
+| **P — participation** | Distinct refineries claimed from |
+| **R — recency** | Time-weighted claim activity |
+| **A — age** | Wallet tenure on Solana |
+| **D — diversity** | Distinct tokens across the claim history |
+
+Logic lives in `lib/indexer/reputation.ts`. Recomputed nightly by the indexer cron + on-demand via `/api/reputation`.
 
 ---
 
@@ -131,12 +142,14 @@ Bags claimable fee positions are converted at `1 SOL = 1,000 $CRUDE`. This outpu
 
 | Layer | Technology |
 |---|---|
-| Framework | Next.js 15 (App Router, TypeScript) |
-| Language | TypeScript 5.9 |
+| Framework | Next.js 15 App Router · React 19 · TypeScript 5.9 |
 | Styling | Tailwind CSS 4 + custom CSS variables |
-| Blockchain | Helius RPC API (`@solana/web3.js`) |
-| Wallet | `@solana/react-hooks` |
-| Database | Supabase (PostgreSQL) |
+| Solana RPC | Helius (proxied via `/api/rpc` to hide the key) |
+| Wallet | `@solana/web3.js` + `@solana/react-hooks` + `@wallet-standard/app` |
+| Anchor | `@coral-xyz/anchor` 0.32 |
+| Token metadata | Metaplex Token Metadata Program (logos auto-resolved) |
+| Database | Supabase (PostgreSQL) — leaderboard + Bags-stream balances |
+| Indexer | GitHub Actions cron → `lib/indexer/*.json` snapshots committed to repo |
 | External APIs | Helius (transactions), Bags API v2 (fee positions) |
 | Deployment | Vercel |
 
@@ -146,33 +159,64 @@ Bags claimable fee positions are converted at `1 SOL = 1,000 $CRUDE`. This outpu
 
 ```
 app/
-  api/
-    wallet/route.ts           GET  — fetch tx count + compute oil data
-    wallet/stored/route.ts    GET  — load cached data from Supabase
-    refine/route.ts           POST — create timed refine session
-    refine/claim/route.ts     POST — claim completed refine, update leaderboard
-    refine-status/route.ts    GET  — check active refine timer
-    leaderboard/route.ts      GET  — top wallets by $CRUDE
-    verify-speedup/route.ts   POST — verify 0.002 SOL speed-up payment
-    bags/feed/route.ts        GET  — recent Bags token launches
-  leaderboard/page.tsx        Server component (ISR, 60s revalidation)
-  profile/page.tsx            Redirects to connected wallet profile
-  refinery/page.tsx           Main refinery dashboard
+  page.tsx                    Home — hero, featured refineries, how it works
+  layout.tsx                  Root layout + sidebar + chrome
+  refineries/                 Token-refinery directory (filters, CSV export)
+  refinery/[id]/              Refinery detail (claim, operator actions, snapshots)
+  refinery/launch/            Multi-step launch wizard
+  launchpad/                  Legacy $CRUDE personal-refining surface
+  leaderboard/                Operators ⇄ $CRUDE earners tab switcher
+  dashboard/                  Connected-wallet live data
   wallet/[address]/           Public wallet profile (SSR)
-  page.tsx                    Home — hero, refineries grid, leaderboard preview
-  layout.tsx                  Root layout + nav + footer
+  reputation/                 Reputation v1 explainer
+  trust/                      On-chain program transparency + audit
+  admin/                      Authority rotation (gated to treasury_config.admin)
+  developers/                 Preview SDK portal (v1.1)
+  help/, legal/, profile/
+  api/
+    refineries/route.ts       GET — live program accounts
+    indexer/events/route.ts   GET — filtered indexer event feed
+    reputation/route.ts       GET — recompute / fetch per-wallet score
+    treasury/route.ts         GET — live treasury_config
+    rpc/route.ts              POST — Helius RPC proxy (origin-allowlisted)
+    refine/, bags-refine/     Launchpad $CRUDE flow endpoints
+    leaderboard/, wallet/     Supabase-backed reads
 
-components/
-  BarrelHeroSection.tsx       Collapsible barrel visualization section
-  BagsPanel.tsx               Bags refinery data panel
-  OilStats.tsx                Refine/claim/timer action panel
-  WalletSearch.tsx            Address search input
-  WalletConnectModal.tsx      Multi-wallet connect modal
+components/sof/
+  primitives/                 Buttons, badges, status pills, TokenMark (Metaplex logo)
+  refinery-detail/            ClaimAction, OperatorActions, RefineryHeaderActions
+  refinery-launch/            LaunchWizard
+  refineries/                 RefineryDirectory (filters, sort, CSV)
+  dashboard/                  DashboardClient (live SIWS-gated)
+  launchpad/                  RefineCard, CrudeLeaderboard, LaunchpadFeed, prestige
+  leaderboard/                LeaderboardSwitcher (tabs)
+  admin/                      AdminClient (authority rotation form)
+  wallet/                     WalletTabs, ClaimHeatmap, profile sections
+  modals/                     ConnectModal, CommandPalette, ChromeOverlay
+  Sidebar.tsx, Navbar.tsx     Chrome
 
 lib/
-  helius.ts                   Paginated tx counting with time budget + partial flag
-  oilCalculator.ts            Oil units, barrels, $CRUDE, prestige titles, seeded fills
-  bags.ts                     Bags API integration (fee positions → bonus $CRUDE)
+  program.ts                  Program ID, RPC URL, cluster inference, explorer helpers
+  onchain/
+    client.ts                 Read-only Anchor program (server)
+    writeClient.ts            Wallet-bound Anchor program + sendTx
+    refineries.ts             fetchAllRefineries / fetchRefinery
+    snapshots.ts              fetchSnapshots
+    metadata.ts               Metaplex JSON URI → logo image
+    metaplex.ts               Metaplex PDA decoder
+    treasury.ts               fetchTreasuryConfig
+    merkle.ts                 buildMerkleTree + proof helpers (SHA-256, domain-prefixed)
+    snapshotCache.ts          localStorage cache of snapshot entries for claim proofs
+  indexer/
+    store.ts, aggregations.ts Indexer JSON read-side helpers
+    reputation.ts             Reputation v1 (6 signals)
+    ui.ts                     buildActivityFeed
+  share.ts                    Web Share API → clipboard fallback
+  watchlist.ts                Namespaced (refinery / wallet) localStorage watchlist
+  siws.ts                     Sign-In-With-Solana payload + verification
+  helius.ts                   Paginated tx counting (legacy $CRUDE flow)
+  oilCalculator.ts            Oil units / barrels / prestige titles (legacy)
+  bags.ts                     Bags API integration
   supabase.ts                 Supabase client
 ```
 
@@ -180,59 +224,70 @@ lib/
 
 ## Local Development
 
-**Prerequisites:** Node.js 20+, [Helius API key](https://helius.dev), [Supabase project](https://supabase.com), [Bags API key](https://dev.bags.fm)
+**Prerequisites:** Node.js 20+, [Helius API key](https://helius.dev), [Supabase project](https://supabase.com), optional [Bags API key](https://dev.bags.fm) for the launchpad surface.
 
 ```bash
 git clone https://github.com/vip-ultr/solana-oil-factory.git
 cd solana-oil-factory
-npm install
+pnpm install     # or npm / yarn
 ```
 
 Create `.env.local`:
 
 ```env
+# === Solana ===
+# Defaults to the deployed devnet program. Override to point at a fresh deploy.
+NEXT_PUBLIC_REFINERY_PROGRAM_ID=2tPLLPQeLLNL4UDBbeagSUAABJcB3fHGTJaLGEzrx3rE
+
+# Browser RPC. Defaults to /api/rpc (server-proxied with HELIUS_API_KEY).
+# Override only when running against a custom cluster.
+# NEXT_PUBLIC_SOLANA_RPC_URL=/api/rpc
+
+# Server-only — required for the /api/rpc proxy and for indexer reads.
 HELIUS_API_KEY=your-helius-key
 
-# Optional. Override the WS endpoint (defaults to public mainnet-beta — rate-limited).
-# Do NOT embed a Helius key in NEXT_PUBLIC_SOLANA_RPC_URL/_WS_URL — it's exposed to every visitor.
-# The browser uses /api/rpc which proxies through the backend with HELIUS_API_KEY.
-# NEXT_PUBLIC_SOLANA_WS_URL=wss://your-ws-provider/...
-
-# Optional. Comma-separated list of additional origins allowed to hit /api/rpc in production.
-# Same-origin requests are always allowed. Useful for staging / preview deployments.
+# Optional. Comma-separated origins allowed to hit /api/rpc in production.
+# Same-origin is always allowed. Useful for staging / preview deployments.
 # RPC_ALLOWED_ORIGINS=https://staging.solanaoilfactory.xyz,https://preview-xyz.vercel.app
 
+# === Supabase (legacy launchpad + leaderboard) ===
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-# Server-only. Bypasses RLS — used by API routes and server components.
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-# Reserved for future client-side reads (RLS-protected). Not currently used.
-# NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 
+# === Bags (optional — launchpad surface) ===
 BAGS_API_KEY=your-bags-api-key
 ```
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000)
+Open [http://localhost:3000](http://localhost:3000).
+
+### Testing the on-chain flow on devnet
+
+1. Connect any wallet via `/` → sidebar Connect button.
+2. Sign the SIWS challenge.
+3. Visit `/refinery/launch` and walk through the wizard — pay 0.1 SOL launch fee + 1% deposit fee on devnet.
+4. As the operator, click `Submit snapshot #1` on the refinery detail page. If your wallet isn't the configured `snapshot_authority`, the program rejects with `Unauthorized (6000)` — rotate via `/admin` or `scripts/rotate-snapshot-authority.cts` in the program repo.
+5. Once the snapshot lands, the claim panel shows real eligibility for any wallet that held tokens at snapshot time.
 
 ---
 
 ## Deployment
 
-1. Push to GitHub
-2. Import into [Vercel](https://vercel.com)
-3. Add all env vars in the Vercel dashboard
-4. Deploy
+1. Push to GitHub.
+2. Import into [Vercel](https://vercel.com).
+3. Add all env vars in the Vercel dashboard.
+4. Deploy.
 
-> **Note:** The `/api/wallet` route requires a 60-second function timeout. This needs Vercel Pro or a custom runtime config.
+> **Note:** Some Helius reads in `/api/wallet` benefit from extended function timeouts. Configure via `vercel.json` or Vercel Pro.
 
 ---
 
 ## Powered By
 
-[Helius](https://helius.dev) &middot; [Supabase](https://supabase.com) &middot; [Bags](https://bags.fm) &middot; [Vercel](https://vercel.com)
+[Helius](https://helius.dev) · [Supabase](https://supabase.com) · [Bags](https://bags.fm) · [Anchor](https://anchor-lang.com) · [Metaplex](https://www.metaplex.com) · [Vercel](https://vercel.com)
 
 ---
 
