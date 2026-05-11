@@ -6683,6 +6683,241 @@ table.sof-refineries tbody td.num {
   }
 }
 
+/* ---------- REFINERIES MOBILE CARDS ---------- */
+/* Default: card list hidden on desktop (table wins). */
+.sof-refineries-mobile {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  /* Swap the table for the card list. */
+  .sof-table-wrap {
+    overflow: visible;
+  }
+  table.sof-refineries {
+    display: none;
+  }
+  .sof-refineries-mobile {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 0 12px 24px;
+  }
+
+  /* Compact header — stack title + actions, drop the inline
+   * "indexed 2 sec ago" status into a wrap. */
+  .sof-dir-head {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+    padding: 16px 12px 12px;
+  }
+  .sof-dir-head h1 {
+    font-size: 22px;
+    line-height: 1.15;
+  }
+  .sof-dir-head .sub {
+    flex-wrap: wrap;
+    row-gap: 6px;
+    font-size: 12.5px;
+  }
+  .sof-dir-head .sub .sep {
+    margin: 0 2px;
+  }
+  .sof-dir-head .actions {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .sof-dir-head .actions .sof-btn {
+    flex: 1 1 auto;
+    justify-content: center;
+    min-height: 40px;
+  }
+
+  /* Filter bar — stack the slider on its own row, let segmented
+   * tabs scroll horizontally instead of wrapping unevenly. */
+  .sof-filter-bar {
+    padding: 12px;
+    gap: 10px;
+    align-items: stretch;
+  }
+  .sof-filter-bar .sof-search {
+    width: 100%;
+    min-width: 0;
+  }
+  .sof-filter-bar .sof-search .kbd {
+    display: none;
+  }
+  .sof-filter-bar .sof-seg {
+    width: 100%;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    scrollbar-width: none;
+  }
+  .sof-filter-bar .sof-seg::-webkit-scrollbar {
+    display: none;
+  }
+  .sof-filter-bar .sof-seg button {
+    flex: none;
+    white-space: nowrap;
+  }
+  .sof-filter-bar .sof-toggle,
+  .sof-filter-bar .sof-slider-wrap {
+    width: 100%;
+  }
+  .sof-filter-bar .sof-slider-wrap {
+    justify-content: space-between;
+  }
+  .sof-filter-bar .sof-slider-wrap input[type="range"] {
+    flex: 1;
+  }
+  .sof-sort-btn {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .sof-sort-btn + ul {
+    width: 100%;
+  }
+
+  /* Meta row above the cards. */
+  .sof-meta-row {
+    padding: 14px 12px 8px;
+    font-size: 12px;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  /* The lower "Showing N of M" pagination duplicates the meta row
+   * above the cards; hide it on mobile to avoid redundancy. */
+  .sof-pagination {
+    display: none;
+  }
+}
+
+/* Card visuals. Sized for 375px but scale up cleanly. */
+.sof-rm-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sof-rm-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.sof-rm-tk {
+  display: flex;
+  gap: 10px;
+  min-width: 0;
+}
+
+.sof-rm-tk .meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.sof-rm-tk .sym {
+  font-family: var(--font-display, sans-serif);
+  font-weight: 600;
+  font-size: 14.5px;
+  color: var(--text-primary);
+  line-height: 1.1;
+}
+
+.sof-rm-tk .nm {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sof-rm-tk .mint {
+  font-family: var(--font-mono, monospace);
+  font-size: 10.5px;
+  color: var(--text-tertiary);
+  letter-spacing: 0.02em;
+}
+
+.sof-rm-op {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.sof-rm-kv {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 16px;
+  margin: 0;
+}
+
+.sof-rm-kv > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sof-rm-kv dt {
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.sof-rm-kv dd {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.sof-rm-kv dd .a {
+  font-family: var(--font-mono, monospace);
+  font-size: 13.5px;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.sof-rm-kv dd .b {
+  font-size: 11.5px;
+  color: var(--text-tertiary);
+}
+
+.sof-rm-kv dd .muted {
+  color: var(--text-tertiary);
+  font-size: 13.5px;
+}
+
+.sof-rm-kv dd.urgent .a {
+  color: var(--warning);
+}
+
+.sof-rm-foot {
+  display: flex;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.sof-rm-foot a {
+  flex: 1;
+  justify-content: center;
+  min-height: 38px;
+}
+
 /* ---------- 480PX DEEP MOBILE ---------- */
 /* Tightens spacing + collapses grids on small phones. Layered
  * on top of existing 768/900/1100 breakpoints in this file. */

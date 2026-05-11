@@ -314,39 +314,37 @@ export function RefineryDirectory({ refineries }: RefineryDirectoryProps) {
             {filtered.length === 0 && (
               <tr>
                 <td colSpan={9} style={{ padding: 32, textAlign: "center" }}>
-                  <div>
-                    <div
-                      className="font-display"
-                      style={{
-                        fontSize: 16,
-                        fontWeight: 600,
-                        marginBottom: 6,
-                      }}
-                    >
-                      No refineries match these filters.
-                    </div>
-                    <div className="muted" style={{ fontSize: 13, marginBottom: 12 }}>
-                      {refineries.length} refineries are indexed. Try
-                      clearing some filters.
-                    </div>
-                    <button
-                      type="button"
-                      className="sof-btn-mini ghost"
-                      onClick={() => {
-                        setSearch("");
-                        setStatusFilter("all");
-                        setVerifiedOnly(false);
-                        setMinRep(0);
-                      }}
-                    >
-                      Clear filters →
-                    </button>
-                  </div>
+                  <EmptyState
+                    refineries={refineries}
+                    onClear={() => {
+                      setSearch("");
+                      setStatusFilter("all");
+                      setVerifiedOnly(false);
+                      setMinRep(0);
+                    }}
+                  />
                 </td>
               </tr>
             )}
           </tbody>
         </table>
+
+        {/* Mobile card list — desktop table is hidden at <768px. */}
+        <div className="sof-refineries-mobile" aria-hidden="false">
+          {filtered.length === 0 ? (
+            <EmptyState
+              refineries={refineries}
+              onClear={() => {
+                setSearch("");
+                setStatusFilter("all");
+                setVerifiedOnly(false);
+                setMinRep(0);
+              }}
+            />
+          ) : (
+            filtered.map((r) => <MobileCard key={r.id} r={r} />)
+          )}
+        </div>
 
         <div
           className="sof-pagination"
@@ -572,5 +570,148 @@ function Row({ r }: { r: Refinery }) {
         </div>
       </td>
     </tr>
+  );
+}
+
+/**
+ * Mobile-friendly card representation of one Refinery row. The
+ * desktop table is hidden under 768px and this stacked card layout
+ * takes its place — same data, but each metric gets its own line so
+ * nothing has to fight for horizontal space at 375px.
+ */
+function MobileCard({ r }: { r: Refinery }) {
+  const poolPct =
+    r.poolInitial > 0
+      ? Math.round((r.poolRemaining / r.poolInitial) * 100)
+      : 0;
+  const isClosed = r.status === "closed";
+  const windowText =
+    r.claimWindowDaysLeft === null
+      ? "Open-ended"
+      : r.claimWindowDaysLeft === 0
+        ? "Closed"
+        : `${r.claimWindowDaysLeft}d left`;
+  const isUrgent =
+    r.claimWindowDaysLeft !== null && r.claimWindowDaysLeft <= 1;
+
+  return (
+    <article className="sof-rm-card">
+      <header className="sof-rm-head">
+        <div className="sof-rm-tk">
+          <TokenMark
+            variant={r.tokenMarkVariant}
+            symbol={r.tokenSymbol}
+            logoUrl={r.logoUrl}
+            size={40}
+          />
+          <div className="meta">
+            <span className="sym">{r.tokenSymbol}</span>
+            <span className="nm">{r.tokenName}</span>
+            <span className="mint">{r.tokenMint}</span>
+          </div>
+        </div>
+        <StatusPill status={r.status} />
+      </header>
+
+      <div className="sof-rm-op">
+        <WalletPill address={r.operator} />
+        <ReputationChip score={r.operatorReputation} />
+        <VerifiedBadge tier={r.verification} />
+      </div>
+
+      <dl className="sof-rm-kv">
+        <div>
+          <dt>Pool</dt>
+          <dd>
+            {r.poolInitial > 0 ? (
+              <>
+                <span className="a">{formatTokens(r.poolRemaining)}</span>
+                {r.poolRemainingUsd > 0 && (
+                  <span className="b">{formatUsd(r.poolRemainingUsd)}</span>
+                )}
+                <span className="b">{poolPct}% of initial</span>
+              </>
+            ) : (
+              <span className="muted">—</span>
+            )}
+          </dd>
+        </div>
+        <div>
+          <dt>Rate / 1%</dt>
+          <dd>
+            {r.claimRatePer1Pct > 0 ? (
+              <span className="a">{formatTokens(r.claimRatePer1Pct)}</span>
+            ) : (
+              <span className="muted">—</span>
+            )}
+          </dd>
+        </div>
+        <div>
+          <dt>Snapshot</dt>
+          <dd>
+            <span className="a">
+              {r.snapshotAgeSeconds > 0
+                ? formatRelativeTime(r.snapshotAgeSeconds)
+                : "No snapshot yet"}
+            </span>
+            <span className="b">
+              {r.holdersEligible > 0
+                ? `${r.holdersEligible.toLocaleString()} holders`
+                : "—"}
+            </span>
+          </dd>
+        </div>
+        <div>
+          <dt>Window</dt>
+          <dd className={isUrgent ? "urgent" : undefined}>
+            <span className="a">{windowText}</span>
+          </dd>
+        </div>
+      </dl>
+
+      <footer className="sof-rm-foot">
+        <Link href={`/refinery/${r.id}`} className="sof-btn-mini ghost">
+          View
+        </Link>
+        {!isClosed && (
+          <Link
+            href={`/refinery/${r.id}?action=claim`}
+            className="sof-btn-mini primary"
+          >
+            Claim
+          </Link>
+        )}
+      </footer>
+    </article>
+  );
+}
+
+function EmptyState({
+  refineries,
+  onClear,
+}: {
+  refineries: Refinery[];
+  onClear: () => void;
+}) {
+  return (
+    <div>
+      <div
+        className="font-display"
+        style={{ fontSize: 16, fontWeight: 600, marginBottom: 6 }}
+      >
+        No refineries match these filters.
+      </div>
+      <div className="muted" style={{ fontSize: 13, marginBottom: 12 }}>
+        {refineries.length} refineries are indexed. Try clearing some
+        filters.
+      </div>
+      <button
+        type="button"
+        className="sof-btn-mini ghost"
+        onClick={onClear}
+      >
+        Clear filters →
+      </button>
+    </div>
   );
 }
