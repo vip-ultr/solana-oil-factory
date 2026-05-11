@@ -9,6 +9,10 @@ import {
 } from "@/components/sof/primitives";
 import { WalletTabs } from "@/components/sof/wallet/WalletTabs";
 import { ClaimHeatmap } from "@/components/sof/wallet/ClaimHeatmap";
+import {
+  ShareButton,
+  WatchButton,
+} from "@/components/sof/refinery-detail/RefineryHeaderActions";
 import { fetchAllRefineries } from "@/lib/onchain/refineries";
 import { tokenMetaFor } from "@/lib/onchain/token-registry";
 import { loadEvents } from "@/lib/indexer/store";
@@ -18,6 +22,7 @@ import {
   buildClaimHeatmap,
 } from "@/lib/indexer/reputation";
 import { formatTokens } from "@/lib/mock-data";
+import { solscanUrl } from "@/lib/program";
 
 interface PageProps {
   params: Promise<{ address: string }>;
@@ -124,38 +129,22 @@ export default async function WalletPage({ params }: PageProps) {
               <strong style={{ color: "var(--text-primary)" }}>Apr 25 2025</strong>
             </span>
             <span className="sep">·</span>
-            <a className="sof-rd-ext" style={{ cursor: "pointer" }}>
+            <a
+              className="sof-rd-ext"
+              href={solscanUrl(address, "address")}
+              target="_blank"
+              rel="noreferrer"
+            >
               Solscan ↗
             </a>
           </div>
         </div>
         <div className="actions">
-          <button
-            type="button"
-            style={{
-              border: "1px solid var(--border-subtle)",
-              color: "var(--text-secondary)",
-              padding: "9px 14px",
-              borderRadius: 6,
-              fontSize: 13,
-              background: "transparent",
-            }}
-          >
-            Watch
-          </button>
-          <button
-            type="button"
-            style={{
-              border: "1px solid var(--border-subtle)",
-              color: "var(--text-secondary)",
-              padding: "9px 14px",
-              borderRadius: 6,
-              fontSize: 13,
-              background: "transparent",
-            }}
-          >
-            Share
-          </button>
+          <WatchButton kind="wallet" id={address} label="Watch wallet" />
+          <ShareButton
+            title={`Wallet ${truncated}`}
+            text="View this operator on Sol Oil Factory"
+          />
           <ButtonLink href="/dashboard" variant="primary">
             Connect as this wallet
           </ButtonLink>
@@ -382,6 +371,7 @@ export default async function WalletPage({ params }: PageProps) {
                           <TokenMark
                             variant={rf.tokenMarkVariant}
                             symbol={rf.tokenSymbol}
+                            logoUrl={rf.logoUrl}
                           />
                           <div>
                             <div

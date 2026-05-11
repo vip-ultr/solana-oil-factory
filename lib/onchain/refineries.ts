@@ -18,6 +18,27 @@ import {
 import { fetchMetadataFor, tokenMetaWithOverride } from "./metadata";
 
 /**
+ * BN → number that survives values past Number.MAX_SAFE_INTEGER.
+ * `BN.toNumber()` throws above 2^53 — common for u64 pools on
+ * high-decimal tokens (10M @ 9 decimals = 1e16). We fall back to
+ * parseFloat(bn.toString()), which keeps display-grade precision
+ * even past the safe-integer ceiling.
+ */
+function bnToNumberSafe(bn: any): number {
+  if (bn === null || bn === undefined) return 0;
+  if (typeof bn === "number") return bn;
+  try {
+    return bn.toNumber();
+  } catch {
+    try {
+      return parseFloat(bn.toString());
+    } catch {
+      return 0;
+    }
+  }
+}
+
+/**
  * Convert a base-unit u64 amount into a "whole tokens" number,
  * where the unit ratio is 10^decimals. Returns 0 if decimals is
  * unknown (registry miss) — the UI can choose to render base
@@ -157,7 +178,7 @@ function mapRefinery(
   const mintStr = a.tokenMint.toBase58();
   const meta = tokenMetaWithOverride(mintStr, metaOverride);
 
-  const claimWindowEnd = a.claimWindowEnd?.toNumber?.() ?? 0;
+  const claimWindowEnd = bnToNumberSafe(a.claimWindowEnd);
   const claimWindowDaysLeft =
     claimWindowEnd === 0
       ? null
@@ -169,9 +190,8 @@ function mapRefinery(
       ? "verifiedCto"
       : "unverified";
 
-  const poolInitialBase = a.poolInitial?.toNumber?.() ?? 0;
-  const poolRemainingBase = a.poolRemaining?.toNumber?.() ?? 0;
-  const totalEligibleBase = snap?.totalEligibleBalance?.toNumber?.() ?? 0;
+  const poolInitialBase = bnToNumberSafe(a.poolInitial);
+  const poolRemainingBase = bnToNumberSafe(a.poolRemaining);
 
   // claimRatePer1Pct = pool_initial / 100 (tokens distributed per
   // 1% of total eligible supply held), in whole-token units.
@@ -185,8 +205,10 @@ function mapRefinery(
     tokenMint: shortMint(mintStr),
     tokenMintFull: mintStr,
     tokenMarkVariant: meta.variant,
+    logoUrl: meta.logoUrl ?? null,
     operator: shortPubkey(a.operator.toBase58()),
     operatorFull: a.operator.toBase58(),
+    currentSnapshotIndex: a.currentSnapshotIndex ?? 0,
     operatorReputation: 0, // pending indexer
     verification,
     poolInitial: toWhole(poolInitialBase, meta.decimals),
@@ -201,12 +223,12 @@ function mapRefinery(
     holdersClaimed: a.holdersClaimed ?? 0,
     claimRatePer1Pct: claimRatePer1PctWhole,
     snapshotStrategy: snapshotStrategyEnumToUi(a.snapshotStrategy),
-    snapshotAgeSeconds: snap ? now - snap.takenAt.toNumber() : 0,
+    snapshotAgeSeconds: snap ? now - bnToNumberSafe(snap.takenAt) : 0,
     poolEmptyStrategy: poolEmptyStrategyEnumToUi(a.poolEmptyStrategy),
     perClaimCapBps: a.perClaimCapBps,
     claimWindowDaysLeft,
     status: statusEnumToUi(a.status, claimWindowDaysLeft),
     riskFlags: a.freezeAcknowledged ? ["freezeAuthority"] : [],
-    launchedAtIso: new Date((a.createdAt?.toNumber?.() ?? 0) * 1000).toISOString(),
+    launchedAtIso: new Date(bnToNumberSafe(a.createdAt) * 1000).toISOString(),
   };
 }

@@ -6,17 +6,19 @@ Correctness + security review of the Solana-specific code in sol-oilfactory. Rev
 
 | ID | Severity | Status | Notes |
 |---|---|---|---|
-| C1 | 🔴 | ✅ Code shipped | Backend RPC proxy at `app/api/rpc/route.ts`. **Action required**: set `HELIUS_API_KEY` in Vercel env, remove `NEXT_PUBLIC_SOLANA_RPC_URL`/`NEXT_PUBLIC_HELIUS_API_KEY`. |
+| C1 | 🔴 | ✅ Code shipped | Backend RPC proxy at `app/api/rpc/route.ts`. **Production action**: set `HELIUS_API_KEY` in Vercel env, remove `NEXT_PUBLIC_SOLANA_RPC_URL`/`NEXT_PUBLIC_HELIUS_API_KEY`. |
 | C2 | 🔴 | ✅ Fixed | `/api/refine` and `/api/bags-refine` now server-compute oilUnits / swapCount / fees. Client body is just `{ address }`. |
 | C3 | 🔴 | ✅ Fixed | `verify-speedup` switched to `encoding: "jsonParsed"`. Handles ALT-loaded keys natively. |
-| H1 | 🟠 | ⚠️ Code shipped, DB pending | Code catches 23505. **Action required**: apply `supabase/migrations/20260508120000_audit_fixes.sql` for the unique indexes. |
-| H2 | 🟠 | ⚠️ Code shipped, DB pending | `lib/supabase.ts` now uses service role + server-only guard. **Action required**: set `SUPABASE_SERVICE_ROLE_KEY`, apply the same migration to enable RLS. |
+| H1 | 🟠 | ✅ Fixed | Code catches 23505. Unique partial indexes on `tx_signature` applied via migration `audit_fixes_rls_and_tx_signature_unique` (2026-05-08). |
+| H2 | 🟠 | ✅ Fixed | `lib/supabase.ts` uses service role + server-only guard. RLS enabled on all 4 public tables (`wallets`, `refines`, `bags_refines`, `wallet_bags_analytics`) via the same migration. Service role bypasses RLS so app keeps working; anon role gets nothing. **Production action**: set `SUPABASE_SERVICE_ROLE_KEY` in Vercel env. |
 | H3, M1–M6, L1–L4 | various | ⏳ Not yet | Follow-up batch. |
 
-**To finish the gating fixes**, the user must:
-1. Add `HELIUS_API_KEY` and `SUPABASE_SERVICE_ROLE_KEY` to Vercel env (and `.env.local`).
-2. Remove the old `NEXT_PUBLIC_SOLANA_RPC_URL` / `NEXT_PUBLIC_HELIUS_API_KEY` env vars (they're now harmless if set, but redundant).
-3. Apply `supabase/migrations/20260508120000_audit_fixes.sql` via the Supabase dashboard SQL editor.
+**Local dev**: ready. `.env.local` has both keys; migration applied. `npm run dev` should work end-to-end.
+
+**Production deploy actions** (before pushing or after):
+1. Vercel env: add `HELIUS_API_KEY` and `SUPABASE_SERVICE_ROLE_KEY`.
+2. Vercel env: remove `NEXT_PUBLIC_SOLANA_RPC_URL` and `NEXT_PUBLIC_HELIUS_API_KEY` (redundant).
+3. Done — the migration is already applied to the live Supabase project.
 
 Audited files:
 - `app/providers.tsx` — Solana client configuration

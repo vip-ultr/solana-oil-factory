@@ -1,13 +1,22 @@
-import { ButtonLink, WalletPill } from "@/components/sof/primitives";
-import { MOCK_WALLETS, REPUTATION_SIGNALS } from "@/lib/mock-data";
+import { ButtonLink } from "@/components/sof/primitives";
 
-const SIGNAL_VALUES: { name: string; value: string; bar: number; tone?: "success" }[] = [
-  { name: "Refineries claimed successfully", value: "14", bar: 90 },
-  { name: "Average holding duration", value: "47d", bar: 78 },
-  { name: "Tokens held > 7d post-claim", value: "11 / 14", bar: 79 },
-  { name: "Cluster status", value: "Clean", bar: 100, tone: "success" },
-  { name: "Wallet age", value: "380d", bar: 84 },
-  { name: "Refineries launched (verified deployer)", value: "2", bar: 64 },
+// Illustrative example used to explain how reputation breaks
+// down. Not data about any real wallet — the home page can't
+// know who is browsing, and the methodology section is meant
+// to be readable without a wallet connection. Real scores
+// land in /wallet/[address] for the connected user.
+const EXAMPLE_SIGNALS: {
+  name: string;
+  value: string;
+  bar: number;
+  tone?: "success";
+}[] = [
+  { name: "Claim consistency (C)", value: "44 / 50", bar: 88 },
+  { name: "Operator behavior (O)", value: "40 / 50", bar: 80 },
+  { name: "Token deployment trust (P)", value: "20 / 30", bar: 67 },
+  { name: "Wallet tenure (R)", value: "15 / 20", bar: 75 },
+  { name: "Activity diversity (A)", value: "15 / 20", bar: 75 },
+  { name: "Snapshot consistency (D)", value: "10 / 20", bar: 50 },
 ];
 
 const TIERS: { name: string; range: string; color: string }[] = [
@@ -19,19 +28,23 @@ const TIERS: { name: string; range: string; color: string }[] = [
 ];
 
 export function ReputationExplainer() {
-  const w = MOCK_WALLETS[0]; // Hxk2…7gPZ — score 84
-
-  // void the unused signal weights for now (we display the human values
-  // above; the weights table is on /reputation methodology page).
-  void REPUTATION_SIGNALS;
-
   return (
     <section className="sof-home-s elevated">
       <div className="inner">
         <div className="sof-rep-grid">
           <div className="sof-rep-card">
             <div className="top">
-              <WalletPill address={w.address} />
+              <span
+                className="font-mono"
+                style={{
+                  fontSize: 10.5,
+                  color: "var(--text-tertiary)",
+                  letterSpacing: "0.12em",
+                  textTransform: "uppercase",
+                }}
+              >
+                Example wallet · methodology
+              </span>
               <ReputationSparkline />
             </div>
 
@@ -45,20 +58,20 @@ export function ReputationExplainer() {
               }}
             >
               <div className="sof-rep-score">
-                <span className="num">{w.reputation}</span>
+                <span className="num">144</span>
                 <div>
-                  <div className="out">/ 100</div>
+                  <div className="out">capped at 100</div>
                   <div className="tier">EXCELLENT</div>
                 </div>
               </div>
               <div className="tiny" style={{ textAlign: "right", lineHeight: 1.5 }}>
-                <div>Recomputed 4h ago</div>
-                <div>+3 vs 30d ago</div>
+                <div>v1 · 6 signals</div>
+                <div>see /reputation</div>
               </div>
             </div>
 
             <div className="sof-signals">
-              {SIGNAL_VALUES.map((s) => (
+              {EXAMPLE_SIGNALS.map((s) => (
                 <div key={s.name} className="sof-signal">
                   <span className="nm">{s.name}</span>
                   <span

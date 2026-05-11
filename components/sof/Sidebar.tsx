@@ -19,6 +19,7 @@ import {
   LogOut,
 } from "lucide-react";
 import { useWalletConnection } from "@solana/react-hooks";
+import { useSiws } from "@/components/sof/SiwsProvider";
 import { cn } from "@/lib/cn";
 import type { ComponentType, SVGProps } from "react";
 
@@ -110,9 +111,10 @@ export function Sidebar() {
 }
 
 function ConnectControl() {
-  const { connected, wallet, disconnect, isReady } = useWalletConnection();
-  const address = wallet?.account?.address?.toString();
+  const { connected, isReady } = useWalletConnection();
+  const { authed, address, signOut, signing, signIn } = useSiws();
 
+  // Disconnected → click opens the connect modal.
   if (!connected || !address) {
     return (
       <button
@@ -125,6 +127,24 @@ function ConnectControl() {
           <Wallet strokeWidth={1.8} aria-hidden="true" />
         </span>
         <span className="label">Connect wallet</span>
+      </button>
+    );
+  }
+
+  // Connected but not yet signed in — block actions until they sign.
+  if (!authed) {
+    return (
+      <button
+        type="button"
+        className="sof-connect-btn"
+        onClick={() => void signIn()}
+        disabled={signing}
+        style={{ color: "var(--warning)" }}
+      >
+        <span className="ic">
+          <Wallet strokeWidth={1.8} aria-hidden="true" />
+        </span>
+        <span className="label">{signing ? "Signing…" : "Sign to verify"}</span>
       </button>
     );
   }
@@ -144,10 +164,9 @@ function ConnectControl() {
         type="button"
         className="sof-disconnect"
         onClick={(e) => {
-          // Stop the click from navigating to the wallet page.
           e.preventDefault();
           e.stopPropagation();
-          void disconnect();
+          signOut();
         }}
         title="Disconnect"
         aria-label="Disconnect wallet"

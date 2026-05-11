@@ -144,7 +144,7 @@ export function RefineCard() {
 
   if (!connected || !address) {
     return (
-      <section className="sof-lp-refine sof-lp-refine-cta">
+      <section id="refine" className="sof-lp-refine sof-lp-refine-cta">
         <div className="card">
           <Wallet aria-hidden="true" />
           <h2>Connect a wallet to start refining</h2>
@@ -167,7 +167,7 @@ export function RefineCard() {
   }
 
   return (
-    <section className="sof-lp-refine">
+    <section id="refine" className="sof-lp-refine">
       <div className="sof-lp-refine-head">
         <div>
           <WalletPill address={address} />

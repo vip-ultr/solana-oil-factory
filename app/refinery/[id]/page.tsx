@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Copy, ExternalLink, Share2, Star } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import {
   ButtonLink,
   PendingIndexerBanner,
@@ -11,8 +11,13 @@ import {
   VerifiedBadge,
   WalletPill,
 } from "@/components/sof/primitives";
-import { EligibilityPanel } from "@/components/sof/refinery-detail/EligibilityPanel";
 import { PoolDrainChart } from "@/components/sof/refinery-detail/PoolDrainChart";
+import {
+  CopyMintButton,
+  ScrollToButton,
+  ShareButton,
+  WatchButton,
+} from "@/components/sof/refinery-detail/RefineryHeaderActions";
 import {
   formatTokens,
   formatUsd,
@@ -21,13 +26,22 @@ import {
 import { fetchRefinery } from "@/lib/onchain/refineries";
 import { fetchSnapshots } from "@/lib/onchain/snapshots";
 import { fetchMint, formatSupply } from "@/lib/onchain/mint";
-import { explorerUrl } from "@/lib/program";
+import { fetchTreasuryConfig } from "@/lib/onchain/treasury";
+import {
+  birdeyeUrl,
+  explorerUrl,
+  jupiterUrl,
+  solscanUrl,
+  SOLANA_CLUSTER,
+} from "@/lib/program";
 import { buildActivityFeed } from "@/lib/indexer/ui";
 import {
   topClaimantsForRefinery,
   operatorStatsFor,
 } from "@/lib/indexer/aggregations";
 import { computeReputation } from "@/lib/indexer/reputation";
+import { OperatorActions } from "@/components/sof/refinery-detail/OperatorActions";
+import { ClaimAction } from "@/components/sof/refinery-detail/ClaimAction";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -70,11 +84,13 @@ export default async function RefineryPage({ params }: PageProps) {
   });
 
   // Snapshot history (on-chain) + top claimants (indexer
-  // aggregation) + token-mint metadata — fetched in parallel.
-  const [snapshots, topClaimants, mintInfo] = await Promise.all([
+  // aggregation) + token-mint metadata + treasury config —
+  // fetched in parallel.
+  const [snapshots, topClaimants, mintInfo, treasury] = await Promise.all([
     fetchSnapshots(id),
     Promise.resolve(topClaimantsForRefinery(id, 7)),
     r.tokenMintFull ? fetchMint(r.tokenMintFull) : Promise.resolve(null),
+    fetchTreasuryConfig(),
   ]);
 
   // Operator stats from indexer + reputation v0 score.
@@ -99,6 +115,7 @@ export default async function RefineryPage({ params }: PageProps) {
             symbol={r.tokenSymbol}
             size={64}
             className="lg"
+            logoUrl={r.logoUrl}
           />
           <div className="sof-rd-hdr-meta">
             <h1>
@@ -107,32 +124,57 @@ export default async function RefineryPage({ params }: PageProps) {
             </h1>
             <div className="row">
               <VerifiedBadge tier={r.verification} />
-              <button type="button" className="sof-rd-copy-mint">
-                {r.tokenMint}
-                <Copy aria-hidden="true" strokeWidth={2} />
-              </button>
-              <a className="sof-rd-ext">
-                Solscan <ExternalLink size={11} />
-              </a>
-              <a className="sof-rd-ext">
-                Birdeye <ExternalLink size={11} />
-              </a>
-              <a className="sof-rd-ext">
-                Jupiter <ExternalLink size={11} />
-              </a>
+              <CopyMintButton
+                label={r.tokenMint}
+                fullMint={r.tokenMintFull ?? r.tokenMint}
+              />
+              {r.tokenMintFull && (
+                <>
+                  <a
+                    className="sof-rd-ext"
+                    href={solscanUrl(r.tokenMintFull, "token")}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Solscan <ExternalLink size={11} />
+                  </a>
+                  {SOLANA_CLUSTER === "mainnet" && (
+                    <>
+                      <a
+                        className="sof-rd-ext"
+                        href={birdeyeUrl(r.tokenMintFull)}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Birdeye <ExternalLink size={11} />
+                      </a>
+                      <a
+                        className="sof-rd-ext"
+                        href={jupiterUrl(r.tokenMintFull)}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Jupiter <ExternalLink size={11} />
+                      </a>
+                    </>
+                  )}
+                </>
+              )}
             </div>
           </div>
         </div>
         <div className="sof-rd-hdr-r">
-          <button type="button" className="sof-rd-share" title="Share" aria-label="Share refinery">
-            <Share2 size={14} strokeWidth={1.6} />
-          </button>
-          <button type="button" className="sof-rd-share" title="Watch" aria-label="Watch refinery">
-            <Star size={14} strokeWidth={1.6} />
-          </button>
-          <button type="button" className="sof-btn sof-btn-primary">
+          <ShareButton
+            title={`${r.tokenName} (${r.tokenSymbol}) Refinery`}
+            text={`Claim ${r.tokenSymbol} on Sol Oil Factory`}
+          />
+          <WatchButton kind="refinery" id={r.id} label="Watch refinery" />
+          <ScrollToButton
+            targetId="sof-claim-panel"
+            className="sof-btn sof-btn-primary"
+          >
             Check eligibility →
-          </button>
+          </ScrollToButton>
         </div>
       </header>
 
@@ -380,7 +422,36 @@ export default async function RefineryPage({ params }: PageProps) {
 
         {/* Right column */}
         <aside className="sof-rd-col-r">
-          <EligibilityPanel refinery={r} initialState="b" />
+          {r.tokenMintFull && (
+            <div
+              id="sof-claim-panel"
+              className="sof-rd-panel"
+              style={{ padding: 18, scrollMarginTop: 24 }}
+            >
+              <div className="sof-rd-panel-head" style={{ marginBottom: 12 }}>
+                <h3>Claim {r.tokenSymbol}</h3>
+                <span className="meta">
+                  snapshot #{r.currentSnapshotIndex ?? 0}
+                </span>
+              </div>
+              <ClaimAction
+                refineryId={r.id}
+                tokenMint={r.tokenMintFull}
+                currentSnapshotIndex={r.currentSnapshotIndex ?? 0}
+              />
+            </div>
+          )}
+          {r.operatorFull && r.tokenMintFull && (
+            <OperatorActions
+              refineryId={r.id}
+              operator={r.operatorFull}
+              tokenMint={r.tokenMintFull}
+              snapshotAuthority={treasury?.snapshotAuthority ?? null}
+              currentSnapshotIndex={r.currentSnapshotIndex ?? 0}
+              status={r.status}
+              decimals={mintInfo?.decimals ?? null}
+            />
+          )}
 
           <div className="sof-rd-panel">
             <div className="sof-rd-panel-head">

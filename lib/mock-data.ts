@@ -35,8 +35,10 @@ export interface Refinery {
   tokenMint: string;                // truncated for display: "DezX5p…AKKM"
   tokenMintFull?: string;           // full base58 mint (live data only)
   tokenMarkVariant: TokenMarkVariant;
+  logoUrl?: string | null;          // resolved Metaplex JSON image URL (live)
   operator: string;                 // truncated wallet: "Hxk2…7gPZ"
   operatorFull?: string;            // full base58 (live data only)
+  currentSnapshotIndex?: number;    // 0 when no snapshot yet (live data only)
   operatorReputation: number;       // 0-100
   verification: VerificationTier;
   poolInitial: number;              // base units (display via formatTokens)

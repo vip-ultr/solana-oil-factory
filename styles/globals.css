@@ -2016,10 +2016,7 @@ table.sof-refineries {
   overflow: hidden;
 }
 table.sof-refineries thead th {
-  position: sticky;
-  top: 73px;
   background: var(--bg-elevated);
-  z-index: 10;
   text-align: left;
   padding: 12px 16px;
   font-family: var(--font-mono, "JetBrains Mono"), monospace;
@@ -4293,7 +4290,21 @@ table.sof-refineries tbody td.num {
   color: var(--text-tertiary);
 }
 
-.sof-lb-body { padding: 32px 48px; }
+.sof-lb-body { padding: 32px 48px; display: flex; flex-direction: column; gap: 32px; }
+.sof-lb-section { display: flex; flex-direction: column; }
+.sof-lb-section-h {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 14px;
+}
+.sof-lb-section-h h2 {
+  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+}
+.sof-lb-section-h .meta { color: var(--text-tertiary); font-size: 12.5px; }
 
 .sof-lb-podium {
   display: grid;
@@ -6027,4 +6038,386 @@ table.sof-refineries tbody td.num {
   font-size: 10.5px;
   color: var(--text-tertiary);
   margin-top: 2px;
+}
+
+/* ============================================================
+ * LAUNCHPAD v2 — centred, professional layout. Overrides
+ * select pieces of the v1 sof-lp- styles below.
+ * ============================================================ */
+
+.sof-lp-page {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 56px;
+  padding: 56px 24px 88px;
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+.sof-lp-page .sof-lp-hero {
+  padding: 0;
+  border-bottom: 0;
+  max-width: none;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.sof-lp-page .sof-lp-hero h1 {
+  font-size: 44px;
+  margin: 16px 0 14px;
+  max-width: 18ch;
+}
+.sof-lp-page .sof-lp-hero p {
+  max-width: 56ch;
+  margin: 0 auto;
+  text-align: center;
+}
+.sof-lp-page .sof-lp-hero .ctas {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* How-it-works section */
+.sof-lp-howitworks {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.sof-lp-howitworks h2 {
+  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0;
+  text-align: center;
+}
+.sof-lp-howitworks ol {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.sof-lp-howitworks ol li {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.sof-lp-howitworks .num {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  color: var(--accent);
+}
+.sof-lp-howitworks h3 {
+  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 6px;
+}
+.sof-lp-howitworks p {
+  color: var(--text-secondary);
+  font-size: 13.5px;
+  line-height: 1.55;
+  margin: 0;
+}
+@media (max-width: 760px) {
+  .sof-lp-howitworks ol { grid-template-columns: 1fr; }
+}
+
+/* Math cards */
+.sof-lp-math {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.sof-lp-math h2 {
+  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0;
+  text-align: center;
+}
+.sof-lp-math .grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+@media (max-width: 760px) { .sof-lp-math .grid { grid-template-columns: 1fr; } }
+
+.sof-lp-math .card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.sof-lp-math .card.bags { border-color: rgba(245, 158, 11, 0.32); }
+.sof-lp-math .card header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.sof-lp-math .card .badge {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+.sof-lp-math .card h3 {
+  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+}
+.sof-lp-math dl {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+}
+.sof-lp-math dl > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.sof-lp-math dl > div:last-child { border-bottom: 0; }
+.sof-lp-math dt {
+  font-size: 13px;
+  color: var(--text-tertiary);
+}
+.sof-lp-math dd {
+  margin: 0;
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 12.5px;
+  color: var(--text-primary);
+}
+.sof-lp-math dd code {
+  background: var(--bg-input);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 12px;
+}
+.sof-lp-math .ex {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--text-tertiary);
+  line-height: 1.6;
+  padding: 12px 14px;
+  background: var(--bg-input);
+  border-radius: 6px;
+}
+.sof-lp-math .ex strong { color: var(--text-primary); }
+.sof-lp-math .footnote {
+  text-align: center;
+  font-size: 12.5px;
+  color: var(--text-tertiary);
+  margin: 0;
+  max-width: 64ch;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.6;
+}
+.sof-lp-math .footnote code {
+  background: var(--bg-input);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-family: var(--font-mono, monospace);
+  font-size: 11.5px;
+}
+
+/* Refine card stays mostly the same but centred */
+.sof-lp-page .sof-lp-refine { padding: 0; }
+.sof-lp-page .sof-lp-refine > * { max-width: none; }
+
+/* Feed v2 */
+.sof-lp-feed { display: flex; flex-direction: column; gap: 18px; }
+.sof-lp-feed > header h2 {
+  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0;
+  text-align: center;
+}
+.sof-lp-feed > header p {
+  text-align: center;
+  font-size: 13.5px;
+  color: var(--text-tertiary);
+  line-height: 1.6;
+  margin: 8px auto 0;
+  max-width: 56ch;
+}
+.sof-lp-feed > header code {
+  background: var(--bg-input);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-family: var(--font-mono, monospace);
+  font-size: 11.5px;
+}
+.sof-lp-feed > header .dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background: var(--accent);
+  border-radius: 50%;
+  margin: 0 4px;
+  vertical-align: middle;
+}
+.sof-lp-feed .grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+@media (max-width: 760px) { .sof-lp-feed .grid { grid-template-columns: 1fr; } }
+
+.sof-lp-feed .card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  gap: 14px;
+  align-items: start;
+  position: relative;
+  transition: border-color 120ms;
+}
+.sof-lp-feed .card:hover { border-color: var(--accent); }
+.sof-lp-feed .card.new { border-color: rgba(245, 158, 11, 0.48); }
+.sof-lp-feed .card .tag {
+  position: absolute;
+  top: -10px;
+  left: 14px;
+  background: var(--accent);
+  color: #1a1208;
+  font-family: var(--font-mono, monospace);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  padding: 3px 8px;
+  border-radius: 3px;
+}
+.sof-lp-feed .card .img {
+  width: 56px;
+  height: 56px;
+  border-radius: 10px;
+  background: var(--bg-input);
+  display: grid;
+  place-items: center;
+  font-family: var(--font-mono, monospace);
+  font-size: 14px;
+  color: var(--text-secondary);
+  overflow: hidden;
+}
+.sof-lp-feed .card .img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.sof-lp-feed .card .meta .nm {
+  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+.sof-lp-feed .card .meta .sym {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  color: var(--accent);
+  margin-top: 2px;
+}
+.sof-lp-feed .card .meta .desc {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-tertiary);
+  margin: 8px 0 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.sof-lp-feed .card .ext {
+  grid-column: 1 / -1;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  color: var(--text-tertiary);
+  text-decoration: none;
+  margin-top: 4px;
+}
+.sof-lp-feed .card .ext:hover { color: var(--accent); }
+.sof-lp-feed .empty {
+  border: 1px dashed var(--border-subtle);
+  border-radius: 8px;
+  padding: 28px;
+  color: var(--text-tertiary);
+  font-size: 13px;
+  line-height: 1.6;
+  text-align: center;
+}
+
+/* Prestige tier list */
+.sof-lp-prestige {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.sof-lp-prestige h2 {
+  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0;
+  text-align: center;
+}
+.sof-lp-prestige .sub {
+  text-align: center;
+  color: var(--text-tertiary);
+  font-size: 13px;
+  line-height: 1.6;
+  max-width: 56ch;
+  margin: 0 auto;
+}
+.sof-lp-prestige .tiers {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+@media (max-width: 760px) { .sof-lp-prestige .tiers { grid-template-columns: repeat(2, 1fr); } }
+.sof-lp-prestige .tiers li {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.sof-lp-prestige .amt {
+  font-family: var(--font-mono, monospace);
+  font-size: 11.5px;
+  color: var(--accent);
+}
+.sof-lp-prestige .ti {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-primary);
 }

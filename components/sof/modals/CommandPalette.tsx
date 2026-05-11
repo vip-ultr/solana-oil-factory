@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import { TokenMark } from "@/components/sof/primitives";
-import { MOCK_REFINERIES } from "@/lib/mock-data";
+import type { Refinery } from "@/lib/mock-data";
 import { cn } from "@/lib/cn";
 
 interface Props {
@@ -27,52 +27,63 @@ export function CommandPalette({ open, onClose }: Props) {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
+  const [refineries, setRefineries] = useState<Refinery[]>([]);
+  const [hydrated, setHydrated] = useState(false);
+
+  // Lazy-fetch live refineries the first time the palette opens.
+  // Subsequent opens use the cached list — server-side response
+  // also has Cache-Control for 30s.
+  useEffect(() => {
+    if (!open || hydrated) return;
+    let cancelled = false;
+    fetch("/api/refineries")
+      .then((res) => res.json())
+      .then((json) => {
+        if (cancelled) return;
+        if (Array.isArray(json.refineries)) {
+          setRefineries(json.refineries);
+        }
+        setHydrated(true);
+      })
+      .catch(() => {
+        if (!cancelled) setHydrated(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [open, hydrated]);
 
   // Build the static + dynamic item list.
   const items = useMemo<Item[]>(() => {
     const list: Item[] = [];
     const q = query.trim().toLowerCase();
 
-    // RECENT (only when no query)
-    if (!q) {
-      const bonk = MOCK_REFINERIES[0];
-      const wif = MOCK_REFINERIES[2];
-      list.push({
-        key: "recent-bonk",
-        group: "Recent",
-        label: (
-          <>
-            <b>{bonk.tokenSymbol}</b> refinery
-          </>
-        ),
-        detail: { text: "● 2d 14h left", live: true },
-        iconNode: (
-          <TokenMark
-            variant={bonk.tokenMarkVariant}
-            symbol={bonk.tokenSymbol}
-            size={18}
-          />
-        ),
-        onPick: () => router.push(`/refinery/${bonk.id}`),
-      });
-      list.push({
-        key: "recent-wif",
-        group: "Recent",
-        label: (
-          <>
-            <b>{wif.tokenSymbol}</b> refinery
-          </>
-        ),
-        detail: { text: "● 18d left", live: true },
-        iconNode: (
-          <TokenMark
-            variant={wif.tokenMarkVariant}
-            symbol={wif.tokenSymbol}
-            size={18}
-          />
-        ),
-        onPick: () => router.push(`/refinery/${wif.id}`),
-      });
+    // RECENT (only when no query) — show the 2 newest live refineries.
+    if (!q && refineries.length > 0) {
+      for (const r of refineries.slice(0, 2)) {
+        list.push({
+          key: `recent-${r.id}`,
+          group: "Recent",
+          label: (
+            <>
+              <b>{r.tokenSymbol}</b> refinery
+            </>
+          ),
+          detail:
+            r.claimWindowDaysLeft !== null
+              ? { text: `● ${r.claimWindowDaysLeft}d left`, live: true }
+              : { text: "● open-ended", live: true },
+          iconNode: (
+            <TokenMark
+              variant={r.tokenMarkVariant}
+              symbol={r.tokenSymbol}
+              size={18}
+              logoUrl={r.logoUrl}
+            />
+          ),
+          onPick: () => router.push(`/refinery/${r.id}`),
+        });
+      }
       list.push({
         key: "recent-dashboard",
         group: "Recent",
@@ -99,7 +110,18 @@ export function CommandPalette({ open, onClose }: Props) {
     list.push({
       key: "act-browse",
       group: "Quick actions",
-      label: <>Browse all 12 active refineries</>,
+      label: (
+        <>
+          Browse{" "}
+          {refineries.length > 0 ? (
+            <>
+              all <b>{refineries.length}</b> refineries
+            </>
+          ) : (
+            <>refineries</>
+          )}
+        </>
+      ),
       kbd: "⌘R",
       iconText: "⌖",
       onPick: () => router.push("/refineries"),
@@ -128,8 +150,8 @@ export function CommandPalette({ open, onClose }: Props) {
 
     // TOKEN MATCHES (when query)
     if (q) {
-      const matches = MOCK_REFINERIES.filter((r) =>
-        [r.tokenSymbol, r.tokenName, r.tokenMint, r.operator]
+      const matches = refineries.filter((r) =>
+        [r.tokenSymbol, r.tokenName, r.tokenMint, r.operator, r.id]
           .join(" ")
           .toLowerCase()
           .includes(q),
@@ -152,6 +174,7 @@ export function CommandPalette({ open, onClose }: Props) {
               variant={r.tokenMarkVariant}
               symbol={r.tokenSymbol}
               size={18}
+              logoUrl={r.logoUrl}
             />
           ),
           onPick: () => router.push(`/refinery/${r.id}`),
@@ -176,7 +199,7 @@ export function CommandPalette({ open, onClose }: Props) {
     });
 
     return list;
-  }, [query, router]);
+  }, [query, router, refineries]);
 
   // Group items for rendering
   const grouped = useMemo(() => {

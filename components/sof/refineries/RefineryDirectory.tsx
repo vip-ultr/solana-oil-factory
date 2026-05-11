@@ -133,7 +133,12 @@ export function RefineryDirectory({ refineries }: RefineryDirectoryProps) {
           </div>
         </div>
         <div className="actions">
-          <button type="button" className="sof-btn sof-btn-secondary">
+          <button
+            type="button"
+            className="sof-btn sof-btn-secondary"
+            disabled={filtered.length === 0}
+            onClick={() => exportRefineriesCsv(filtered)}
+          >
             <Download size={14} strokeWidth={1.6} aria-hidden="true" />
             Export CSV
           </button>
@@ -267,10 +272,7 @@ export function RefineryDirectory({ refineries }: RefineryDirectoryProps) {
             Showing {filtered.length} of {refineries.length} refineries
           </span>
           <span>
-            Last updated{" "}
-            <span className="font-mono" style={{ color: "var(--text-secondary)" }}>
-              14:32:08 UTC
-            </span>
+            Live from <span className="font-mono">devnet</span>
           </span>
         </div>
 
@@ -346,26 +348,81 @@ export function RefineryDirectory({ refineries }: RefineryDirectoryProps) {
           </tbody>
         </table>
 
-        <div className="sof-pagination">
-          <span>
-            Page <span className="font-mono" style={{ color: "var(--text-secondary)" }}>1</span> of{" "}
-            <span className="font-mono" style={{ color: "var(--text-secondary)" }}>1</span>
+        <div
+          className="sof-pagination"
+          style={{ justifyContent: "flex-start" }}
+        >
+          <span style={{ color: "var(--text-tertiary)", fontSize: 12 }}>
+            Showing {filtered.length.toLocaleString()} of{" "}
+            {refineries.length.toLocaleString()} refineries
+            {filtered.length !== refineries.length && " (filtered)"}
           </span>
-          <div className="sof-pagi-btns">
-            <button type="button" disabled aria-label="Previous page">
-              ‹
-            </button>
-            <button type="button" className="on" aria-current="page">
-              1
-            </button>
-            <button type="button" disabled aria-label="Next page">
-              ›
-            </button>
-          </div>
         </div>
       </section>
     </>
   );
+}
+
+function exportRefineriesCsv(rows: Refinery[]): void {
+  if (typeof window === "undefined" || rows.length === 0) return;
+  const header = [
+    "rank",
+    "token_symbol",
+    "token_name",
+    "token_mint",
+    "operator",
+    "pool_remaining",
+    "pool_initial",
+    "pool_remaining_usd",
+    "holders_eligible",
+    "holders_claimed",
+    "claim_rate_per_1pct",
+    "snapshot_strategy",
+    "status",
+    "verification",
+    "claim_window_days_left",
+    "launched_at_iso",
+  ].join(",");
+  const escape = (v: string | number | null) => {
+    if (v === null || v === undefined) return "";
+    const s = String(v);
+    return s.includes(",") || s.includes('"') || s.includes("\n")
+      ? `"${s.replace(/"/g, '""')}"`
+      : s;
+  };
+  const lines = rows.map((r) =>
+    [
+      r.rank,
+      r.tokenSymbol,
+      r.tokenName,
+      r.tokenMintFull ?? r.tokenMint,
+      r.operatorFull ?? r.operator,
+      r.poolRemaining,
+      r.poolInitial,
+      r.poolRemainingUsd,
+      r.holdersEligible,
+      r.holdersClaimed,
+      r.claimRatePer1Pct,
+      r.snapshotStrategy,
+      r.status,
+      r.verification,
+      r.claimWindowDaysLeft,
+      r.launchedAtIso,
+    ]
+      .map(escape)
+      .join(","),
+  );
+  const csv = [header, ...lines].join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const ts = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `sof-refineries-${ts}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 function Row({ r }: { r: Refinery }) {
@@ -391,7 +448,11 @@ function Row({ r }: { r: Refinery }) {
     <tr>
       <td>
         <div className="sof-tk">
-          <TokenMark variant={r.tokenMarkVariant} symbol={r.tokenSymbol} />
+          <TokenMark
+            variant={r.tokenMarkVariant}
+            symbol={r.tokenSymbol}
+            logoUrl={r.logoUrl}
+          />
           <div className="meta">
             <span className="sym">{r.tokenSymbol}</span>
             <span className="nm">{r.tokenName}</span>

@@ -274,11 +274,12 @@ export default function ReputationPage() {
               </tr>
             </tbody>
           </table>
-          <p style={{ marginTop: 18 }}>
-            <a style={{ color: "var(--accent)", cursor: "pointer" }}>
-              Source code (github.com/sof/reputation) ↗
-            </a>{" "}
-            — verify the calculation, file issues, propose changes via PR.
+          <p style={{ marginTop: 18, color: "var(--text-tertiary)" }}>
+            Source code lives in the program repo (private during devnet).
+            The reputation algorithm is implemented in{" "}
+            <code>lib/indexer/reputation.ts</code> on the frontend — verify
+            the calculation, file issues, or propose changes via PR once the
+            repo is opened with v1.0.
           </p>
         </section>
       </article>

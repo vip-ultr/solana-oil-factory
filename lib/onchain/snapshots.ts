@@ -9,6 +9,20 @@
 import { PublicKey } from "@solana/web3.js";
 import { getProgram, snapshotPda } from "./client";
 
+function bnToNumberSafe(bn: any): number {
+  if (bn === null || bn === undefined) return 0;
+  if (typeof bn === "number") return bn;
+  try {
+    return bn.toNumber();
+  } catch {
+    try {
+      return parseFloat(bn.toString());
+    } catch {
+      return 0;
+    }
+  }
+}
+
 export interface SnapshotRow {
   index: number;
   takenAtUnix: number;
@@ -54,9 +68,9 @@ export async function fetchSnapshots(
         return {
           index,
           pda: pda.toBase58(),
-          takenAtUnix: a.takenAt.toNumber(),
+          takenAtUnix: bnToNumberSafe(a.takenAt),
           holderCount: a.holderCount,
-          totalEligibleBalance: a.totalEligibleBalance.toNumber(),
+          totalEligibleBalance: bnToNumberSafe(a.totalEligibleBalance),
           merkleRoot: Buffer.from(a.merkleRoot).toString("hex"),
         } satisfies SnapshotRow;
       } catch {

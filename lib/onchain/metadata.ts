@@ -1,13 +1,7 @@
-// Token metadata fetcher — bridges the hardcoded token-registry
-// to Helius's DAS getAssetBatch. We only hit Helius for mints
-// that miss the hardcoded registry; the registry is the
-// authoritative override (it controls token-mark variants, which
-// the UI ultimately styles).
-//
-// Helius DAS is mainnet-only. On devnet / testnet we skip the
-// network call and return an empty map — refineries against
-// freshly-minted devnet tokens still fall through to the
-// truncated-mint display.
+// Token metadata fetcher — bridges the hardcoded registry to
+// the Metaplex Token Metadata Program (devnet + mainnet) and
+// then to Helius DAS (mainnet only). Best-effort: anything
+// unresolved falls back to the truncated-mint registry default.
 
 import { SOLANA_CLUSTER } from "@/lib/program";
 import {
@@ -15,46 +9,116 @@ import {
   hasRegistryEntry,
   type TokenMeta,
 } from "./token-registry";
+import { fetchMetadataForMints, type MetaplexMetadata } from "./metaplex";
+
+export interface ResolvedMeta {
+  name: string;
+  symbol: string;
+  /** Direct image URL (Phantom-style logo). Resolved from the
+   *  Metaplex JSON URI when present. */
+  logoUrl?: string;
+}
+
+const URI_FETCH_TIMEOUT_MS = 4_000;
 
 /**
- * Fetch DAS metadata for `mints` that aren't covered by the
- * hardcoded registry. Returns a map of mint → { name, symbol }
- * for the ones Helius resolved. Cluster + API-key guarded so
- * the function is a no-op when neither preconditions hold.
+ * Fetch the Metaplex JSON pointed to by `uri` and extract the
+ * `image` field. Times out fast — failure just means no logo.
+ */
+async function resolveLogoFromUri(uri: string): Promise<string | undefined> {
+  if (!uri) return undefined;
+  // Some mints point to a non-HTTP URI (e.g. arweave native or
+  // ipfs). Browsers handle most of them via gateways already
+  // resolvable from the URI string.
+  let normalized = uri;
+  if (uri.startsWith("ipfs://")) {
+    normalized = `https://ipfs.io/ipfs/${uri.slice("ipfs://".length)}`;
+  }
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), URI_FETCH_TIMEOUT_MS);
+    const res = await fetch(normalized, { signal: ctrl.signal });
+    clearTimeout(t);
+    if (!res.ok) return undefined;
+    const json = (await res.json()) as { image?: string };
+    if (!json || typeof json.image !== "string") return undefined;
+    if (json.image.startsWith("ipfs://")) {
+      return `https://ipfs.io/ipfs/${json.image.slice("ipfs://".length)}`;
+    }
+    return json.image;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Resolve display metadata for `mints` not covered by the
+ * hardcoded registry. Tries Metaplex first (every cluster) then
+ * Helius DAS (mainnet only). For Metaplex hits, also fetches the
+ * off-chain JSON to grab the logo image URL.
  */
 export async function fetchMetadataFor(
   mints: string[],
-): Promise<Map<string, { name: string; symbol: string }>> {
-  const result = new Map<string, { name: string; symbol: string }>();
+): Promise<Map<string, ResolvedMeta>> {
+  const result = new Map<string, ResolvedMeta>();
   if (mints.length === 0) return result;
-  if (SOLANA_CLUSTER !== "mainnet") return result;
-  if (!process.env.HELIUS_API_KEY) return result;
 
-  // Lazy import to keep helius (which transitively pulls big
-  // tx-history walkers) out of the bundle for routes that
-  // don't actually need it.
-  const { fetchTokenMetadataBatch } = await import("@/lib/helius");
+  // Step 1 — Metaplex Token Metadata Program PDAs (devnet + mainnet).
+  let metaplex: Map<string, MetaplexMetadata> = new Map();
   try {
-    const meta = await fetchTokenMetadataBatch(mints);
-    for (const [mint, m] of meta.entries()) {
-      result.set(mint, { name: m.name, symbol: m.symbol });
-    }
+    metaplex = await fetchMetadataForMints(mints);
   } catch {
-    // Helius blip — fall through with empty map. Caller's
-    // registry-fallback path takes over.
+    metaplex = new Map();
+  }
+
+  // Resolve logo URLs in parallel — bounded concurrency via
+  // Promise.all over the small mint set we already filtered.
+  const logoPromises: Promise<void>[] = [];
+  for (const [mint, m] of metaplex.entries()) {
+    if (!m.name && !m.symbol) continue;
+    const entry: ResolvedMeta = {
+      name: m.name || m.symbol,
+      symbol: m.symbol || m.name,
+    };
+    result.set(mint, entry);
+    if (m.uri) {
+      logoPromises.push(
+        resolveLogoFromUri(m.uri).then((logo) => {
+          if (logo) entry.logoUrl = logo;
+        }),
+      );
+    }
+  }
+  await Promise.all(logoPromises);
+
+  // Step 2 — Helius DAS for mints that lacked a Metaplex PDA.
+  const stillMissing = mints.filter((m) => !result.has(m));
+  if (
+    stillMissing.length > 0 &&
+    SOLANA_CLUSTER === "mainnet" &&
+    process.env.HELIUS_API_KEY
+  ) {
+    try {
+      const { fetchTokenMetadataBatch } = await import("@/lib/helius");
+      const helius = await fetchTokenMetadataBatch(stillMissing);
+      for (const [mint, m] of helius.entries()) {
+        result.set(mint, { name: m.name, symbol: m.symbol });
+      }
+    } catch {
+      /* ignored */
+    }
   }
   return result;
 }
 
 /**
- * Resolve a mint to a TokenMeta, blending the hardcoded
- * registry with an optional metadata override. Synchronous —
- * call sites that want Helius should pass the pre-fetched map.
+ * Resolve a mint to a TokenMeta + optional logoUrl, blending the
+ * hardcoded registry with a pre-fetched override map.
  */
 export function tokenMetaWithOverride(
   mint: string,
-  override: Map<string, { name: string; symbol: string }>,
-): TokenMeta {
+  override: Map<string, ResolvedMeta>,
+): TokenMeta & { logoUrl?: string } {
   if (hasRegistryEntry(mint)) return tokenMetaFor(mint);
   const live = override.get(mint);
   if (live) {
@@ -62,8 +126,8 @@ export function tokenMetaWithOverride(
       symbol: live.symbol,
       name: live.name,
       variant: "default",
-      decimals: 0, // helius DAS doesn't return decimals; mint
-                   // fetch handles those callers that need them
+      decimals: 0,
+      logoUrl: live.logoUrl,
     };
   }
   return tokenMetaFor(mint);

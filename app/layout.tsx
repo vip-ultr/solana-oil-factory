@@ -4,7 +4,6 @@ import { Space_Grotesk, Inter, JetBrains_Mono } from "next/font/google";
 import Providers from "./providers";
 import { Sidebar } from "@/components/sof/Sidebar";
 import { Footer } from "@/components/sof/Footer";
-import { ThemeFab } from "@/components/sof/ThemeToggle";
 import { ChromeOverlay } from "@/components/sof/modals/ChromeOverlay";
 import "../styles/globals.css";
 
@@ -65,7 +64,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               {children}
               <Footer />
             </main>
-            <ThemeFab />
           </ChromeOverlay>
         </Providers>
       </body>

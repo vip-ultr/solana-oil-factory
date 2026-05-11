@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Check, X } from "lucide-react";
 import { useWalletConnection } from "@solana/react-hooks";
+import { useSiws } from "@/components/sof/SiwsProvider";
 
 interface Props {
   open: boolean;
@@ -19,18 +20,27 @@ export function ConnectModal({ open, onClose }: Props) {
     error,
     currentConnector,
   } = useWalletConnection();
+  const siws = useSiws();
 
   // Local UI state for the "you can install this one" rows that
   // aren't actually wallet-standard ready yet.
   const [picked, setPicked] = useState<string | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
 
-  // Auto-close on successful connect.
+  // Auto-close once the wallet is connected AND a SIWS payload
+  // exists. We also auto-trigger the SIWS sign right after a
+  // fresh handshake.
   useEffect(() => {
-    if (open && connected) {
+    if (!open) return;
+    if (!connected) return;
+    if (siws.authed) {
       onClose();
+      return;
     }
-  }, [open, connected, onClose]);
+    if (!siws.signing && !siws.error) {
+      void siws.signIn();
+    }
+  }, [open, connected, siws, onClose]);
 
   // Modal lifecycle: lock body scroll, hook Esc, reset on open.
   useEffect(() => {
@@ -64,11 +74,18 @@ export function ConnectModal({ open, onClose }: Props) {
     }
   }
 
+  // We're "signing" while the wallet handshake is in flight OR
+  // while SIWS is asking for the message signature. The picker
+  // re-shows on error so users can pick a different wallet.
   const showSigning =
-    connecting ||
+    (connecting && !localError) ||
+    (connected && !siws.authed && !localError && !siws.error) ||
     (picked !== null && currentConnector?.id !== picked && !localError);
   const errorMessage =
-    localError ?? (error instanceof Error ? error.message : null);
+    localError ??
+    siws.error ??
+    (error instanceof Error ? error.message : null);
+  const signingForSiws = connected && !siws.authed && !siws.error;
 
   // Connectors come from wallet-standard discovery — Phantom,
   // Solflare, Backpack etc. all show up automatically when their
@@ -99,6 +116,7 @@ export function ConnectModal({ open, onClose }: Props) {
               ? (sortedConnectors.find((c) => c.id === picked)?.name ?? "wallet")
               : "wallet"}
             errorMessage={errorMessage}
+            stage={signingForSiws ? "siws" : "handshake"}
             onCancel={() => {
               setPicked(null);
               setLocalError(null);
@@ -279,6 +297,7 @@ function PickPhase({
 interface SigningProps {
   connectorName: string;
   errorMessage: string | null;
+  stage: "handshake" | "siws";
   onCancel: () => void;
   onClose: () => void;
 }
@@ -286,20 +305,31 @@ interface SigningProps {
 function SigningPhase({
   connectorName,
   errorMessage,
+  stage,
   onCancel,
   onClose,
 }: SigningProps) {
+  const headline =
+    stage === "siws"
+      ? `Sign to verify in ${connectorName}`
+      : `Approve in ${connectorName}`;
+  const subhead =
+    stage === "siws"
+      ? `${connectorName} will pop up asking you to sign a message. Free signature — no SOL moves, no transaction is broadcast.`
+      : `Confirm the connect prompt in your ${connectorName} extension. This is free and never moves funds.`;
+  const waiting = stage === "siws" ? "signature" : "approval";
+
   return (
     <>
       <div className="sof-mo-h">
         <div>
           <h3 id="sof-mo-title">
-            {errorMessage ? "Connection failed" : `Approve in ${connectorName}`}
+            {errorMessage ? "Connection failed" : headline}
           </h3>
           <p>
             {errorMessage
               ? "Pick a different wallet or try again. No SOL was moved."
-              : `Confirm the connect prompt in your ${connectorName} extension. This is free and never moves funds.`}
+              : subhead}
           </p>
         </div>
         <button
@@ -315,15 +345,19 @@ function SigningPhase({
         {errorMessage ? (
           <>
             <h4 style={{ color: "var(--error)" }}>{errorMessage}</h4>
-            <p>The wallet may have rejected the request.</p>
+            <p>
+              The wallet may have rejected the request. Disconnect and pick a
+              different wallet to retry.
+            </p>
           </>
         ) : (
           <>
             <div className="ring" aria-hidden="true" />
-            <h4>Waiting for {connectorName}…</h4>
+            <h4>Waiting for {connectorName} {waiting}…</h4>
             <p>
-              You&apos;ll see a popup asking to connect. Click approve there to
-              continue.
+              {stage === "siws"
+                ? "We're verifying that you control this wallet. The message includes only a domain, timestamp, and a random nonce — no funds are touched."
+                : "You'll see a popup asking to connect. Click approve there to continue."}
             </p>
           </>
         )}

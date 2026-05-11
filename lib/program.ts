@@ -41,3 +41,24 @@ export function explorerUrl(
   if (SOLANA_CLUSTER === "mainnet") return base;
   return `${base}?cluster=${SOLANA_CLUSTER}`;
 }
+
+/** Solscan link — same cluster-aware logic as the explorer helper. */
+export function solscanUrl(
+  ref: string,
+  type: "address" | "tx" | "token" = "address",
+): string {
+  const path = type === "tx" ? "tx" : type === "token" ? "token" : "account";
+  const base = `https://solscan.io/${path}/${ref}`;
+  if (SOLANA_CLUSTER === "mainnet") return base;
+  return `${base}?cluster=${SOLANA_CLUSTER}`;
+}
+
+/** Birdeye token chart. Mainnet-only — Birdeye doesn't index devnet. */
+export function birdeyeUrl(mint: string): string {
+  return `https://birdeye.so/token/${mint}?chain=solana`;
+}
+
+/** Jupiter swap link for a given mint. Mainnet-only. */
+export function jupiterUrl(mint: string): string {
+  return `https://jup.ag/swap/SOL-${mint}`;
+}

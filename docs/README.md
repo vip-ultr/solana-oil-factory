@@ -8,6 +8,7 @@ Working notes for sol-oilfactory: architecture, decisions, and plans.
 - `backend-strategy.md` — When and why to split into a separate backend. Trigger conditions and a phased plan.
 - `multi-tenant-pivot.md` — Strategy for evolving from single-tenant gamification site to "any token can spin up a factory" platform. Market scan + product design + open questions.
 - `solana-audit.md` — Severity-ranked correctness + security audit of the Solana integration. C1–C3 are the gating fixes before the multi-tenant pivot.
+- `token-refinery-design.md` — Implementation spec for token refineries (Refinery Type 3). Launch flow, distribution math, custody model, anti-sybil, fees, UI/IA, data sources, edge cases, and a consolidated list of decisions blocked on user input.
 
 ## Conventions
 

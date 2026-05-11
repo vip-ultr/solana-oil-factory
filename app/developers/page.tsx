@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Developers",
@@ -36,17 +37,37 @@ export default function DevelopersPage() {
   return (
     <>
       <header className="sof-dv-hero">
-        <div className="meta">DEVELOPER PORTAL</div>
+        <div className="meta">DEVELOPER PORTAL · PREVIEW</div>
         <h1>Build on a verifiable claim layer for Solana.</h1>
         <p>
-          Indexer GraphQL, three SDKs, and four on-chain programs. Free tier
-          covers most use cases. Programs are verified, source is public,
-          claims are non-custodial.
+          Indexer GraphQL, three SDKs, and four on-chain programs.
+          The page below documents the v1.1 surface — the SDK and the
+          hosted indexer aren&apos;t shipped yet. Until then, integrate
+          directly against the on-chain program (the Anchor IDL is in
+          the repo).
         </p>
         <div className="cta-row">
-          <a className="sof-btn sof-btn-primary">Read the docs →</a>
-          <a className="sof-btn sof-btn-secondary">View on GitHub ↗</a>
-          <a className="sof-btn sof-btn-secondary">Get an API key</a>
+          <Link href="/help" className="sof-btn sof-btn-primary">
+            Read the help docs →
+          </Link>
+          <button
+            type="button"
+            className="sof-btn sof-btn-secondary"
+            disabled
+            aria-disabled="true"
+            title="Public repo not yet open-sourced"
+          >
+            View on GitHub · soon
+          </button>
+          <button
+            type="button"
+            className="sof-btn sof-btn-secondary"
+            disabled
+            aria-disabled="true"
+            title="Hosted indexer launches with v1.1"
+          >
+            Get an API key · soon
+          </button>
         </div>
       </header>
 
@@ -141,7 +162,16 @@ export default function DevelopersPage() {
                 </div>
                 <div className="install">{s.install}</div>
                 <div className="det">{s.det}</div>
-                <a>API reference →</a>
+                <span
+                  style={{
+                    fontSize: 11,
+                    color: "var(--text-tertiary)",
+                    letterSpacing: "0.06em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Reference · ships with v1.1
+                </span>
               </div>
             ))}
           </div>

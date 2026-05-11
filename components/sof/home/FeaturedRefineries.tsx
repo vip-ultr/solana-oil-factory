@@ -54,7 +54,12 @@ function HeroCard({ refinery: r }: { refinery: Refinery }) {
     <div className="sof-feat-card hero-card">
       <div className="head">
         <div className="h-l">
-          <TokenMark variant={r.tokenMarkVariant} symbol={r.tokenSymbol} size={48} />
+          <TokenMark
+            variant={r.tokenMarkVariant}
+            symbol={r.tokenSymbol}
+            size={48}
+            logoUrl={r.logoUrl}
+          />
           <div>
             <div className="name">{r.tokenName}</div>
             <div className="sym">
@@ -136,7 +141,11 @@ function CompactCard({ refinery: r }: { refinery: Refinery }) {
     <div className="sof-feat-card">
       <div className="head">
         <div className="h-l">
-          <TokenMark variant={r.tokenMarkVariant} symbol={r.tokenSymbol} />
+          <TokenMark
+            variant={r.tokenMarkVariant}
+            symbol={r.tokenSymbol}
+            logoUrl={r.logoUrl}
+          />
           <div>
             <div className="name">{r.tokenName}</div>
             <div className="sym">

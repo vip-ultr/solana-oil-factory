@@ -1009,6 +1009,72 @@ export type Refinery = {
       ]
     },
     {
+      "name": "rotateAuthority",
+      "docs": [
+        "Admin rotates one of the three treasury authorities",
+        "(snapshot, pause, or admin itself). Signed by the current",
+        "`treasury_config.admin`. Permitted while the platform is",
+        "paused — rotation is a recovery primitive."
+      ],
+      "discriminator": [
+        248,
+        225,
+        151,
+        35,
+        28,
+        15,
+        85,
+        12
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "docs": [
+            "Current admin. Must equal `treasury_config.admin`."
+          ],
+          "signer": true
+        },
+        {
+          "name": "treasuryConfig",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  101,
+                  97,
+                  115,
+                  117,
+                  114,
+                  121,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "rotateAuthorityArgs"
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "submitSnapshot",
       "docs": [
         "Platform snapshot authority publishes the merkle root for",
@@ -1760,6 +1826,27 @@ export type Refinery = {
   ],
   "types": [
     {
+      "name": "authorityKind",
+      "docs": [
+        "Which authority to rotate. Wire format is u8 so the event payload",
+        "in `AuthorityRotated.which` and the instruction arg match."
+      ],
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "snapshotAuthority"
+          },
+          {
+            "name": "pauseAuthority"
+          },
+          {
+            "name": "admin"
+          }
+        ]
+      }
+    },
+    {
       "name": "authorityRotated",
       "type": {
         "kind": "struct",
@@ -2358,6 +2445,31 @@ export type Refinery = {
           },
           {
             "name": "closed"
+          }
+        ]
+      }
+    },
+    {
+      "name": "rotateAuthorityArgs",
+      "docs": [
+        "Args for `rotate_authority`. The admin signer rotates one of the",
+        "three platform authority keys atomically. The previous value is",
+        "emitted in the event for audit reconstruction."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "which",
+            "type": {
+              "defined": {
+                "name": "authorityKind"
+              }
+            }
+          },
+          {
+            "name": "newAuthority",
+            "type": "pubkey"
           }
         ]
       }

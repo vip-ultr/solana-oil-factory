@@ -172,7 +172,12 @@ export default async function TrustPage() {
               <span className="det">
                 3 medium and 8 informational, all addressed pre-release.
               </span>
-              <a className="pdf">Download full report (PDF, 1.4MB) →</a>
+              <span
+                className="pdf"
+                style={{ color: "var(--text-tertiary)" }}
+              >
+                Full PDF report ships with the v1.0 mainnet audit
+              </span>
             </div>
           </div>
         </section>
@@ -229,9 +234,14 @@ export default async function TrustPage() {
                   {i.postmortem && (
                     <>
                       {" "}
-                      <a style={{ color: "var(--accent)", cursor: "pointer" }}>
-                        Full post-mortem ↗
-                      </a>
+                      <span
+                        style={{
+                          color: "var(--text-tertiary)",
+                          fontSize: 11,
+                        }}
+                      >
+                        (post-mortem available on request — v1.0)
+                      </span>
                     </>
                   )}
                 </div>

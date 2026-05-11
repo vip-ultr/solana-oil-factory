@@ -3,6 +3,9 @@
 out/
 tsconfig.tsbuildinfo
 
+# Local validator / fork-test runner state
+.surfpool/
+
 # Dependencies
 node_modules/
 

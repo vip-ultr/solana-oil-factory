@@ -86,7 +86,12 @@ export function HowItWorks({ featured }: Props) {
       <div className="sof-demo-card" aria-label={`Sample refinery — ${featured.tokenName}`}>
         <div className="head">
           <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
-            <TokenMark variant={featured.tokenMarkVariant} symbol={featured.tokenSymbol} size={42} />
+            <TokenMark
+              variant={featured.tokenMarkVariant}
+              symbol={featured.tokenSymbol}
+              size={42}
+              logoUrl={featured.logoUrl}
+            />
             <div>
               <div className="name">{featured.tokenName}</div>
               <div className="sym">

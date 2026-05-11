@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { ThemeProvider } from "next-themes";
 import { SolanaProvider } from "@solana/react-hooks";
 import { createClient, autoDiscover } from "@solana/client";
+import { SiwsProvider } from "@/components/sof/SiwsProvider";
 
 // HTTP RPC routes through our backend proxy so the Helius API key never
 // reaches the browser. See app/api/rpc/route.ts. Override with
@@ -37,7 +38,7 @@ export default function Providers({ children }: { children: ReactNode }) {
         client={solanaClient}
         walletPersistence={{ autoConnect: false }}
       >
-        {children}
+        <SiwsProvider>{children}</SiwsProvider>
       </SolanaProvider>
     </ThemeProvider>
   );
