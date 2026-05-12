@@ -178,6 +178,7 @@ button {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 @media (max-width: 768px) {
@@ -185,6 +186,12 @@ button {
     margin-left: 0;
     padding-top: 56px; /* mobile top bar */
     padding-bottom: 64px; /* mobile bottom tab bar */
+    /* Containment: any rogue child that tries to be wider than the
+       viewport gets clipped instead of causing the whole page to
+       scroll horizontally. Inner tables that legitimately need to
+       scroll still do so via their own .*-wrap containers. */
+    overflow-x: clip;
+    max-width: 100vw;
   }
 }
 
@@ -3048,6 +3055,13 @@ table.sof-refineries tbody td.num {
 }
 @media (max-width: 680px) {
   .sof-rd-crumb { padding: 14px 20px 0; font-size: 11.5px; }
+  .sof-rd-feed-row {
+    grid-template-columns: minmax(0, 1fr) auto auto 32px;
+    gap: 8px;
+    padding: 11px 14px;
+    font-size: 12.5px;
+  }
+  .sof-rd-feed-row .ago { font-size: 10.5px; }
   .sof-rd-hdr {
     padding: 18px 20px 22px;
     gap: 16px;
@@ -3082,6 +3096,77 @@ table.sof-refineries tbody td.num {
   .sof-rd-col-l, .sof-rd-col-r { gap: 16px; }
   .sof-rd-panel-head { padding: 14px 16px; }
   .sof-rd-panel-head h3 { font-size: 13px; }
+
+  /* Mini-tables (.sof-rd-mtable) → card list on mobile.
+     Eliminates the horizontal scrollbars on Snapshot history /
+     Top claimants etc. Each row becomes its own card, each cell
+     a label/value pair via data-label + ::before. */
+  .sof-rd-panel .sof-rd-mtable-wrap {
+    overflow-x: visible;
+    padding: 10px 14px 14px;
+  }
+  .sof-rd-mtable {
+    min-width: 0;
+    width: 100%;
+  }
+  .sof-rd-mtable,
+  .sof-rd-mtable tbody,
+  .sof-rd-mtable tr,
+  .sof-rd-mtable td {
+    display: block;
+    width: 100%;
+  }
+  .sof-rd-mtable thead {
+    display: none;
+  }
+  .sof-rd-mtable tbody tr {
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    background: var(--bg-elevated);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .sof-rd-mtable tbody tr:last-child { margin-bottom: 0; }
+  .sof-rd-mtable tbody td {
+    padding: 6px 0 !important;
+    border-bottom: 1px dashed var(--border-subtle) !important;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    text-align: right !important;
+    white-space: normal !important;
+  }
+  .sof-rd-mtable tbody td:last-child {
+    border-bottom: 0 !important;
+    padding-bottom: 0 !important;
+  }
+  .sof-rd-mtable tbody td::before {
+    content: attr(data-label);
+    font-family: var(--font-mono, "Geist Mono"), monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-tertiary);
+    flex: none;
+    text-align: left;
+  }
+  /* Suppress label for the rank cell — it's just a number, the
+     card itself implies "row #". */
+  .sof-rd-mtable tbody td[data-label="#"]::before {
+    content: none;
+  }
+  .sof-rd-mtable tbody td[data-label="#"] {
+    border-bottom: 0 !important;
+    padding-bottom: 2px !important;
+    justify-content: flex-start;
+    color: var(--text-tertiary);
+    font-family: var(--font-mono, "Geist Mono"), monospace;
+    font-size: 11px;
+  }
 }
 @media (max-width: 480px) {
   .sof-rd-stat-strip { grid-template-columns: 1fr; }
@@ -4497,6 +4582,8 @@ table.sof-refineries tbody td.num {
   padding: 0;
   display: grid;
   grid-template-columns: repeat(53, 1fr);
+  grid-template-rows: repeat(7, auto);
+  grid-auto-flow: column;
   gap: 3px;
 }
 .sof-w-heatmap .cell {
@@ -4971,8 +5058,25 @@ table.sof-refineries tbody td.num {
   }
   .sof-w-kpi { padding: 14px 14px; }
   .sof-w-kpi .v { font-size: 24px; }
-  .sof-w-heatmap,
-  .sof-w-heatmap-months { grid-template-columns: repeat(26, 1fr); }
+  /* Heatmap: horizontal scroll so all 53 weeks stay legible */
+  .sof-w-heatmap-outer {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-subtle) transparent;
+    padding: 10px 0 12px;
+  }
+  .sof-w-heatmap-axis-row {
+    min-width: max-content;
+    padding: 0 16px;
+  }
+  .sof-w-heatmap {
+    grid-template-columns: repeat(53, 11px);
+    grid-template-rows: repeat(7, 11px);
+  }
+  .sof-w-heatmap-months {
+    grid-template-columns: repeat(53, 11px);
+  }
 
   /* Reputation panel — stack to single column on mobile */
   .sof-w-rep-grid {

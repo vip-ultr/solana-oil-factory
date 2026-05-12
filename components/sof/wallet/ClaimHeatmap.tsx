@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * 53-week claim activity heatmap (GitHub-contrib style).
  *
@@ -5,7 +7,12 @@
  * current-week Sunday used by buildClaimHeatmap — no prop changes
  * needed. Shows month names (+ abbreviated year on Jan / year-wrap)
  * across the top and Mon/Wed/Fri day labels on the left.
+ *
+ * On mobile the outer container scrolls horizontally; scroll is
+ * anchored to the right (most recent week) on mount.
  */
+
+import { useRef, useEffect } from "react";
 
 const MONTHS = [
   "Jan","Feb","Mar","Apr","May","Jun",
@@ -29,7 +36,15 @@ function levelClass(count: number): string {
 }
 
 export function ClaimHeatmap({ counts }: Props) {
+  const outerRef = useRef<HTMLDivElement>(null);
   const weeks = counts.length;
+
+  // On mobile the container scrolls — anchor to the right (newest week)
+  // so the user sees current activity without having to scroll first.
+  useEffect(() => {
+    const el = outerRef.current;
+    if (el) el.scrollLeft = el.scrollWidth;
+  }, []);
 
   // Anchor: Sunday of the current week (UTC), same as buildClaimHeatmap.
   const now = new Date();
@@ -63,7 +78,7 @@ export function ClaimHeatmap({ counts }: Props) {
   }
 
   return (
-    <div className="sof-w-heatmap-outer">
+    <div className="sof-w-heatmap-outer" ref={outerRef}>
 
       {/* ── Month label row ── */}
       <div className="sof-w-heatmap-axis-row">
