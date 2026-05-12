@@ -16,6 +16,7 @@ import {
   shortPubkey,
 } from "./token-registry";
 import { fetchMetadataFor, tokenMetaWithOverride } from "./metadata";
+import { computeReputation } from "@/lib/indexer/reputation";
 
 /**
  * BN → number that survives values past Number.MAX_SAFE_INTEGER.
@@ -132,6 +133,28 @@ export async function fetchAllRefineries(): Promise<UiRefinery[]> {
     return mapRefinery(r.publicKey, a, snap, i + 1, now, metaOverride);
   });
 
+  // Backfill live operator reputation. Dedupe by operator address —
+  // one operator can run multiple refineries, no point computing the
+  // same reputation twice. Failures default to 0 (treated identically
+  // to "unknown" by ReputationChip).
+  const uniqueOperators = Array.from(
+    new Set(ui.map((r) => r.operatorFull).filter((a): a is string => Boolean(a))),
+  );
+  const reps = await Promise.all(
+    uniqueOperators.map((addr) =>
+      computeReputation(addr).then(
+        (r) => r.score,
+        () => 0,
+      ),
+    ),
+  );
+  const repByOperator = new Map(uniqueOperators.map((addr, i) => [addr, reps[i]]));
+  for (const r of ui) {
+    if (r.operatorFull) {
+      r.operatorReputation = repByOperator.get(r.operatorFull) ?? 0;
+    }
+  }
+
   return ui;
 }
 
@@ -161,7 +184,13 @@ export async function fetchRefinery(id: string): Promise<UiRefinery | null> {
         : fetchMetadataFor([mintStr]),
     ]);
     const now = Math.floor(Date.now() / 1000);
-    return mapRefinery(pda, a, snap, 0, now, metaOverride);
+    const ui = mapRefinery(pda, a, snap, 0, now, metaOverride);
+    if (ui.operatorFull) {
+      ui.operatorReputation = await computeReputation(ui.operatorFull)
+        .then((r) => r.score)
+        .catch(() => 0);
+    }
+    return ui;
   } catch {
     return null;
   }

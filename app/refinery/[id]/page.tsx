@@ -48,6 +48,10 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
+function truncateAddress(addr: string): string {
+  return addr.length > 12 ? `${addr.slice(0, 4)}…${addr.slice(-4)}` : addr;
+}
+
 // Always-fresh — refinery accounts can update on every claim,
 // deposit, or pause toggle. Caching would lie.
 export const dynamic = "force-dynamic";
@@ -279,7 +283,10 @@ export default async function RefineryPage({ params }: PageProps) {
               ) : (
                 recentClaims.map((c) => (
                   <div key={c.id} className="sof-rd-feed-row">
-                    <WalletPill address={c.wallet} />
+                    <WalletPill
+                      address={truncateAddress(c.wallet)}
+                      fullAddress={c.wallet}
+                    />
                     <span className="amt">
                       {c.amount !== undefined ? formatTokens(c.amount) : "—"}
                     </span>
@@ -349,16 +356,16 @@ export default async function RefineryPage({ params }: PageProps) {
                       : s.totalEligibleBalance;
                     return (
                       <tr key={s.index}>
-                        <td className="fade" style={{ whiteSpace: "nowrap" }}>
+                        <td data-label="#" className="fade" style={{ whiteSpace: "nowrap" }}>
                           {s.index.toString().padStart(2, "0")}
                         </td>
-                        <td style={{ whiteSpace: "nowrap" }}>{dateStr}</td>
-                        <td className="fade" style={{ whiteSpace: "nowrap" }}>{timeStr}</td>
-                        <td className="num" style={{ whiteSpace: "nowrap" }}>{s.holderCount.toLocaleString()}</td>
-                        <td className="num" style={{ whiteSpace: "nowrap" }}>
+                        <td data-label="Date" style={{ whiteSpace: "nowrap" }}>{dateStr}</td>
+                        <td data-label="Time (UTC)" className="fade" style={{ whiteSpace: "nowrap" }}>{timeStr}</td>
+                        <td data-label="Holders" className="num" style={{ whiteSpace: "nowrap" }}>{s.holderCount.toLocaleString()}</td>
+                        <td data-label="Eligible supply" className="num" style={{ whiteSpace: "nowrap" }}>
                           {formatTokens(eligibleWhole)}
                         </td>
-                        <td style={{ whiteSpace: "nowrap" }}>
+                        <td data-label="Root" style={{ whiteSpace: "nowrap" }}>
                           <a
                             className="sof-rd-snap-merkle font-mono"
                             href={`https://explorer.solana.com/address/${s.pda}?cluster=devnet`}
@@ -412,15 +419,18 @@ export default async function RefineryPage({ params }: PageProps) {
                 <tbody>
                   {topClaimants.map((c) => (
                     <tr key={c.holder}>
-                      <td className="fade" style={{ whiteSpace: "nowrap" }}>
+                      <td data-label="#" className="fade" style={{ whiteSpace: "nowrap" }}>
                         {c.rank.toString().padStart(2, "0")}
                       </td>
-                      <td style={{ whiteSpace: "nowrap" }}>
-                        <WalletPill address={c.holder} />
+                      <td data-label="Wallet" style={{ whiteSpace: "nowrap" }}>
+                        <WalletPill
+                          address={truncateAddress(c.holder)}
+                          fullAddress={c.holder}
+                        />
                       </td>
-                      <td className="num" style={{ whiteSpace: "nowrap" }}>{formatTokens(c.totalClaimed)}</td>
-                      <td className="num" style={{ whiteSpace: "nowrap" }}>{c.claimCount}</td>
-                      <td className="fade" style={{ whiteSpace: "nowrap" }}>
+                      <td data-label="Total claimed" className="num" style={{ whiteSpace: "nowrap" }}>{formatTokens(c.totalClaimed)}</td>
+                      <td data-label="Claims" className="num" style={{ whiteSpace: "nowrap" }}>{c.claimCount}</td>
+                      <td data-label="First claim" className="fade" style={{ whiteSpace: "nowrap" }}>
                         {c.firstClaimUnix
                           ? new Date(c.firstClaimUnix * 1000).toLocaleDateString("en-US", {
                               month: "short", day: "numeric", year: "numeric",
@@ -591,7 +601,10 @@ export default async function RefineryPage({ params }: PageProps) {
             <div className="sof-rd-op-card">
               <div className="top">
                 <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                  <WalletPill address={r.operatorFull ?? r.operator} />
+                  <WalletPill
+                    address={truncateAddress(r.operatorFull ?? r.operator)}
+                    fullAddress={r.operatorFull ?? r.operator}
+                  />
                   {operatorRep && (
                     <ReputationChip score={operatorRep.score} prefix="" />
                   )}
@@ -626,11 +639,10 @@ export default async function RefineryPage({ params }: PageProps) {
                 </div>
                 <div>
                   <div className="k">Wallet age</div>
-                  <div
-                    className="v"
-                    style={{ color: "var(--text-tertiary)" }}
-                  >
-                    v0.5
+                  <div className="v">
+                    {operatorRep && operatorRep.context.tenureDays > 0
+                      ? `${operatorRep.context.tenureDays}d`
+                      : "—"}
                   </div>
                 </div>
               </div>

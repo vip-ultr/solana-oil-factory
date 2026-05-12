@@ -9,6 +9,7 @@ import {
   Factory,
   User,
   Star,
+  Bookmark,
   Shield,
   Code2,
   HelpCircle,
@@ -38,6 +39,7 @@ const NAV_PRIMARY: NavItem[] = [
 
 const NAV_SECONDARY: NavItem[] = [
   { key: "profile", label: "Profile", href: "/wallet", Icon: User, match: "prefix" },
+  { key: "watchlist", label: "Watchlist", href: "/watchlist", Icon: Bookmark, match: "prefix" },
   { key: "reputation", label: "Reputation", href: "/reputation", Icon: Star, match: "prefix" },
   { key: "trust", label: "Trust & status", href: "/trust", Icon: Shield, match: "prefix" },
   { key: "developers", label: "Developers", href: "/developers", Icon: Code2, match: "prefix" },

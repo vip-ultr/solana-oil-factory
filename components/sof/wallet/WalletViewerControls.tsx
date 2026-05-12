@@ -3,7 +3,10 @@
 import { Plus } from "lucide-react";
 import { useWalletConnection } from "@solana/react-hooks";
 import { ButtonLink } from "@/components/sof/primitives";
-import { ShareButton } from "@/components/sof/refinery-detail/RefineryHeaderActions";
+import {
+  ShareButton,
+  WatchButton,
+} from "@/components/sof/refinery-detail/RefineryHeaderActions";
 
 interface Props {
   address: string;
@@ -17,6 +20,9 @@ export function WalletViewerControls({ address, truncated }: Props) {
 
   return (
     <>
+      {!isOwner && (
+        <WatchButton kind="wallet" id={address} label="Save wallet to watchlist" />
+      )}
       <ShareButton
         title={`Wallet ${truncated}`}
         text="View this operator on Sol Oil Factory"

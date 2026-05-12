@@ -255,17 +255,18 @@ export function RefineryDirectory({ refineries }: RefineryDirectoryProps) {
           </span>
         </div>
 
+        <div className="sof-table-scroll">
         <table className="sof-refineries">
           <thead>
             <tr>
               <th style={{ width: 220 }}>Token</th>
-              <th style={{ width: 200 }}>Operator</th>
+              <th style={{ width: 80 }}>Rep</th>
               <th
                 className={cn("sortable num")}
-                style={{ width: 160 }}
+                style={{ width: 120 }}
                 onClick={() => setSort("poolUsd")}
               >
-                Pool remaining{" "}
+                Pool{" "}
                 {sort === "poolUsd" && (
                   <ArrowDown
                     size={11}
@@ -276,14 +277,14 @@ export function RefineryDirectory({ refineries }: RefineryDirectoryProps) {
                   />
                 )}
               </th>
-              <th className="num" style={{ width: 140 }}>
-                Rate / 1%
-              </th>
-              <th style={{ width: 140 }}>Snapshot</th>
-              <th style={{ width: 130 }}>Window</th>
-              <th style={{ width: 170 }}>Risk</th>
-              <th style={{ width: 90 }}>Status</th>
-              <th className="num" style={{ width: 120 }}></th>
+              <th className="num" style={{ width: 90 }}>Filled</th>
+              <th className="num" style={{ width: 100 }}>Rate / 1%</th>
+              <th style={{ width: 110 }}>Last snapshot</th>
+              <th className="num" style={{ width: 80 }}>Holders</th>
+              <th style={{ width: 110 }}>Window</th>
+              <th style={{ width: 150 }}>Risk</th>
+              <th style={{ width: 100 }}>Status</th>
+              <th className="num" style={{ width: 130 }}></th>
             </tr>
           </thead>
           <tbody>
@@ -292,7 +293,7 @@ export function RefineryDirectory({ refineries }: RefineryDirectoryProps) {
             ))}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={9} style={{ padding: 32, textAlign: "center" }}>
+                <td colSpan={11} style={{ padding: 32, textAlign: "center" }}>
                   <EmptyState
                     refineries={refineries}
                     onClear={() => {
@@ -307,6 +308,7 @@ export function RefineryDirectory({ refineries }: RefineryDirectoryProps) {
             )}
           </tbody>
         </table>
+        </div>
 
         {/* Mobile card list — desktop table is hidden at <768px. */}
         <div className="sof-refineries-mobile" aria-hidden="false">
@@ -376,67 +378,52 @@ function Row({ r }: { r: Refinery }) {
         </div>
       </td>
       <td>
-        <div className="sof-op-cell">
-          <div className="sof-op-row">
-            <WalletPill address={r.operator} />
-            <ReputationChip score={r.operatorReputation} />
-          </div>
-          <VerifiedBadge tier={r.verification} />
-        </div>
-      </td>
-      <td>
-        <div className="sof-pool-cell">
-          {r.poolInitial > 0 ? (
-            <>
-              <div className="sof-pool-vals">
-                <span className="a">{formatTokens(r.poolRemaining)}</span>
-                {r.poolRemainingUsd > 0 && (
-                  <span className="b">{formatUsd(r.poolRemainingUsd)}</span>
-                )}
-              </div>
-              <div className={cn("sof-pool-bar-thin", poolBarTone)}>
-                <div className="fill" style={{ transform: `scaleX(${poolPct / 100})` }} />
-              </div>
-              <span className="sof-pct">{poolPct}% of initial</span>
-            </>
-          ) : (
-            <span className="a" style={{ color: "var(--text-tertiary)" }}>—</span>
-          )}
-        </div>
+        <ReputationChip score={r.operatorReputation} />
       </td>
       <td className="num">
-        <div className="sof-rate-cell">
-          {r.claimRatePer1Pct > 0 ? (
-            <>
-              <span className="a">{formatTokens(r.claimRatePer1Pct)}</span>
-              {r.poolUsd > 0 && (
-                <span className="b">{formatUsd(r.poolUsd / 100)}</span>
-              )}
-            </>
-          ) : (
-            <span className="a" style={{ color: "var(--text-tertiary)" }}>—</span>
-          )}
-        </div>
+        {r.poolInitial > 0 ? (
+          <span className="sof-pool-amt">{formatTokens(r.poolRemaining)}</span>
+        ) : (
+          <span style={{ color: "var(--text-tertiary)" }}>—</span>
+        )}
+      </td>
+      <td className="num">
+        {r.poolInitial > 0 ? (
+          <div className="sof-fill-cell">
+            <span className="pct">{poolPct}%</span>
+            <div className={cn("sof-pool-bar-thin", poolBarTone)}>
+              <div className="fill" style={{ transform: `scaleX(${poolPct / 100})` }} />
+            </div>
+          </div>
+        ) : (
+          <span style={{ color: "var(--text-tertiary)" }}>—</span>
+        )}
+      </td>
+      <td className="num">
+        {r.claimRatePer1Pct > 0 ? (
+          formatTokens(r.claimRatePer1Pct)
+        ) : (
+          <span style={{ color: "var(--text-tertiary)" }}>—</span>
+        )}
       </td>
       <td>
-        <div className="sof-snap-cell">
-          <span className="a">
-            {r.snapshotAgeSeconds > 0
-              ? formatRelativeTime(r.snapshotAgeSeconds)
-              : "No snapshot yet"}
-          </span>
-          <span className="b">
-            {r.holdersEligible > 0
-              ? `${r.holdersEligible.toLocaleString()} holders`
-              : "—"}
-          </span>
-        </div>
+        {r.snapshotAgeSeconds > 0 ? (
+          formatRelativeTime(r.snapshotAgeSeconds)
+        ) : (
+          <span style={{ color: "var(--text-tertiary)" }}>No snapshot yet</span>
+        )}
+      </td>
+      <td className="num">
+        {r.holdersEligible > 0 ? (
+          r.holdersEligible.toLocaleString()
+        ) : (
+          <span style={{ color: "var(--text-tertiary)" }}>—</span>
+        )}
       </td>
       <td>
-        <div className={cn("sof-win-cell", windowKind === "urgent" && "urgent")}>
-          <span>{windowText}</span>
-          {windowKind === "normal" && <span className="b">closes</span>}
-        </div>
+        <span className={cn("sof-win-text", windowKind === "urgent" && "urgent", windowKind === "closed" && "closed")}>
+          {windowText}
+        </span>
       </td>
       <td>
         <div className="sof-risk-cell">

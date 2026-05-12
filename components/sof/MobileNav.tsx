@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
+  Bookmark,
   Building2,
   Code2,
   Factory,
@@ -38,6 +39,7 @@ const NAV_PRIMARY: NavLink[] = [
 
 const NAV_WALLET: NavLink[] = [
   { key: "profile", label: "Profile", href: "/wallet", match: "prefix" },
+  { key: "watchlist", label: "Watchlist", href: "/watchlist", match: "prefix" },
 ];
 
 const NAV_LEARN: NavLink[] = [
@@ -223,6 +225,7 @@ const ICON_FOR: Record<string, React.ReactNode> = {
   refineries: <Building2 size={16} strokeWidth={1.6} aria-hidden="true" />,
   launch: <Factory size={16} strokeWidth={1.6} aria-hidden="true" />,
   profile: <User size={16} strokeWidth={1.6} aria-hidden="true" />,
+  watchlist: <Bookmark size={16} strokeWidth={1.6} aria-hidden="true" />,
   reputation: <Star size={16} strokeWidth={1.6} aria-hidden="true" />,
   trust: <Shield size={16} strokeWidth={1.6} aria-hidden="true" />,
   developers: <Code2 size={16} strokeWidth={1.6} aria-hidden="true" />,

@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Check, Copy, Share2, Star } from "lucide-react";
-import { isWatched, toggleWatched } from "@/lib/watchlist";
+import { toggleWatched } from "@/lib/watchlist";
+import { useWatched } from "@/lib/use-watched";
 import { shareUrl } from "@/lib/share";
 
 interface CopyMintButtonProps {
@@ -83,13 +84,9 @@ interface WatchButtonProps {
 }
 
 export function WatchButton({ kind, id, label }: WatchButtonProps) {
-  const [on, setOn] = useState(false);
-  useEffect(() => {
-    setOn(isWatched(kind, id));
-  }, [kind, id]);
+  const on = useWatched(kind, id);
   function handle() {
-    const next = toggleWatched(kind, id);
-    setOn(next);
+    toggleWatched(kind, id);
   }
   const description = on ? "Remove from watchlist" : "Add to watchlist";
   return (

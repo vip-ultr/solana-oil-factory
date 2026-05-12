@@ -2156,6 +2156,16 @@ button {
 .sof-table-wrap {
   padding: 0 48px 48px;
   flex: 1;
+  min-width: 0;
+}
+/* Inner wrapper so only the table scrolls horizontally, not the
+   meta row above or the pagination below. */
+.sof-table-scroll {
+  overflow-x: auto;
+  border-radius: 8px;
+}
+.sof-table-scroll > table.sof-refineries {
+  min-width: 1200px;
 }
 .sof-meta-row {
   display: flex;
@@ -2246,32 +2256,27 @@ table.sof-refineries tbody td.num {
   margin-top: 2px;
 }
 
-.sof-op-cell {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  align-items: flex-start;
-}
-.sof-op-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+/* Pool amount cell — single value, mono, right-aligned via .num */
+.sof-pool-amt {
+  font-family: var(--font-mono, "Geist Mono"), monospace;
+  font-size: 12.5px;
+  color: var(--text-primary);
 }
 
-.sof-pool-cell {
+/* Filled column — small percent + mini bar (same data, two views) */
+.sof-fill-cell {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  min-width: 140px;
+  align-items: stretch;
+  gap: 4px;
+  min-width: 60px;
 }
-.sof-pool-vals {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
+.sof-fill-cell .pct {
   font-family: var(--font-mono, "Geist Mono"), monospace;
+  font-size: 12px;
+  color: var(--text-primary);
+  text-align: right;
 }
-.sof-pool-vals .a { font-size: 12.5px; color: var(--text-primary); }
-.sof-pool-vals .b { font-size: 11px; color: var(--text-tertiary); }
 .sof-pool-bar-thin {
   height: 3px;
   background: var(--bg-input);
@@ -2289,60 +2294,16 @@ table.sof-refineries tbody td.num {
 }
 .sof-pool-bar-thin.warn .fill { background: var(--warning); }
 .sof-pool-bar-thin.danger .fill { background: var(--error); }
-.sof-pct {
-  font-family: var(--font-mono, "Geist Mono"), monospace;
-  font-size: 10.5px;
-  color: var(--text-tertiary);
-}
 
-.sof-rate-cell {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 1px;
-}
-.sof-rate-cell .a {
-  font-family: var(--font-mono, "Geist Mono"), monospace;
-  font-size: 12.5px;
-  color: var(--text-primary);
-}
-.sof-rate-cell .b {
-  font-family: var(--font-mono, "Geist Mono"), monospace;
-  font-size: 11px;
-  color: var(--text-tertiary);
-}
-
-.sof-snap-cell {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.3;
-}
-.sof-snap-cell .a { font-size: 12px; color: var(--text-secondary); }
-.sof-snap-cell .b {
-  font-family: var(--font-mono, "Geist Mono"), monospace;
-  font-size: 11px;
-  color: var(--text-tertiary);
-  margin-top: 2px;
-}
-
-.sof-win-cell {
+/* Window — single token, urgency-tinted */
+.sof-win-text {
   font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 12px;
   color: var(--text-primary);
-  display: flex;
-  flex-direction: column;
-  line-height: 1.3;
+  white-space: nowrap;
 }
-.sof-win-cell .b {
-  font-size: 10.5px;
-  color: var(--text-tertiary);
-  font-family: var(--font-body, "Geist"), sans-serif;
-  margin-top: 2px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-weight: 500;
-}
-.sof-win-cell.urgent { color: var(--warning); }
+.sof-win-text.urgent { color: var(--warning); }
+.sof-win-text.closed { color: var(--text-tertiary); }
 
 .sof-risk-cell {
   display: flex;
@@ -4584,6 +4545,11 @@ table.sof-refineries tbody td.num {
      height). No aspect-ratio here — that would lock the row to 26px
      instead of matching the cell row height. */
   min-height: 0;
+  /* Lock line-height to 1 so the text bounding box equals the font
+     size and doesn't push the centered label out of its row,
+     especially on mobile where rows are only 11px tall. */
+  line-height: 1;
+  overflow: hidden;
 }
 
 /* Cell grid — no padding (outer handles it) */
@@ -5082,6 +5048,12 @@ table.sof-refineries tbody td.num {
   }
   .sof-w-heatmap {
     grid-template-columns: repeat(53, 11px);
+    grid-template-rows: repeat(7, 11px);
+  }
+  /* Pin day-labels grid to identical 11px rows so each label
+     locks to the exact same y-position as its cell row — no
+     1fr / stretch math, no sub-pixel rounding. */
+  .sof-w-heatmap-days {
     grid-template-rows: repeat(7, 11px);
   }
   .sof-w-heatmap-months {
