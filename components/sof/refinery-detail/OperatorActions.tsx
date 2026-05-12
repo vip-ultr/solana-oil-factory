@@ -8,6 +8,7 @@ import { ExternalLink, Loader2 } from "lucide-react";
 import { useSiws } from "@/components/sof/SiwsProvider";
 import {
   BN,
+  PROGRAM_ID,
   TOKEN_PROGRAM_ID,
   ASSOCIATED_TOKEN_PROGRAM_ID,
   escrowAuthorityPda,
@@ -39,6 +40,27 @@ interface Props {
   status: string;
   /** Mint decimals — for the take-snapshot RPC scan. */
   decimals: number | null;
+}
+
+// Decode Anchor/program custom error hex codes into readable messages
+// so users see "Not authorized" instead of "custom program error: 0x1770".
+const PROGRAM_ERRORS: Record<number, string> = {
+  6000: "Not authorized — your wallet is not the snapshot authority for this platform.",
+  6001: "Platform is paused. Try again later.",
+  6002: "Refinery is not active.",
+  6016: "Epoch mismatch — please refresh the page and try again.",
+  6019: "Snapshot must include at least one holder with a positive balance.",
+  6025: "Numerical overflow — contact support.",
+};
+
+function decodeError(err: unknown): string {
+  const msg = err instanceof Error ? err.message : String(err);
+  const m = msg.match(/custom program error:\s*0x([0-9a-fA-F]+)/i);
+  if (m) {
+    const code = parseInt(m[1], 16);
+    if (PROGRAM_ERRORS[code]) return PROGRAM_ERRORS[code];
+  }
+  return msg;
 }
 
 export function OperatorActions({
@@ -97,7 +119,7 @@ export function OperatorActions({
       const mintPk = new PublicKey(tokenMint);
       return await fn({ adapter: ad, refinery: refineryPk, mintPk });
     } catch (e) {
-      setErr(e instanceof Error ? e.message : String(e));
+      setErr(decodeError(e));
       return null;
     } finally {
       setBusy(null);
@@ -197,23 +219,44 @@ export function OperatorActions({
     await withProgram("snapshot", async ({ adapter, refinery, mintPk }) => {
       if (decimals === null) throw new Error("Mint decimals not loaded");
       const conn = getClientConnection();
+      const program = getClientProgram(adapter);
 
-      // getProgramAccounts on Token program with a 32-byte
-      // memcmp at offset 0 (mint) returns every token-account
-      // for this mint. dataSlice=[0,72] skips the trailing
-      // bytes we don't need.
-      const accounts = await conn.getProgramAccounts(TOKEN_PROGRAM_ID, {
-        commitment: "confirmed",
-        dataSlice: { offset: 0, length: 72 },
-        filters: [
-          { dataSize: 165 },
-          { memcmp: { offset: 0, bytes: mintPk.toBase58() } },
-        ],
-      });
+      // Fetch the live refinery account to get the current epoch.
+      // Using the hardcoded 0 would cause EpochMismatch if update_rate
+      // was ever called on this refinery.
+      const refineryAccount = await program.account.refinery.fetch(refinery);
+      const liveEpoch = (refineryAccount.epoch as number) ?? 0;
+      const liveSnapshotIndex = (refineryAccount.currentSnapshotIndex as number) ?? 0;
+      const newIndex = liveSnapshotIndex + 1;
+
+      // Scan both Token program and Token-2022 program so refineries
+      // that use T22 mints (no unsupported extensions) include all holders.
+      const TOKEN_2022_PROGRAM_ID = new PublicKey(
+        "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
+      );
+      const mintBase58 = mintPk.toBase58();
+      const [t1Accounts, t22Accounts] = await Promise.all([
+        conn.getProgramAccounts(TOKEN_PROGRAM_ID, {
+          commitment: "confirmed",
+          dataSlice: { offset: 0, length: 72 },
+          filters: [
+            { dataSize: 165 },
+            { memcmp: { offset: 0, bytes: mintBase58 } },
+          ],
+        }),
+        conn.getProgramAccounts(TOKEN_2022_PROGRAM_ID, {
+          commitment: "confirmed",
+          dataSlice: { offset: 0, length: 72 },
+          filters: [{ memcmp: { offset: 0, bytes: mintBase58 } }],
+        }),
+      ]);
+      const accounts = [...t1Accounts, ...t22Accounts];
+
       // Decode owner (offset 32, 32 bytes) + amount (offset 64, u64 LE).
       const entriesMap = new Map<string, bigint>();
       for (const acc of accounts) {
         const data = Buffer.from(acc.account.data);
+        if (data.length < 72) continue;
         const ownerPk = new PublicKey(data.subarray(32, 64));
         const amount = data.readBigUInt64LE(64);
         if (amount === BigInt(0)) continue;
@@ -232,7 +275,7 @@ export function OperatorActions({
 
       if (entriesArr.length === 0) {
         throw new Error(
-          "No eligible holders found for this mint. Mint some of the token to any wallet before submitting the snapshot.",
+          "No eligible holders found for this mint. Make sure at least one wallet (other than the escrow) holds this token before submitting the snapshot.",
         );
       }
 
@@ -242,24 +285,23 @@ export function OperatorActions({
         (acc, e) => acc + e.balance,
         BigInt(0),
       );
-      const newIndex = currentSnapshotIndex + 1;
 
-      // Find snapshot PDA.
+      // Derive snapshot PDA using the live index from the chain,
+      // matching the program's own seed derivation exactly.
       const idxBuf = Buffer.alloc(4);
       idxBuf.writeUInt32LE(newIndex, 0);
       const SEED_SNAPSHOT = Buffer.from("snapshot");
       const snapshotPdaAddr = PublicKey.findProgramAddressSync(
         [SEED_SNAPSHOT, refinery.toBuffer(), idxBuf],
-        new PublicKey("2tPLLPQeLLNL4UDBbeagSUAABJcB3fHGTJaLGEzrx3rE"),
+        PROGRAM_ID,
       )[0];
 
-      const program = getClientProgram(adapter);
       const ix = await program.methods
         .submitSnapshot({
           merkleRoot: Array.from(root) as never,
           totalEligibleBalance: new BN(totalEligibleBalance.toString()),
           holderCount: entriesArr.length,
-          epoch: 0, // TODO surface refinery.epoch
+          epoch: liveEpoch,
         })
         .accounts({
           snapshotAuthority: adapter.publicKey,
