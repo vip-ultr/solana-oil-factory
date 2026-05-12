@@ -54,6 +54,7 @@ export interface ReputationResult {
     verifiedDeployerCount: number;
     earlyClosures: number;
     tenureDays: number;
+    firstSeenUnix: number | null;
     distinctRefineriesAny: number;
     consistentSnapshotRefineries: number;
     isOperator: boolean;
@@ -363,6 +364,7 @@ export async function computeReputation(walletPubkey: string): Promise<Reputatio
       verifiedDeployerCount,
       earlyClosures,
       tenureDays,
+      firstSeenUnix: firstSeen,
       distinctRefineriesAny: distinctAny,
       consistentSnapshotRefineries: consistentRefineries,
       isOperator: myLaunches.length > 0,

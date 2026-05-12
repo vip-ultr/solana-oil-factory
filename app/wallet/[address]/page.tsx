@@ -176,14 +176,9 @@ export default async function WalletPage({ params }: PageProps) {
               Devnet
             </span>
           </div>
-          <div className="sof-w-stat-chip">
-            <span className="k">Wallet age</span>
-            <span className="v">380 days</span>
-          </div>
-          <div className="sof-w-stat-chip">
-            <span className="k">First seen</span>
-            <span className="v">Apr 25 2025</span>
-          </div>
+          <Suspense fallback={<WalletAgeFallback />}>
+            <WalletAgeChips address={address} />
+          </Suspense>
           <a
             href={solscanUrl(address, "address")}
             target="_blank"
@@ -489,6 +484,47 @@ async function HeatmapPanel({ address }: { address: string }) {
         More
       </div>
     </div>
+  );
+}
+
+async function WalletAgeChips({ address }: { address: string }) {
+  const rep = await getReputation(address);
+  const { tenureDays, firstSeenUnix } = rep.context;
+
+  return (
+    <>
+      <div className="sof-w-stat-chip">
+        <span className="k">Wallet age</span>
+        <span className="v">{tenureDays > 0 ? `${tenureDays} days` : "—"}</span>
+      </div>
+      <div className="sof-w-stat-chip">
+        <span className="k">First seen</span>
+        <span className="v">
+          {firstSeenUnix
+            ? new Date(firstSeenUnix * 1000).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              })
+            : "—"}
+        </span>
+      </div>
+    </>
+  );
+}
+
+function WalletAgeFallback() {
+  return (
+    <>
+      <div className="sof-w-stat-chip">
+        <span className="k">Wallet age</span>
+        <div className="sof-w-sk-line" style={{ width: 58, height: 11, marginTop: 2 }} />
+      </div>
+      <div className="sof-w-stat-chip">
+        <span className="k">First seen</span>
+        <div className="sof-w-sk-line" style={{ width: 78, height: 11, marginTop: 2 }} />
+      </div>
+    </>
   );
 }
 

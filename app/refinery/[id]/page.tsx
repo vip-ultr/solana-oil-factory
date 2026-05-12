@@ -542,15 +542,25 @@ export default async function RefineryPage({ params }: PageProps) {
                 </div>
               </div>
               <div>
-                <div className="k">Market cap</div>
-                <div className="v" style={{ color: "var(--text-tertiary)" }}>
-                  v1.1
+                <div className="k">Market cap (est.)</div>
+                <div className="v">
+                  {(() => {
+                    if (!mintInfo || r.poolInitial <= 0 || r.poolUsd <= 0) {
+                      return <span style={{ color: "var(--text-tertiary)" }}>—</span>;
+                    }
+                    const price = r.poolUsd / r.poolInitial;
+                    const supply = Number(mintInfo.supply) / Math.pow(10, mintInfo.decimals);
+                    const mcap = supply * price;
+                    return mcap > 0 ? formatUsd(mcap) : <span style={{ color: "var(--text-tertiary)" }}>—</span>;
+                  })()}
                 </div>
               </div>
               <div>
                 <div className="k">Holders (chain)</div>
-                <div className="v" style={{ color: "var(--text-tertiary)" }}>
-                  v1.1
+                <div className="v">
+                  {r.holdersEligible > 0
+                    ? r.holdersEligible.toLocaleString()
+                    : <span style={{ color: "var(--text-tertiary)" }}>—</span>}
                 </div>
               </div>
             </div>
@@ -558,39 +568,62 @@ export default async function RefineryPage({ params }: PageProps) {
 
           <div className="sof-rd-panel">
             <div className="sof-rd-panel-head">
-              <h3>Token trust report</h3>
-              <span
-                className="meta"
-                style={{ display: "flex", alignItems: "center", gap: 6 }}
-              >
-                <span
-                  style={{
-                    width: 6,
-                    height: 6,
-                    borderRadius: "50%",
-                    background: "var(--success)",
-                  }}
-                />
-                RugCheck 92/100
-              </span>
+              <h3>Token risk factors</h3>
+              <span className="meta">On-chain</span>
             </div>
             <div>
-              {[
-                { nm: "Mint authority", val: "Renounced", tone: "ok" as const },
-                { nm: "Freeze authority", val: "Renounced", tone: "ok" as const },
-                { nm: "Transfer fee", val: "0%", tone: "ok" as const },
-                { nm: "Top-10 concentration", val: "8.2%", tone: "ok" as const },
-                { nm: "Liquidity (24h)", val: "Healthy ($1.4M)", tone: "warn" as const },
-                { nm: "LP burned", val: "Yes (98.4%)", tone: "ok" as const },
-              ].map((row) => (
-                <div key={row.nm} className="sof-rd-risk-row">
-                  <span className="nm">
-                    <span className={`ind ${row.tone}`} aria-hidden="true" />
-                    {row.nm}
-                  </span>
-                  <span className={`vl ${row.tone}`}>{row.val}</span>
+              {mintInfo ? (
+                <>
+                  <div className="sof-rd-risk-row">
+                    <span className="nm">
+                      <span
+                        className={`ind ${mintInfo.mintAuthority ? "warn" : "ok"}`}
+                        aria-hidden="true"
+                      />
+                      Mint authority
+                    </span>
+                    <span className={`vl ${mintInfo.mintAuthority ? "warn" : "ok"}`}>
+                      {mintInfo.mintAuthority ? "Active" : "Renounced"}
+                    </span>
+                  </div>
+                  <div className="sof-rd-risk-row">
+                    <span className="nm">
+                      <span
+                        className={`ind ${mintInfo.freezeAuthority ? "warn" : "ok"}`}
+                        aria-hidden="true"
+                      />
+                      Freeze authority
+                    </span>
+                    <span className={`vl ${mintInfo.freezeAuthority ? "warn" : "ok"}`}>
+                      {mintInfo.freezeAuthority ? "Active" : "Renounced"}
+                    </span>
+                  </div>
+                </>
+              ) : (
+                <div
+                  style={{
+                    padding: "14px 14px 10px",
+                    fontSize: 12,
+                    color: "var(--text-tertiary)",
+                  }}
+                >
+                  Mint info unavailable — RPC fetch failed.
                 </div>
-              ))}
+              )}
+              {SOLANA_CLUSTER === "devnet" && (
+                <div
+                  style={{
+                    fontSize: 11,
+                    color: "var(--text-tertiary)",
+                    padding: "10px 14px 12px",
+                    lineHeight: 1.5,
+                  }}
+                >
+                  External risk scanners (RugCheck, Birdeye) don&apos;t index
+                  devnet tokens. Liquidity, holder concentration, and LP data
+                  are unavailable on devnet.
+                </div>
+              )}
             </div>
           </div>
 
