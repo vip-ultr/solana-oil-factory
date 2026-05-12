@@ -4528,11 +4528,18 @@ table.sof-refineries tbody td.num {
   gap: 2px;
 }
 
-/* Each row: corner/day-label column + the grid column */
+/* Each row: corner/day-label column + the grid column.
+ * The day-label row stretches its child columns so the .days grid
+ * matches the cell-grid's height — that way 7×1fr rows on the
+ * day-labels grid lines up perfectly with the 7 rows of cells. */
 .sof-w-heatmap-axis-row {
   display: flex;
-  align-items: flex-start;
+  align-items: stretch;
   gap: 4px;
+}
+/* Month-label row keeps its compact height — only the cell row stretches. */
+.sof-w-heatmap-axis-row:first-child {
+  align-items: flex-start;
 }
 
 /* Top-left spacer — same width as day-label column */
@@ -4573,7 +4580,10 @@ table.sof-refineries tbody td.num {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  aspect-ratio: 1;
+  /* Height is set by the parent grid (1fr × 7 stretched to cell-grid
+     height). No aspect-ratio here — that would lock the row to 26px
+     instead of matching the cell row height. */
+  min-height: 0;
 }
 
 /* Cell grid — no padding (outer handles it) */
@@ -8339,5 +8349,388 @@ table.sof-refineries tbody td.num {
     font-size: 12px;
     text-align: left;
     justify-content: flex-start;
+  }
+}
+
+/* ============================================================
+ * WATCHLIST PAGE (sof-wl-* prefix)
+ * ============================================================ */
+
+.sof-wl-hdr {
+  padding: 28px 48px 20px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.sof-wl-hdr h1 {
+  font-family: var(--font-display, "Geist"), sans-serif;
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  color: var(--text-primary);
+  margin: 0 0 6px;
+  line-height: 1.1;
+}
+.sof-wl-hdr p {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  line-height: 1.55;
+  max-width: 64ch;
+  margin: 0;
+}
+.sof-wl-hdr p code {
+  font-family: var(--font-mono, "Geist Mono"), monospace;
+  font-size: 11.5px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  padding: 1px 5px;
+  border-radius: 3px;
+  color: var(--text-secondary);
+}
+
+.sof-wl-tabs {
+  display: flex;
+  flex-direction: column;
+}
+.sof-wl-tabs-list {
+  display: flex;
+  gap: 4px;
+  padding: 16px 48px 0;
+  border-bottom: 1px solid var(--border-subtle);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.sof-wl-tabs-list::-webkit-scrollbar {
+  display: none;
+}
+.sof-wl-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px 12px;
+  border: none;
+  background: transparent;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 120ms ease, border-color 120ms ease;
+}
+.sof-wl-tab:hover:not([data-state="active"]) {
+  color: var(--text-secondary);
+}
+.sof-wl-tab[data-state="active"] {
+  color: var(--text-primary);
+  border-bottom-color: var(--accent);
+}
+.sof-wl-tab svg { color: var(--text-tertiary); }
+.sof-wl-tab[data-state="active"] svg { color: var(--accent); }
+.sof-wl-tab .cnt {
+  font-family: var(--font-mono, "Geist Mono"), monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.02em;
+  background: var(--bg-input);
+  color: var(--text-tertiary);
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid var(--border-subtle);
+}
+.sof-wl-tab[data-state="active"] .cnt {
+  background: var(--accent-bg);
+  color: var(--accent);
+  border-color: rgba(245, 166, 35, 0.32);
+}
+.sof-wl-tab:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  border-radius: 4px;
+}
+
+.sof-wl-panel {
+  padding: 20px 48px 40px;
+  outline: none;
+}
+.sof-wl-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sof-wl-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 18px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+.sof-wl-row:hover {
+  border-color: var(--border-strong);
+}
+.sof-wl-row-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+}
+.sof-wl-row-main:hover .sof-wl-id .nm { color: var(--accent); }
+.sof-wl-id { min-width: 0; }
+.sof-wl-id .nm {
+  font-family: var(--font-display, "Geist"), sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-primary);
+  letter-spacing: -0.005em;
+  transition: color 120ms ease;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sof-wl-id .sub {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
+  font-size: 11.5px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+.sof-wl-id .sub .dot { color: var(--text-disabled); }
+.sof-wl-id .sub .mint {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sof-wl-id .sub .dim { color: var(--text-tertiary); font-style: italic; }
+
+.sof-wl-stats {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  flex: none;
+}
+.sof-wl-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.sof-wl-stat .k {
+  font-family: var(--font-mono, "Geist Mono"), monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+.sof-wl-stat .v {
+  font-family: var(--font-mono, "Geist Mono"), monospace;
+  font-size: 13px;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+.sof-wl-stat .v small {
+  color: var(--text-tertiary);
+  font-weight: 400;
+  margin-left: 2px;
+}
+
+.sof-wl-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+}
+.sof-wl-open {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
+  font-size: 11.5px;
+  color: var(--accent);
+  text-decoration: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  transition: background 120ms ease;
+}
+.sof-wl-open:hover {
+  background: var(--accent-bg);
+}
+.sof-wl-remove {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  border: 1px solid var(--border-subtle);
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: color 120ms ease, background 120ms ease, border-color 120ms ease;
+}
+.sof-wl-remove:hover {
+  color: var(--error);
+  border-color: rgba(239, 68, 68, 0.4);
+  background: rgba(239, 68, 68, 0.06);
+}
+
+/* Skeleton shimmer shown in wallet stat cells while summaries load */
+.sof-wl-stat-loading {
+  display: inline-block;
+  width: 32px;
+  height: 12px;
+  border-radius: 3px;
+  background: linear-gradient(
+    90deg,
+    var(--bg-input) 25%,
+    var(--border-subtle) 50%,
+    var(--bg-input) 75%
+  );
+  background-size: 200% 100%;
+  animation: sof-shimmer 1.4s ease infinite;
+}
+@keyframes sof-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Operator badge inside wallet stat v cell */
+.sof-wl-role-op {
+  color: var(--accent);
+  font-size: 11px;
+}
+
+.sof-wl-row-orphan {
+  opacity: 0.75;
+  border-style: dashed;
+}
+.sof-wl-row-wallet {
+  /* Wallet rows are simpler — gap is wider since there are no stats */
+}
+
+.sof-wl-clear {
+  align-self: flex-start;
+  margin-top: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border-subtle);
+  background: transparent;
+  color: var(--text-tertiary);
+  font-size: 11.5px;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
+  cursor: pointer;
+  transition: color 120ms ease, border-color 120ms ease, background 120ms ease;
+}
+.sof-wl-clear:hover {
+  color: var(--error);
+  border-color: rgba(239, 68, 68, 0.4);
+  background: rgba(239, 68, 68, 0.06);
+}
+
+.sof-wl-empty {
+  padding: 56px 28px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  border: 1px dashed var(--border-subtle);
+  border-radius: 12px;
+  background: var(--bg-elevated);
+}
+.sof-wl-empty-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: var(--accent-bg);
+  border: 1px solid rgba(245, 166, 35, 0.28);
+  color: var(--accent);
+  display: grid;
+  place-items: center;
+  margin-bottom: 6px;
+}
+.sof-wl-empty-title {
+  font-family: var(--font-display, "Geist"), sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+.sof-wl-empty p {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-tertiary);
+  margin: 0;
+  max-width: 48ch;
+}
+.sof-wl-empty-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 8px 14px;
+  border-radius: 6px;
+  background: var(--accent-bg);
+  border: 1px solid rgba(245, 166, 35, 0.32);
+  color: var(--accent);
+  font-size: 12.5px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 120ms ease;
+}
+.sof-wl-empty-cta:hover {
+  background: rgba(245, 166, 35, 0.18);
+}
+
+@media (max-width: 1100px) {
+  .sof-wl-hdr { padding: 22px 32px 18px; }
+  .sof-wl-tabs-list { padding: 14px 32px 0; }
+  .sof-wl-panel { padding: 18px 32px 32px; }
+  .sof-wl-stats { gap: 18px; }
+}
+@media (max-width: 680px) {
+  .sof-wl-hdr { padding: 20px 20px 16px; }
+  .sof-wl-hdr h1 { font-size: 22px; }
+  .sof-wl-hdr p { font-size: 12px; }
+  .sof-wl-tabs-list { padding: 12px 20px 0; gap: 2px; }
+  .sof-wl-tab { padding: 10px 10px 12px; font-size: 12.5px; }
+  .sof-wl-tab .cnt { font-size: 10px; padding: 1px 6px; }
+  .sof-wl-panel { padding: 14px 20px 28px; }
+  .sof-wl-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 14px;
+  }
+  .sof-wl-row-main { gap: 10px; }
+  .sof-wl-stats {
+    gap: 14px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--border-subtle);
+  }
+  .sof-wl-stat .v { font-size: 12.5px; }
+  .sof-wl-row-actions {
+    width: 100%;
+    justify-content: space-between;
+    gap: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--border-subtle);
+  }
+  .sof-wl-empty {
+    padding: 40px 20px;
+  }
+  .sof-wl-empty-icon {
+    width: 44px;
+    height: 44px;
+  }
+  .sof-wl-empty-title {
+    font-size: 14.5px;
   }
 }
