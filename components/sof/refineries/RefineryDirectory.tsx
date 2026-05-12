@@ -284,18 +284,6 @@ export function RefineryDirectory({ refineries }: RefineryDirectoryProps) {
               <col key={c.key} style={{ width: c.width }} />
             ))}
           </colgroup>
-          <thead className="sof-thead-sr">
-            <tr>
-              {COLUMNS.map((c) => (
-                <th
-                  key={c.key}
-                  className={cn(c.num && "num", c.stickyLeft && "sof-col-token")}
-                >
-                  {c.label}
-                </th>
-              ))}
-            </tr>
-          </thead>
           <tbody>
             {filtered.map((r) => (
               <Row key={r.id} r={r} />

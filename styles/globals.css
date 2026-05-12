@@ -2251,17 +2251,22 @@ table.sof-refineries tbody td:last-child {
 /* Original <thead> is kept for accessibility (screen readers see
    real column headers) but visually collapsed — the visible header
    is rendered by <StickyTableHeader> as a sibling of the scroll
-   container so it can pin to the page viewport. */
+   container so it can pin to the page viewport.
+   IMPORTANT: under table-layout: fixed, browsers consult the first
+   row's cell widths when determining column widths if <col> widths
+   aren't set. The earlier position:absolute + width:1px on this
+   thead was shrinking those "first row" cells to 1px, which
+   confused some browsers into laying out body columns inconsistent
+   with the colgroup widths. We use visibility: collapse instead —
+   it visually hides the thead but keeps cell widths intact for
+   layout. */
 table.sof-refineries thead.sof-thead-sr {
-  position: absolute;
-  width: 1px;
-  height: 1px;
+  visibility: collapse;
+}
+table.sof-refineries thead.sof-thead-sr th {
   padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
   border: 0;
+  font-size: 0;
 }
 
 /* Sticky header (lives OUTSIDE .sof-table-scroll, sibling above
@@ -2322,7 +2327,13 @@ table.sof-refineries thead.sof-thead-sr {
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--text-primary);
-  border-right: 1px solid var(--border-subtle);
+  /* Slightly thicker + a touch stronger than --border-subtle so the
+     column dividers actually read against the header's lighter bg
+     (color-mix on .sof-sticky-thead bumps contrast against subtle
+     borders enough that 1px disappears). Matches the body row
+     dividers visually because the body bg is darker so 1px there
+     is already visible. */
+  border-right: 1.5px solid var(--border-strong);
   white-space: nowrap;
   box-sizing: border-box;
   display: flex;
@@ -2622,6 +2633,15 @@ table.sof-refineries tbody td.num {
     border-right: 0;
     -webkit-overflow-scrolling: touch;
   }
+  /* Drop the sticky header's side borders to match the body's
+     full-bleed mobile look — without this, the header has a 1px
+     left border that shifts its Token cell over by 1px while the
+     body's Token cell starts at the screen edge, and every column
+     below drifts. */
+  .sof-sticky-thead {
+    border-left: 0;
+    border-right: 0;
+  }
   .sof-pagination { padding: 14px 20px; }
 }
 @media (max-width: 767px) {
@@ -2640,10 +2660,70 @@ table.sof-refineries tbody td.num {
     letter-spacing: 0.08em;
   }
   .sof-tk { gap: 8px; }
-  .sof-tk .rank { min-width: 22px; font-size: 10.5px; }
   .sof-tk .meta .sym,
   .sof-tk .meta .sol { font-size: 13px; }
-  .sof-tk .meta .nm { font-size: 11.5px; max-width: 120px; }
+}
+
+/* Mobile Token column: just logo + TICKER/SOL. Rank and full
+   token name are hidden so the column stays narrow and more of
+   the table's other columns are visible without scrolling.
+   Breakpoint matches .sof-main shell (768px), not 767px, to avoid
+   the off-by-one where the layout flips to mobile chrome but the
+   table cell stays at its 300px desktop width. */
+@media (max-width: 768px) {
+  .sof-tk .rank,
+  .sof-tk .meta .nm {
+    display: none !important;
+  }
+  /* Pin every body column's width to the exact value its sticky
+     header partner uses (from the COLUMNS array). Without this,
+     under table-layout: fixed, browsers occasionally apply col
+     widths inconsistently and the header / body cells end up
+     1-2px off — which compounds across 11 columns and shifts the
+     dividers visibly. nth-child indices follow the COLUMNS order:
+     token, mcap, price, age, rep, poolUsd, filled, rate, snapshot,
+     holders, risk, status. */
+  table.sof-refineries colgroup col:nth-child(1)  { width: 160px !important; }
+  table.sof-refineries colgroup col:nth-child(2)  { width: 100px !important; }
+  table.sof-refineries colgroup col:nth-child(3)  { width: 110px !important; }
+  table.sof-refineries colgroup col:nth-child(4)  { width: 80px  !important; }
+  table.sof-refineries colgroup col:nth-child(5)  { width: 80px  !important; }
+  table.sof-refineries colgroup col:nth-child(6)  { width: 120px !important; }
+  table.sof-refineries colgroup col:nth-child(7)  { width: 90px  !important; }
+  table.sof-refineries colgroup col:nth-child(8)  { width: 100px !important; }
+  table.sof-refineries colgroup col:nth-child(9)  { width: 150px !important; }
+  table.sof-refineries colgroup col:nth-child(10) { width: 80px  !important; }
+  table.sof-refineries colgroup col:nth-child(11) { width: 150px !important; }
+  table.sof-refineries colgroup col:nth-child(12) { width: 130px !important; }
+
+  table.sof-refineries tbody td:nth-child(1)  { width: 160px !important; min-width: 160px !important; max-width: 160px !important; }
+  table.sof-refineries tbody td:nth-child(2)  { width: 100px !important; min-width: 100px !important; max-width: 100px !important; }
+  table.sof-refineries tbody td:nth-child(3)  { width: 110px !important; min-width: 110px !important; max-width: 110px !important; }
+  table.sof-refineries tbody td:nth-child(4)  { width: 80px  !important; min-width: 80px  !important; max-width: 80px  !important; }
+  table.sof-refineries tbody td:nth-child(5)  { width: 80px  !important; min-width: 80px  !important; max-width: 80px  !important; }
+  table.sof-refineries tbody td:nth-child(6)  { width: 120px !important; min-width: 120px !important; max-width: 120px !important; }
+  table.sof-refineries tbody td:nth-child(7)  { width: 90px  !important; min-width: 90px  !important; max-width: 90px  !important; }
+  table.sof-refineries tbody td:nth-child(8)  { width: 100px !important; min-width: 100px !important; max-width: 100px !important; }
+  table.sof-refineries tbody td:nth-child(9)  { width: 150px !important; min-width: 150px !important; max-width: 150px !important; }
+  table.sof-refineries tbody td:nth-child(10) { width: 80px  !important; min-width: 80px  !important; max-width: 80px  !important; }
+  table.sof-refineries tbody td:nth-child(11) { width: 150px !important; min-width: 150px !important; max-width: 150px !important; }
+  table.sof-refineries tbody td:nth-child(12) { width: 130px !important; min-width: 130px !important; max-width: 130px !important; }
+
+  .sof-sticky-thead-cell.sof-col-token {
+    width: 160px !important;
+    min-width: 160px !important;
+  }
+  /* Drop the desktop min-width on mobile. The desktop rule
+     (min-width: 1490px) forces the table wider than the sum of its
+     col widths on mobile (1350px after Token shrinks to 160),
+     which under table-layout: fixed makes browsers proportionally
+     expand every body column to fill — body cells end up wider
+     than the sticky header cells, and the dividers fall out of
+     alignment. Setting min-width: 0 lets the table sit exactly at
+     its col-width sum. */
+  .sof-table-scroll > table.sof-refineries {
+    min-width: 0 !important;
+  }
 }
 
 /* Responsive collapse */
@@ -6775,10 +6855,8 @@ table.sof-refineries tbody td.num {
 
 @media (max-width: 680px) {
   .sof-mo-scrim {
-    padding-top: 56px;
-    padding-left: 12px;
-    padding-right: 12px;
-    align-items: flex-start;
+    padding: 12px;
+    align-items: center;
   }
   .sof-mo-modal {
     width: 100%;
