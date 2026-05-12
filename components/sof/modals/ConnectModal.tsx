@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ArrowRight, ShieldCheck, X } from "lucide-react";
+import Image from "next/image";
+import { ShieldCheck, X } from "lucide-react";
 import { useWalletConnection } from "@solana/react-hooks";
 import { useSiws } from "@/components/sof/SiwsProvider";
 import { cn } from "@/lib/cn";
@@ -26,11 +27,6 @@ function writeLastUsed(connectorId: string) {
   }
 }
 
-/**
- * Mobile detection — UA-based. We only use this to decide whether
- * to surface the in-app-browser deeplink fallback when no
- * wallet-standard connectors show up.
- */
 function detectMobile(): { isMobile: boolean; isIos: boolean; isAndroid: boolean } {
   if (typeof navigator === "undefined") {
     return { isMobile: false, isIos: false, isAndroid: false };
@@ -41,23 +37,37 @@ function detectMobile(): { isMobile: boolean; isIos: boolean; isAndroid: boolean
   return { isMobile: isAndroid || isIos, isIos, isAndroid };
 }
 
-/**
- * Trampoline deeplinks that open this URL inside the wallet's
- * built-in browser. Once the page reloads inside the wallet,
- * wallet-standard injects normally and the modal works as on
- * desktop. We deliberately skip the encrypted v1 connect protocol
- * — too heavy for a web dapp's one-time handshake.
- */
-function walletBrowserDeeplinks(): { phantom: string; solflare: string } {
-  if (typeof window === "undefined") {
-    return { phantom: "https://phantom.app/", solflare: "https://solflare.com/" };
-  }
+const DEEPLINK_WALLETS = [
+  {
+    id: "phantom",
+    name: "Phantom",
+    icon: "/phantom-icon.png",
+    url: (here: string, host: string) =>
+      `https://phantom.app/ul/browse/${encodeURIComponent(here)}?ref=${encodeURIComponent(host)}`,
+  },
+  {
+    id: "solflare",
+    name: "Solflare",
+    icon: "/solflare-icon.png",
+    url: (here: string, host: string) =>
+      `https://solflare.com/ul/v1/browse/${encodeURIComponent(here)}?ref=${encodeURIComponent(host)}`,
+  },
+  {
+    id: "backpack",
+    name: "Backpack",
+    icon: "/backpack-icon.png",
+    url: (here: string, _host: string) =>
+      `https://backpack.app/browse/${encodeURIComponent(here)}`,
+  },
+];
+
+function buildDeeplinks(): Record<string, string> {
+  if (typeof window === "undefined") return {};
   const here = window.location.href;
   const host = window.location.host;
-  return {
-    phantom: `https://phantom.app/ul/browse/${encodeURIComponent(here)}?ref=${encodeURIComponent(host)}`,
-    solflare: `https://solflare.com/ul/v1/browse/${encodeURIComponent(here)}?ref=${encodeURIComponent(host)}`,
-  };
+  return Object.fromEntries(
+    DEEPLINK_WALLETS.map((w) => [w.id, w.url(here, host)]),
+  );
 }
 
 interface Props {
@@ -77,22 +87,16 @@ export function ConnectModal({ open, onClose }: Props) {
   } = useWalletConnection();
   const siws = useSiws();
 
-  // Local UI state for the "you can install this one" rows that
-  // aren't actually wallet-standard ready yet.
   const [picked, setPicked] = useState<string | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
   const [lastUsed, setLastUsed] = useState<string | null>(null);
 
-  // Read remembered last-used connector when the modal opens so we
-  // can surface it as the primary affordance.
   useEffect(() => {
     if (open) setLastUsed(readLastUsed());
   }, [open]);
 
-  // Wait a short beat after open for wallet-standard registrations
-  // to land (MWA on Android registers asynchronously). After the
-  // grace period we treat "still zero ready connectors on mobile"
-  // as the signal to offer the in-app-browser deeplinks.
+  // Grace period: wait for wallet-standard registrations to land
+  // (MWA on Android registers asynchronously).
   const env = useMemo(() => detectMobile(), []);
   const [grace, setGrace] = useState(true);
   useEffect(() => {
@@ -106,9 +110,7 @@ export function ConnectModal({ open, onClose }: Props) {
   const showDeeplinkPane =
     env.isMobile && isReady && !grace && readyConnectorCount === 0;
 
-  // Auto-close once the wallet is connected AND a SIWS payload
-  // exists. We also auto-trigger the SIWS sign right after a
-  // fresh handshake.
+  // Auto-close once wallet is connected and SIWS is satisfied.
   useEffect(() => {
     if (!open) return;
     if (!connected) return;
@@ -121,7 +123,6 @@ export function ConnectModal({ open, onClose }: Props) {
     }
   }, [open, connected, siws, onClose]);
 
-  // Modal lifecycle: lock body scroll, hook Esc, reset on open.
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();
@@ -146,7 +147,6 @@ export function ConnectModal({ open, onClose }: Props) {
     try {
       await connect(connectorId);
       writeLastUsed(connectorId);
-      // useEffect above closes the modal once `connected` flips.
     } catch (err) {
       setLocalError(
         err instanceof Error ? err.message : `Could not connect to ${name}`,
@@ -154,9 +154,6 @@ export function ConnectModal({ open, onClose }: Props) {
     }
   }
 
-  // We're "signing" while the wallet handshake is in flight OR
-  // while SIWS is asking for the message signature. The picker
-  // re-shows on error so users can pick a different wallet.
   const showSigning =
     (connecting && !localError) ||
     (connected && !siws.authed && !localError && !siws.error) ||
@@ -167,12 +164,6 @@ export function ConnectModal({ open, onClose }: Props) {
     (error instanceof Error ? error.message : null);
   const signingForSiws = connected && !siws.authed && !siws.error;
 
-  // Connectors come from wallet-standard discovery — Phantom,
-  // Solflare, Backpack etc. all show up automatically when their
-  // browser extensions are installed. `ready` is false for
-  // wallets the user hasn't installed yet; we still surface them
-  // so they can be prompted to install.
-  // Order: last-used (if installed) → other installed (alphabetical) → not-installed.
   const sortedConnectors = [...connectors].sort((a, b) => {
     const aLast = a.ready && a.id === lastUsed;
     const bLast = b.ready && b.id === lastUsed;
@@ -208,7 +199,7 @@ export function ConnectModal({ open, onClose }: Props) {
             onClose={onClose}
           />
         ) : showDeeplinkPane ? (
-          <DeeplinkPane onClose={onClose} isIos={env.isIos} />
+          <DeeplinkPane onClose={onClose} />
         ) : (
           <PickPhase
             connectors={sortedConnectors}
@@ -249,9 +240,7 @@ function PickPhase({
         <div className="sof-mo-h-title">
           <h3 id="sof-mo-title">Connect a wallet</h3>
           {installedCount > 0 && (
-            <span className="sof-mo-h-count">
-              {installedCount} detected
-            </span>
+            <span className="sof-mo-h-count">{installedCount} detected</span>
           )}
         </div>
         <button
@@ -268,29 +257,27 @@ function PickPhase({
         {connectors.length === 0 && !isReady ? (
           <div className="sof-mo-empty">Detecting installed wallets…</div>
         ) : connectors.length === 0 ? (
-          <div className="sof-mo-empty">
-            No Solana wallets detected. Install{" "}
+          // Desktop: no extension installed — show install links as wallet rows
+          DEEPLINK_WALLETS.map((w) => (
             <a
-              href="https://phantom.app/"
+              key={w.id}
+              href={`https://${w.id === "phantom" ? "phantom.app" : w.id === "solflare" ? "solflare.com" : "backpack.app"}/download`}
+              className="sof-mo-wallet-opt"
               target="_blank"
               rel="noreferrer"
             >
-              Phantom
-            </a>{" "}
-            or{" "}
-            <a
-              href="https://solflare.com/"
-              target="_blank"
-              rel="noreferrer"
-            >
-              Solflare
-            </a>{" "}
-            and reload.
-          </div>
+              <Image src={w.icon} alt="" width={30} height={30} unoptimized />
+              <span className="nm">{w.name}</span>
+              <span className="sof-mo-tag muted">Install</span>
+            </a>
+          ))
         ) : (
           connectors.map((c) => {
             const ready = c.ready ?? true;
             const isLastUsed = ready && c.id === lastUsed;
+            const localIcon = DEEPLINK_WALLETS.find(
+              (w) => w.name.toLowerCase() === c.name.toLowerCase(),
+            )?.icon;
             return (
               <button
                 key={c.id}
@@ -304,7 +291,9 @@ function PickPhase({
                 disabled={!ready}
                 aria-disabled={!ready}
               >
-                {c.icon ? (
+                {localIcon ? (
+                  <Image src={localIcon} alt="" width={30} height={30} unoptimized />
+                ) : c.icon ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={c.icon} alt="" width={30} height={30} />
                 ) : (
@@ -429,31 +418,18 @@ function SigningPhase({
   );
 }
 
-interface DeeplinkPaneProps {
-  onClose: () => void;
-  isIos: boolean;
-}
+function DeeplinkPane({ onClose }: { onClose: () => void }) {
+  const [links, setLinks] = useState<Record<string, string>>({});
 
-/**
- * Mobile-web fallback when wallet-standard surfaces no connectors.
- * Phantom and Solflare have no way to inject into iOS Safari or
- * mobile Chrome; the workaround the rest of the ecosystem uses is
- * a "browse" deeplink that opens THIS page inside the wallet's
- * built-in browser. Once it reopens there, our normal connect flow
- * picks up the wallet-standard surface the wallet injects.
- */
-function DeeplinkPane({ onClose, isIos }: DeeplinkPaneProps) {
-  const links = walletBrowserDeeplinks();
+  useEffect(() => {
+    setLinks(buildDeeplinks());
+  }, []);
+
   return (
     <>
       <div className="sof-mo-h">
-        <div>
-          <h3 id="sof-mo-title">Open in your wallet</h3>
-          <p>
-            {isIos
-              ? "iOS Safari can't connect to a Solana wallet directly. Open this page inside Phantom or Solflare to continue."
-              : "No installed wallet was found in this browser. Open this page in your wallet app and the connect prompt will appear."}
-          </p>
+        <div className="sof-mo-h-title">
+          <h3 id="sof-mo-title">Connect a wallet</h3>
         </div>
         <button
           type="button"
@@ -466,68 +442,28 @@ function DeeplinkPane({ onClose, isIos }: DeeplinkPaneProps) {
       </div>
 
       <div className="sof-mo-wallets">
-        <a
-          href={links.phantom}
-          className="sof-mo-wallet-opt detected"
-          target="_blank"
-          rel="noreferrer"
-        >
-          <span className="more-ic" aria-hidden="true">
-            P
-          </span>
-          <span className="nm">Open in Phantom</span>
-          <span className="det">DEEPLINK</span>
-          <span className="arrow">
-            <ArrowRight size={14} strokeWidth={2} />
-          </span>
-        </a>
-        <a
-          href={links.solflare}
-          className="sof-mo-wallet-opt detected"
-          target="_blank"
-          rel="noreferrer"
-        >
-          <span className="more-ic" aria-hidden="true">
-            S
-          </span>
-          <span className="nm">Open in Solflare</span>
-          <span className="det">DEEPLINK</span>
-          <span className="arrow">
-            <ArrowRight size={14} strokeWidth={2} />
-          </span>
-        </a>
+        {DEEPLINK_WALLETS.map((w) => (
+          <a
+            key={w.id}
+            href={links[w.id] ?? "#"}
+            className="sof-mo-wallet-opt detected"
+            target="_blank"
+            rel="noreferrer"
+          >
+            <Image src={w.icon} alt="" width={30} height={30} unoptimized />
+            <span className="nm">{w.name}</span>
+          </a>
+        ))}
       </div>
 
       <div className="sof-mo-foot">
-        <div
-          className="row"
-          style={{
-            color: "var(--text-tertiary)",
-            lineHeight: 1.55,
-            fontSize: 12,
-          }}
-        >
-          <span>
-            Don&apos;t have a wallet yet? Install{" "}
-            <a
-              href="https://phantom.app/download"
-              target="_blank"
-              rel="noreferrer"
-              style={{ color: "var(--accent)" }}
-            >
-              Phantom
-            </a>{" "}
-            or{" "}
-            <a
-              href="https://solflare.com/download"
-              target="_blank"
-              rel="noreferrer"
-              style={{ color: "var(--accent)" }}
-            >
-              Solflare
-            </a>{" "}
-            and reload.
-          </span>
+        <div className="sof-mo-foot-trust">
+          <ShieldCheck size={13} strokeWidth={2} aria-hidden="true" />
+          <span>Non-custodial · Free signature · No transaction</span>
+        </div>
+        <div className="sof-mo-foot-legal">
+          By connecting you agree to the <a href="/legal/terms">terms</a>.
+          Programs are <a href="/trust">verified on-chain</a>.
         </div>
       </div>
     </>
