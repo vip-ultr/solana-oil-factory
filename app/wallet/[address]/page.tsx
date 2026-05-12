@@ -20,7 +20,8 @@ import {
 } from "@/components/sof/wallet/WalletViewerControls";
 import { WalletCopyButton } from "@/components/sof/wallet/WalletCopyButton";
 import { fetchRefinery } from "@/lib/onchain/refineries";
-import { tokenMetaFor } from "@/lib/onchain/token-registry";
+import { hasRegistryEntry } from "@/lib/onchain/token-registry";
+import { fetchMetadataFor, tokenMetaWithOverride } from "@/lib/onchain/metadata";
 import { loadEvents } from "@/lib/indexer/store";
 import type { IndexedEvent } from "@/lib/indexer/types";
 import {
@@ -286,7 +287,7 @@ async function RepPanel({ address }: { address: string }) {
       <div className="sof-w-rep-grid">
         <div className="sof-w-rep-cell sof-w-rep-cell-gauge">
           <div className="sof-w-gauge">
-            <div className="ring">
+            <div className="gauge-ring">
               <svg
                 viewBox="0 0 170 170"
                 aria-hidden="true"
@@ -294,14 +295,6 @@ async function RepPanel({ address }: { address: string }) {
                 role="presentation"
                 preserveAspectRatio="xMidYMid meet"
               >
-                <circle
-                  cx="85"
-                  cy="85"
-                  r="74"
-                  fill="none"
-                  stroke="var(--bg-input)"
-                  strokeWidth="10"
-                />
                 <circle
                   cx="85"
                   cy="85"
@@ -390,6 +383,18 @@ async function TabsPanel({ address }: { address: string }) {
 
   const refineryMintMap = await getRefineryMintMap(address);
 
+  // Resolve live token metadata (Helius / Metaplex) for any mint
+  // that isn't in the hardcoded registry. Without this lookup the
+  // panels fall back to "Unknown token" + truncated mint, which is
+  // a poor experience for any token launched on devnet.
+  const uniqueUnknownMints = Array.from(
+    new Set([...refineryMintMap.values()].filter((m) => !hasRegistryEntry(m))),
+  );
+  const metaOverride =
+    uniqueUnknownMints.length > 0
+      ? await fetchMetadataFor(uniqueUnknownMints)
+      : new Map<string, { name: string; symbol: string }>();
+
   const operatedIds = [
     ...new Set(launches.map((e) => e.data.refinery as string).filter(Boolean)),
   ];
@@ -421,7 +426,11 @@ async function TabsPanel({ address }: { address: string }) {
             label: "Recent claims",
             count: claims.length,
             panel: (
-              <ClaimsPanel claims={claims} refineryMintMap={refineryMintMap} />
+              <ClaimsPanel
+                claims={claims}
+                refineryMintMap={refineryMintMap}
+                metaOverride={metaOverride}
+              />
             ),
           },
           {
@@ -438,6 +447,7 @@ async function TabsPanel({ address }: { address: string }) {
                 snapshots={snapshots}
                 claims={claims}
                 refineryMintMap={refineryMintMap}
+                metaOverride={metaOverride}
               />
             ),
           },
@@ -448,6 +458,7 @@ async function TabsPanel({ address }: { address: string }) {
               <ReputationEventsPanel
                 events={timeline}
                 refineryMintMap={refineryMintMap}
+                metaOverride={metaOverride}
               />
             ),
           },
@@ -619,9 +630,11 @@ function KpiTile({
 function ClaimsPanel({
   claims,
   refineryMintMap,
+  metaOverride,
 }: {
   claims: Awaited<ReturnType<typeof loadEvents>>;
   refineryMintMap: Map<string, string>;
+  metaOverride: Map<string, { name: string; symbol: string }>;
 }) {
   if (claims.length === 0) {
     return (
@@ -651,7 +664,7 @@ function ClaimsPanel({
             const ref = c.refinery ?? "";
             const mint = ref ? refineryMintMap.get(ref) : undefined;
             const meta = mint
-              ? tokenMetaFor(mint)
+              ? tokenMetaWithOverride(mint, metaOverride)
               : {
                   symbol: "—",
                   name: "Unknown",
@@ -709,21 +722,21 @@ function ClaimsPanel({
 
 function RefineryCell({
   refineryId,
-  name,
   symbol,
   variant,
 }: {
   refineryId: string;
-  name: string;
+  /** Accepted but no longer displayed — we render TICKER/SOL only. */
+  name?: string;
   symbol: string;
   variant: TokenMarkVariant;
 }) {
   const inner = (
     <div className="sof-w-token-row">
       <TokenMark variant={variant} symbol={symbol} size={28} />
-      <div className="sof-w-token-id">
-        <span className="nm">{name}</span>
+      <div className="sof-card-ticker">
         <span className="sym">{symbol}</span>
+        <span className="sol">/SOL</span>
       </div>
     </div>
   );
@@ -772,9 +785,9 @@ function OperatedPanel({ operated }: { operated: Refinery[] }) {
                       symbol={rf.tokenSymbol}
                       logoUrl={rf.logoUrl}
                     />
-                    <div className="sof-w-token-id">
-                      <span className="nm">{rf.tokenName}</span>
+                    <div className="sof-card-ticker">
                       <span className="sym">{rf.tokenSymbol}</span>
+                      <span className="sol">/SOL</span>
                     </div>
                   </div>
                 </Link>
@@ -817,10 +830,12 @@ function SnapshotsPanel({
   snapshots,
   claims,
   refineryMintMap,
+  metaOverride,
 }: {
   snapshots: IndexedEvent[];
   claims: IndexedEvent[];
   refineryMintMap: Map<string, string>;
+  metaOverride: Map<string, { name: string; symbol: string }>;
 }) {
   if (snapshots.length === 0) {
     return (
@@ -853,7 +868,7 @@ function SnapshotsPanel({
             const ref = s.refinery ?? "";
             const mint = ref ? refineryMintMap.get(ref) : undefined;
             const meta = mint
-              ? tokenMetaFor(mint)
+              ? tokenMetaWithOverride(mint, metaOverride)
               : { symbol: "—", name: "Unknown", variant: "default" as const };
             const snapshotIndex = s.data.snapshot_index as number;
             const holderCount = Number(s.data.holder_count ?? 0);
@@ -962,9 +977,11 @@ const REP_EVENT_NAMES = new Set(Object.keys(REP_EVENT_META));
 function ReputationEventsPanel({
   events,
   refineryMintMap,
+  metaOverride,
 }: {
   events: IndexedEvent[];
   refineryMintMap: Map<string, string>;
+  metaOverride: Map<string, { name: string; symbol: string }>;
 }) {
   const filtered = events.filter((e) => REP_EVENT_NAMES.has(e.eventName));
 
@@ -994,7 +1011,7 @@ function ReputationEventsPanel({
             const meta = REP_EVENT_META[e.eventName];
             const ref = e.refinery ?? "";
             const mint = ref ? refineryMintMap.get(ref) : undefined;
-            const tokenMeta = mint ? tokenMetaFor(mint) : null;
+            const tokenMeta = mint ? tokenMetaWithOverride(mint, metaOverride) : null;
             const when = e.blockTime
               ? new Date(e.blockTime * 1000).toLocaleString()
               : "—";

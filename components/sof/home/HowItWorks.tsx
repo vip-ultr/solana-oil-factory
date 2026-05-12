@@ -1,4 +1,5 @@
 import { StatusPill, VerifiedBadge, TokenMark, PoolBar } from "@/components/sof/primitives";
+import { ClaimStatusText } from "@/components/sof/home/ClaimStatusText";
 import { formatTokens, snapshotStrategyLabel } from "@/lib/mock-data";
 import type { Refinery } from "@/lib/mock-data";
 
@@ -82,23 +83,21 @@ export function HowItWorks({ featured }: Props) {
   function DemoRefineryCard() {
     if (!featured) return null;
     return (
-      <div className="sof-demo-card" aria-label={`Sample refinery — ${featured.tokenName}`}>
+      <div className="sof-demo-card" aria-label={`Sample refinery — ${featured.tokenSymbol}`}>
         <div className="head">
-          <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+          <div className="sof-card-id">
             <TokenMark
               variant={featured.tokenMarkVariant}
               symbol={featured.tokenSymbol}
               size={42}
               logoUrl={featured.logoUrl}
             />
-            <div>
-              <div className="name">{featured.tokenName}</div>
-              <div className="sym">
-                {featured.tokenSymbol} · {featured.tokenMint}
-              </div>
+            <div className="sof-card-ticker">
+              <span className="sym">{featured.tokenSymbol}</span>
+              <span className="sol">/SOL</span>
             </div>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
+          <div className="sof-card-badges">
             <StatusPill status={featured.status} />
             <VerifiedBadge tier={featured.verification} />
           </div>
@@ -158,8 +157,8 @@ export function HowItWorks({ featured }: Props) {
             <div className="tiny" style={{ textTransform: "uppercase", letterSpacing: "0.1em" }}>
               YOU CAN CLAIM
             </div>
-            <div className="font-mono" style={{ fontSize: 18, fontWeight: 500, color: "var(--accent)", marginTop: 2 }}>
-              Connect to check
+            <div className="font-mono" style={{ fontSize: 15, fontWeight: 500, color: "var(--accent)", marginTop: 2 }}>
+              <ClaimStatusText />
             </div>
           </div>
           <button type="button" className="sof-btn-claim">

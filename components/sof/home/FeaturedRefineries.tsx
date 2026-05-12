@@ -63,14 +63,12 @@ function HeroCard({ refinery: r }: { refinery: Refinery }) {
             size={48}
             logoUrl={r.logoUrl}
           />
-          <div>
-            <div className="name">{r.tokenName}</div>
-            <div className="sym">
-              {r.tokenSymbol} · {r.tokenMint}
-            </div>
+          <div className="sof-card-ticker">
+            <span className="sym">{r.tokenSymbol}</span>
+            <span className="sol">/SOL</span>
           </div>
         </div>
-        <div className="pillrow">
+        <div className="sof-card-badges">
           <StatusPill status={r.status} />
           <VerifiedBadge tier={r.verification} />
         </div>
@@ -132,7 +130,7 @@ function HeroCard({ refinery: r }: { refinery: Refinery }) {
           Last snapshot {formatRelativeTime(r.snapshotAgeSeconds)} · #
           {r.holdersClaimed > 0 ? Math.ceil(r.holdersClaimed / 100) : 1}
         </span>
-        <div style={{ display: "flex", gap: 8 }}>
+        <div className="sof-card-actions">
           <ButtonLink
             href={`/refinery/${r.id}`}
             variant="miniGhost"
@@ -164,11 +162,9 @@ function CompactCard({ refinery: r }: { refinery: Refinery }) {
             symbol={r.tokenSymbol}
             logoUrl={r.logoUrl}
           />
-          <div>
-            <div className="name">{r.tokenName}</div>
-            <div className="sym">
-              {r.tokenSymbol} · {r.tokenMint}
-            </div>
+          <div className="sof-card-ticker">
+            <span className="sym">{r.tokenSymbol}</span>
+            <span className="sol">/SOL</span>
           </div>
         </div>
         <StatusPill status={r.status} />
