@@ -227,6 +227,7 @@ function mapRefinery(
     poolEmptyStrategy: poolEmptyStrategyEnumToUi(a.poolEmptyStrategy),
     perClaimCapBps: a.perClaimCapBps,
     claimWindowDaysLeft,
+    claimWindowEndIso: claimWindowEnd > 0 ? new Date(claimWindowEnd * 1000).toISOString() : null,
     status: statusEnumToUi(a.status, claimWindowDaysLeft),
     riskFlags: a.freezeAcknowledged ? ["freezeAuthority"] : [],
     launchedAtIso: new Date(bnToNumberSafe(a.createdAt) * 1000).toISOString(),

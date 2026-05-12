@@ -17,7 +17,7 @@ function getClient(): SupabaseClient {
   if (!key) throw new Error("SUPABASE_SERVICE_ROLE_KEY is not set");
   return createClient(url, key, {
     auth: { persistSession: false, autoRefreshToken: false },
-    realtime: { transport: ws },
+    realtime: { transport: ws as unknown as typeof WebSocket },
   });
 }
 

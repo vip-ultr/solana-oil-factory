@@ -35,6 +35,7 @@ import {
   SOLANA_CLUSTER,
 } from "@/lib/program";
 import { buildActivityFeed } from "@/lib/indexer/ui";
+import { loadEvents } from "@/lib/indexer/store";
 import {
   topClaimantsForRefinery,
   operatorStatsFor,
@@ -77,13 +78,21 @@ export default async function RefineryPage({ params }: PageProps) {
   // Live recent-claims feed for this refinery, sourced from the
   // indexer JSON. Returns 0 rows for fresh refineries — the
   // empty-state branch below handles that.
-  const [recentClaims, snapshots, topClaimants, mintInfo, treasury] = await Promise.all([
+  const [recentClaims, snapshots, topClaimants, mintInfo, treasury, allClaims] = await Promise.all([
     buildActivityFeed({ refinery: id, eventName: "ClaimMade", limit: 8 }),
     fetchSnapshots(id),
     topClaimantsForRefinery(id, 7),
     r.tokenMintFull ? fetchMint(r.tokenMintFull) : Promise.resolve(null),
     fetchTreasuryConfig(),
+    loadEvents({ refinery: id, eventName: "ClaimMade" }),
   ]);
+
+  const nowUnix = Math.floor(Date.now() / 1000);
+  const dayAgo = nowUnix - 86_400;
+  const claims24h = allClaims.filter((e) => e.blockTime !== null && e.blockTime >= dayAgo);
+  const net24hBase = claims24h.reduce((sum, e) => sum + Number(e.data.amount_claimed ?? 0), 0);
+  const decimals = mintInfo?.decimals ?? 0;
+  const net24h = decimals > 0 ? net24hBase / Math.pow(10, decimals) : net24hBase;
 
   const [operatorStats, operatorRep] = await Promise.all([
     r.operatorFull ? operatorStatsFor(r.operatorFull) : Promise.resolve(null),
@@ -215,9 +224,9 @@ export default async function RefineryPage({ params }: PageProps) {
               : `${r.claimWindowDaysLeft}d`}
           </div>
           <div className={r.claimWindowDaysLeft && r.claimWindowDaysLeft <= 1 ? "sub warn" : "sub"}>
-            {r.claimWindowDaysLeft === null
+            {r.claimWindowDaysLeft === null || !r.claimWindowEndIso
               ? "No expiration set"
-              : "Window ends Dec 15, 18:00 UTC"}
+              : `Ends ${new Date(r.claimWindowEndIso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })}`}
           </div>
         </div>
       </div>
@@ -231,8 +240,8 @@ export default async function RefineryPage({ params }: PageProps) {
               <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
                 <span className="meta">
                   Net:{" "}
-                  <span style={{ color: "var(--error)" }}>
-                    −138,200 {r.tokenSymbol}
+                  <span style={{ color: claims24h.length > 0 ? "var(--error)" : "var(--text-tertiary)" }}>
+                    {claims24h.length > 0 ? `−${formatTokens(net24h)}` : "—"}{" "}{r.tokenSymbol}
                   </span>
                 </span>
                 <div className="sof-rd-seg-mini">
@@ -314,46 +323,58 @@ export default async function RefineryPage({ params }: PageProps) {
                 window opens once snapshot #1 lands.
               </div>
             ) : (
+              <div className="sof-rd-mtable-wrap">
               <table className="sof-rd-mtable">
                 <thead>
                   <tr>
-                    <th style={{ width: 60 }}>#</th>
-                    <th>Taken at</th>
+                    <th style={{ width: 44 }}>#</th>
+                    <th>Date</th>
+                    <th style={{ width: 72 }}>Time (UTC)</th>
                     <th className="num">Holders</th>
                     <th className="num">Eligible supply</th>
-                    <th>Merkle root</th>
+                    <th>Root</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {snapshots.map((s) => (
-                    <tr key={s.index}>
-                      <td className="fade">
-                        {s.index.toString().padStart(2, "0")}
-                      </td>
-                      <td>{new Date(s.takenAtUnix * 1000).toUTCString()}</td>
-                      <td className="num">{s.holderCount.toLocaleString()}</td>
-                      <td className="num">
-                        {formatTokens(s.totalEligibleBalance)}
-                      </td>
-                      <td>
-                        <a
-                          className="sof-rd-snap-merkle font-mono"
-                          href={`https://explorer.solana.com/address/${s.pda}?cluster=devnet`}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          {s.merkleRoot.slice(0, 8)}…
-                          {s.merkleRoot.slice(-4)}{" "}
-                          <ExternalLink
-                            size={10}
-                            style={{ display: "inline-block" }}
-                          />
-                        </a>
-                      </td>
-                    </tr>
-                  ))}
+                  {snapshots.map((s) => {
+                    const dt = new Date(s.takenAtUnix * 1000);
+                    const dateStr = dt.toLocaleDateString("en-US", {
+                      month: "short", day: "numeric", year: "numeric", timeZone: "UTC",
+                    });
+                    const timeStr = dt.toLocaleTimeString("en-US", {
+                      hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "UTC",
+                    });
+                    const eligibleWhole = decimals > 0
+                      ? s.totalEligibleBalance / Math.pow(10, decimals)
+                      : s.totalEligibleBalance;
+                    return (
+                      <tr key={s.index}>
+                        <td className="fade" style={{ whiteSpace: "nowrap" }}>
+                          {s.index.toString().padStart(2, "0")}
+                        </td>
+                        <td style={{ whiteSpace: "nowrap" }}>{dateStr}</td>
+                        <td className="fade" style={{ whiteSpace: "nowrap" }}>{timeStr}</td>
+                        <td className="num" style={{ whiteSpace: "nowrap" }}>{s.holderCount.toLocaleString()}</td>
+                        <td className="num" style={{ whiteSpace: "nowrap" }}>
+                          {formatTokens(eligibleWhole)}
+                        </td>
+                        <td style={{ whiteSpace: "nowrap" }}>
+                          <a
+                            className="sof-rd-snap-merkle font-mono"
+                            href={`https://explorer.solana.com/address/${s.pda}?cluster=devnet`}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            {s.merkleRoot.slice(0, 8)}…{s.merkleRoot.slice(-4)}{" "}
+                            <ExternalLink size={10} style={{ display: "inline-block" }} />
+                          </a>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
+              </div>
             )}
           </div>
 
@@ -377,10 +398,11 @@ export default async function RefineryPage({ params }: PageProps) {
                 is published.
               </div>
             ) : (
+              <div className="sof-rd-mtable-wrap">
               <table className="sof-rd-mtable">
                 <thead>
                   <tr>
-                    <th style={{ width: 60 }}>#</th>
+                    <th style={{ width: 44 }}>#</th>
                     <th>Wallet</th>
                     <th className="num">Total claimed</th>
                     <th className="num">Claims</th>
@@ -390,23 +412,26 @@ export default async function RefineryPage({ params }: PageProps) {
                 <tbody>
                   {topClaimants.map((c) => (
                     <tr key={c.holder}>
-                      <td className="fade">
+                      <td className="fade" style={{ whiteSpace: "nowrap" }}>
                         {c.rank.toString().padStart(2, "0")}
                       </td>
-                      <td>
+                      <td style={{ whiteSpace: "nowrap" }}>
                         <WalletPill address={c.holder} />
                       </td>
-                      <td className="num">{formatTokens(c.totalClaimed)}</td>
-                      <td className="num">{c.claimCount}</td>
-                      <td className="fade">
+                      <td className="num" style={{ whiteSpace: "nowrap" }}>{formatTokens(c.totalClaimed)}</td>
+                      <td className="num" style={{ whiteSpace: "nowrap" }}>{c.claimCount}</td>
+                      <td className="fade" style={{ whiteSpace: "nowrap" }}>
                         {c.firstClaimUnix
-                          ? new Date(c.firstClaimUnix * 1000).toLocaleDateString()
+                          ? new Date(c.firstClaimUnix * 1000).toLocaleDateString("en-US", {
+                              month: "short", day: "numeric", year: "numeric",
+                            })
                           : "—"}
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+              </div>
             )}
           </div>
         </div>

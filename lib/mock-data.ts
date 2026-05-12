@@ -53,6 +53,7 @@ export interface Refinery {
   poolEmptyStrategy: PoolEmptyStrategy;
   perClaimCapBps: number;
   claimWindowDaysLeft: number | null; // null = open-ended
+  claimWindowEndIso?: string | null;
   status: RefineryStatus;
   hasTransferFee?: boolean;
   transferFeeBps?: number;

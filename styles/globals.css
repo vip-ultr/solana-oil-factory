@@ -38,6 +38,11 @@
 
   --grid-line: rgba(255, 255, 255, 0.04);
 
+  /* Font aliases — display + body both resolve to Geist Sans.
+     --font-sans / --font-mono are set on <html> by next/font. */
+  --font-display: var(--font-sans);
+  --font-body: var(--font-sans);
+
   color-scheme: dark;
 }
 
@@ -101,9 +106,9 @@
   --color-rep-risky: var(--rep-risky);
   --color-rep-flagged: var(--rep-flagged);
 
-  --font-display: var(--font-display, "Space Grotesk"), sans-serif;
-  --font-body: var(--font-body, "Inter"), sans-serif;
-  --font-mono: var(--font-mono, "JetBrains Mono"), monospace;
+  --font-display: var(--font-display, "Geist"), sans-serif;
+  --font-body: var(--font-body, "Geist"), sans-serif;
+  --font-mono: var(--font-mono, "Geist Mono"), monospace;
 }
 
 /* ---------- BASE RESET ---------- */
@@ -124,7 +129,7 @@ html {
 }
 
 body {
-  font-family: var(--font-body, "Inter"), sans-serif;
+  font-family: var(--font-body, "Geist"), sans-serif;
   background: var(--bg-base);
   color: var(--text-primary);
   font-size: 14px;
@@ -149,12 +154,12 @@ button {
 
 /* ---------- TYPE HELPERS ---------- */
 .font-display {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   letter-spacing: -0.02em;
 }
 
 .font-mono {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-variant-numeric: tabular-nums;
 }
 
@@ -364,7 +369,7 @@ button {
 
 /* Wallet pill (mono truncated address) */
 .sof-wallet-pill {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 12px;
   padding: 3px 9px;
   border-radius: 9999px;
@@ -386,7 +391,7 @@ button {
 
 /* Reputation chip — 5 tiers */
 .sof-rep-chip {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 12px;
   padding: 2px 7px;
   border-radius: 4px;
@@ -424,7 +429,7 @@ button {
   flex: none;
   display: grid;
   place-items: center;
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   font-weight: 700;
   font-size: 14px;
   color: #1a1208;
@@ -537,7 +542,7 @@ button {
 }
 
 .sof-sidebar .logo .word {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   font-weight: 600;
   font-size: 14px;
   letter-spacing: 0.005em;
@@ -649,7 +654,7 @@ button {
   color: var(--text-tertiary);
   text-transform: uppercase;
   letter-spacing: 0.14em;
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
 }
 
 .sof-sb-foot-row .net-text .v {
@@ -820,6 +825,17 @@ button {
     gap: 28px;
     padding: 28px 0;
   }
+  .sof-foot-social-btn {
+    width: 36px;
+    height: 36px;
+  }
+  .sof-foot-social-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+  .sof-foot-bottom .legal {
+    line-height: 1.55;
+  }
 }
 
 .sof-foot-brand .lg {
@@ -835,7 +851,7 @@ button {
 }
 
 .sof-foot-brand .lg .word {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   font-weight: 600;
   font-size: 14px;
 }
@@ -849,7 +865,7 @@ button {
 }
 
 .sof-foot-col h5 {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 11px;
   color: var(--text-tertiary);
   text-transform: uppercase;
@@ -877,6 +893,43 @@ button {
   color: var(--text-primary);
 }
 
+.sof-foot-brand p {
+  margin-bottom: 18px;
+}
+
+.sof-foot-social {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sof-foot-social-btn {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  cursor: pointer;
+  text-decoration: none;
+  transition: color 120ms ease, background 120ms ease, border-color 120ms ease, transform 120ms ease;
+}
+.sof-foot-social-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-overlay);
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
+}
+.sof-foot-social-btn:focus-visible {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.sof-foot-social-btn svg {
+  width: 15px;
+  height: 15px;
+}
+
 .sof-foot-bottom {
   display: flex;
   justify-content: space-between;
@@ -888,86 +941,82 @@ button {
   flex-wrap: wrap;
   gap: 16px;
 }
+.sof-foot-bottom .legal {
+  flex: 1;
+  min-width: 0;
+}
 
-.sof-theme-toggle {
+/* ---------- THEME SEGMENTED CONTROL (light / system / dark) ---------- */
+.sof-theme-seg {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
-  border-radius: 6px;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 8px;
+  background: var(--bg-input);
   border: 1px solid var(--border-subtle);
-  background: transparent;
-  font-size: 12px;
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: border-color 150ms ease-out, color 150ms ease-out;
 }
-
-.sof-theme-toggle:hover {
-  border-color: var(--border-strong);
+.sof-theme-seg-opt {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 26px;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  border: none;
+  padding: 0;
+  transition: color 120ms ease, background 120ms ease;
+}
+.sof-theme-seg-opt:hover:not(.on) {
   color: var(--text-primary);
 }
+.sof-theme-seg-opt.on {
+  color: var(--accent);
+  background: var(--bg-base);
+  box-shadow:
+    inset 0 0 0 1px var(--border-strong),
+    0 1px 2px rgba(0, 0, 0, 0.25);
+}
+.sof-theme-seg-opt svg {
+  width: 14px;
+  height: 14px;
+}
 
-/* Sidebar host wrapper: aligns the theme toggle on the same
+/* Sidebar host wrapper: aligns the theme segment on the same
  * left padding as the network row above and the connect button
- * below; trims its label when the sidebar is collapsed to 64px. */
+ * below; switches to a vertical stack when the sidebar is
+ * collapsed to 64px so all three options stay clickable. */
 .sof-sb-theme {
   padding: 0 18px 8px;
   display: flex;
   align-items: center;
   justify-content: flex-start;
 }
-.sof-sb-theme .sof-theme-toggle {
+.sof-sb-theme .sof-theme-seg {
   width: 100%;
   height: 36px;
-  padding: 0 10px;
-  justify-content: flex-start;
+  padding: 3px;
 }
-.sof-sidebar:not(:hover):not([data-expanded="true"]) .sof-sb-theme .sof-theme-toggle {
+.sof-sb-theme .sof-theme-seg-opt {
+  flex: 1;
+  height: 100%;
+  width: auto;
+}
+.sof-sidebar:not(:hover):not([data-expanded="true"]) .sof-sb-theme {
+  padding: 0 14px 8px;
+}
+.sof-sidebar:not(:hover):not([data-expanded="true"]) .sof-sb-theme .sof-theme-seg {
+  flex-direction: column;
   width: 36px;
-  padding: 0;
-  justify-content: center;
+  height: auto;
+  gap: 2px;
 }
-.sof-sidebar:not(:hover):not([data-expanded="true"]) .sof-sb-theme .sof-theme-toggle span {
-  display: none;
-}
-
-.sof-theme-toggle svg {
-  width: 14px;
-  height: 14px;
-}
-
-/* Theme FAB — persistent floating button bottom-right */
-.sof-theme-fab {
-  position: fixed;
-  top: 18px;
-  right: 24px;
-  z-index: 80;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
-  border-radius: 9999px;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-subtle);
-  font-size: 12px;
-  color: var(--text-secondary);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-}
-
-.sof-theme-fab:hover {
-  color: var(--text-primary);
-  border-color: var(--border-strong);
-}
-
-.sof-theme-fab .kbd {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
-  font-size: 10px;
-  padding: 2px 5px;
-  border-radius: 3px;
-  background: var(--bg-input);
-  color: var(--text-tertiary);
-  margin-left: 4px;
+.sof-sidebar:not(:hover):not([data-expanded="true"]) .sof-sb-theme .sof-theme-seg-opt {
+  flex: none;
+  width: 100%;
+  height: 28px;
 }
 
 /* ---------- FOCUS / A11Y ---------- */
@@ -1058,7 +1107,7 @@ button {
 }
 
 .sof-home-h1 {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   font-weight: 600;
   font-size: 60px;
   line-height: 1.02;
@@ -1086,102 +1135,151 @@ button {
   margin-bottom: 28px;
 }
 
-.sof-home-metric-strip {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 20px;
-  font-size: 13px;
-  color: var(--text-secondary);
-}
-.sof-home-metric-strip b {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
-  color: var(--text-primary);
-  font-weight: 500;
-}
-.sof-home-metric-strip .sep {
-  color: var(--text-disabled);
-}
-
-/* Barrel gauge */
-.sof-barrel-stage {
+/* Hero status card — right side of the hero. Shows live platform
+ * signals using real data so an empty-devnet state never surfaces
+ * misleading zeros. */
+.sof-hero-status {
   position: relative;
-  width: 100%;
-  aspect-ratio: 1 / 1;
-  max-width: 300px;
-  margin-left: auto;
-  display: grid;
-  place-items: center;
-}
-.sof-barrel-stage::before {
-  content: "";
-  position: absolute;
-  inset: 28%;
-  border-radius: 50%;
-  background: radial-gradient(
-    circle at 50% 50%,
-    rgba(245, 166, 35, 0.2),
-    transparent 65%
-  );
-  filter: blur(8px);
-}
-.sof-barrel-stage img.sof-barrel {
-  position: relative;
-  height: 38%;
-  width: auto;
-  z-index: 2;
-  filter: drop-shadow(0 10px 16px rgba(0, 0, 0, 0.5));
-}
-.sof-gauge-svg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 3;
-  pointer-events: none;
-}
-.sof-gauge-fill {
-  stroke-dasharray: 880;
-  stroke-dashoffset: 880;
-  animation: sof-gauge-fill-83 900ms cubic-bezier(0.2, 0.7, 0.2, 1) 200ms forwards;
-}
-@keyframes sof-gauge-fill-83 {
-  to {
-    stroke-dashoffset: 150;
-  } /* ~880 × (1 - 0.83) */
-}
-.sof-tag {
-  position: absolute;
-  z-index: 4;
   background: var(--bg-elevated);
   border: 1px solid var(--border-subtle);
-  padding: 6px 9px;
-  border-radius: 5px;
-  font-size: 9px;
+  border-radius: 14px;
+  padding: 24px 26px 18px;
+  overflow: hidden;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+  max-width: 380px;
+  width: 100%;
+  margin-left: auto;
+}
+.sof-hero-status-glow {
+  position: absolute;
+  top: -60px;
+  right: -60px;
+  width: 240px;
+  height: 240px;
+  background: radial-gradient(
+    circle at center,
+    var(--accent-bg),
+    transparent 70%
+  );
+  filter: blur(20px);
+  pointer-events: none;
+}
+.sof-hero-status-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
   color: var(--text-tertiary);
-  white-space: nowrap;
+  margin-bottom: 22px;
+  position: relative;
+  z-index: 1;
+}
+.sof-hero-status-eyebrow .pulse {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--success);
+  box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5);
+  animation: sof-pulse 2.4s infinite;
+}
+.sof-hero-status-stat {
+  position: relative;
+  z-index: 1;
+  margin-bottom: 22px;
+}
+.sof-hero-status-stat .num {
+  font-family: var(--font-display, "Geist"), sans-serif;
+  font-size: 64px;
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  color: var(--text-primary);
+  line-height: 1;
+}
+.sof-hero-status-stat .lab {
+  font-size: 13.5px;
+  color: var(--text-secondary);
+  margin-top: 8px;
+  line-height: 1.4;
+}
+.sof-hero-status-meta {
+  position: relative;
+  z-index: 1;
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 14px;
   display: flex;
   flex-direction: column;
-  gap: 1px;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  gap: 8px;
 }
-.sof-tag b {
+.sof-hero-status-meta .row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
+  font-size: 12px;
+}
+.sof-hero-status-meta .row .k {
+  color: var(--text-tertiary);
+  letter-spacing: 0.02em;
+}
+.sof-hero-status-meta .row .v {
   color: var(--text-primary);
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
-  font-size: 11px;
   font-weight: 500;
-  text-transform: none;
-  letter-spacing: 0;
 }
-.sof-tag .pin {
+.sof-hero-status-feat {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  font-family: var(--font-mono, "Geist Mono"), monospace;
+  font-size: 12px;
+  text-decoration: none;
+  position: relative;
+  z-index: 1;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+.sof-hero-status-feat:hover {
+  background: var(--bg-overlay);
+  border-color: var(--border-strong);
+}
+.sof-hero-status-feat .k {
+  color: var(--text-tertiary);
+}
+.sof-hero-status-feat .v {
+  color: var(--accent);
+  flex: 1;
+  font-weight: 600;
+}
+.sof-hero-status-feat svg {
   color: var(--accent);
 }
-.sof-tag.tl { top: 2%; left: -14%; }
-.sof-tag.tr { top: 12%; right: -16%; }
-.sof-tag.bl { bottom: 12%; left: -16%; }
-.sof-tag.br { bottom: 2%; right: -14%; }
+
+/* Trust micro-strip below the CTAs */
+.sof-home-trust-micro {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+  color: var(--text-tertiary);
+  flex-wrap: wrap;
+}
+.sof-home-trust-micro .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--success);
+  flex: none;
+}
+.sof-home-trust-micro .sep {
+  color: var(--text-disabled);
+}
 
 /* Trust strip */
 .sof-home-trust-strip {
@@ -1232,7 +1330,7 @@ button {
   flex-wrap: wrap;
 }
 .sof-home-section-head h2 {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   font-weight: 600;
   font-size: 36px;
   letter-spacing: -0.02em;
@@ -1245,7 +1343,7 @@ button {
   font-size: 15px;
 }
 .sof-home-section-head .meta {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 11px;
   color: var(--text-tertiary);
   text-transform: uppercase;
@@ -1258,7 +1356,7 @@ button {
   display: grid;
   grid-template-columns: 1.1fr 1fr;
   gap: 64px;
-  align-items: start;
+  align-items: center;
 }
 .sof-how-steps {
   display: flex;
@@ -1277,14 +1375,14 @@ button {
   padding-top: 0;
 }
 .sof-step .num {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 11px;
   color: var(--text-tertiary);
   letter-spacing: 0.12em;
   padding-top: 4px;
 }
 .sof-step h3 {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   font-weight: 600;
   font-size: 22px;
   margin: 0 0 8px;
@@ -1300,7 +1398,7 @@ button {
   display: flex;
   gap: 14px;
   margin-top: 14px;
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 11px;
   color: var(--text-tertiary);
   text-transform: uppercase;
@@ -1337,12 +1435,12 @@ button {
   gap: 12px;
 }
 .sof-demo-card .name {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   font-weight: 600;
   font-size: 16px;
 }
 .sof-demo-card .sym {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 12px;
   color: var(--text-tertiary);
   margin-top: 1px;
@@ -1353,7 +1451,7 @@ button {
 .sof-demo-card .bar-row {
   display: flex;
   justify-content: space-between;
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 12px;
   margin-top: 10px;
 }
@@ -1380,13 +1478,13 @@ button {
   letter-spacing: 0.1em;
 }
 .sof-demo-stats .v {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 18px;
   color: var(--text-primary);
   margin-top: 4px;
 }
 .sof-demo-stats .v small {
-  font-family: var(--font-body, "Inter"), sans-serif;
+  font-family: var(--font-body, "Geist"), sans-serif;
   font-size: 12px;
   color: var(--text-tertiary);
   font-weight: 400;
@@ -1428,7 +1526,7 @@ button {
   gap: 10px;
   padding: 0 22px;
   border-right: 1px solid var(--border-subtle);
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.12em;
@@ -1482,18 +1580,18 @@ button {
 }
 .sof-tk-row .verb { color: var(--text-secondary); }
 .sof-tk-row .amt {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   color: var(--text-primary);
   font-weight: 500;
 }
 .sof-tk-row .tok {
   color: var(--accent);
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-weight: 500;
 }
 .sof-tk-row .ago {
   color: var(--text-tertiary);
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 11px;
 }
 
@@ -1534,12 +1632,12 @@ button {
   align-items: center;
 }
 .sof-feat-card .h-l .name {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   font-size: 16px;
   font-weight: 600;
 }
 .sof-feat-card .h-l .sym {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 11px;
   color: var(--text-tertiary);
   margin-top: 1px;
@@ -1564,11 +1662,11 @@ button {
 }
 .sof-kv .k { color: var(--text-tertiary); }
 .sof-kv .v {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   color: var(--text-primary);
 }
 .sof-kv .v small {
-  font-family: var(--font-body, "Inter"), sans-serif;
+  font-family: var(--font-body, "Geist"), sans-serif;
   color: var(--text-tertiary);
   margin-left: 4px;
   font-size: 11px;
@@ -1584,7 +1682,7 @@ button {
   background: var(--bg-base);
 }
 .sof-foot-meta {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 11px;
   color: var(--text-tertiary);
 }
@@ -1599,7 +1697,7 @@ button {
   padding: 18px 0 0;
 }
 .sof-pool-num {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 36px;
   letter-spacing: -0.01em;
   font-weight: 500;
@@ -1612,7 +1710,7 @@ button {
   display: block;
   margin-top: 6px;
   letter-spacing: 0;
-  font-family: var(--font-body, "Inter"), sans-serif;
+  font-family: var(--font-body, "Geist"), sans-serif;
 }
 .sof-spark { height: 60px; width: 140px; }
 .sof-meta-grid {
@@ -1635,7 +1733,7 @@ button {
   color: var(--text-tertiary);
 }
 .sof-meta-grid .v {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 14px;
   color: var(--text-primary);
   margin-top: 6px;
@@ -1669,7 +1767,7 @@ button {
   gap: 10px;
 }
 .sof-rep-score .num {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   font-weight: 600;
   font-size: 64px;
   line-height: 1;
@@ -1677,7 +1775,7 @@ button {
   letter-spacing: -0.03em;
 }
 .sof-rep-score .out {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 14px;
   color: var(--text-tertiary);
 }
@@ -1706,7 +1804,7 @@ button {
 .sof-signal:first-child { border-top: 0; }
 .sof-signal .nm { color: var(--text-secondary); }
 .sof-signal .vl {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   color: var(--text-primary);
 }
 .sof-sigbar {
@@ -1724,7 +1822,7 @@ button {
 }
 
 .sof-rep-copy h2 {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   font-size: 40px;
   line-height: 1.05;
   margin: 0 0 18px;
@@ -1768,7 +1866,7 @@ button {
   font-weight: 500;
 }
 .sof-tier-row .rg {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   color: var(--text-tertiary);
   font-size: 12px;
 }
@@ -1791,7 +1889,7 @@ button {
   justify-content: space-between;
   align-items: center;
   gap: 24px;
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   font-weight: 500;
   font-size: 18px;
 }
@@ -1818,7 +1916,7 @@ button {
   max-width: 72ch;
 }
 .sof-faq .answer code {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 13px;
   background: var(--bg-elevated);
   padding: 1px 6px;
@@ -1839,7 +1937,7 @@ button {
   flex-wrap: wrap;
 }
 .sof-dir-head h1 {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   font-weight: 600;
   font-size: 32px;
   letter-spacing: -0.02em;
@@ -1884,7 +1982,7 @@ button {
   color: var(--text-primary);
   padding: 9px 12px 9px 34px;
   border-radius: 6px;
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 12.5px;
   outline: none;
   transition: border-color 120ms;
@@ -1895,7 +1993,7 @@ button {
   position: absolute;
   right: 8px; top: 50%;
   transform: translateY(-50%);
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 10px;
   padding: 2px 5px;
   border-radius: 3px;
@@ -1926,7 +2024,7 @@ button {
 .sof-seg button:hover { color: var(--text-primary); }
 .sof-seg button.on { background: var(--bg-overlay); color: var(--text-primary); }
 .sof-seg button .ct {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 10.5px;
   color: var(--text-tertiary);
 }
@@ -1998,7 +2096,7 @@ button {
   border: 2px solid var(--bg-base);
 }
 .sof-slider-wrap .val {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 12px;
   color: var(--text-primary);
   min-width: 24px;
@@ -2047,7 +2145,7 @@ table.sof-refineries thead th {
   background: var(--bg-elevated);
   text-align: left;
   padding: 12px 16px;
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 11px;
   color: var(--text-tertiary);
   text-transform: uppercase;
@@ -2076,7 +2174,7 @@ table.sof-refineries tbody tr:hover { background: var(--bg-overlay); }
 table.sof-refineries tbody tr:last-child td { border-bottom: 0; }
 table.sof-refineries tbody td.num {
   text-align: right;
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 12.5px;
 }
 
@@ -2093,7 +2191,7 @@ table.sof-refineries tbody td.num {
   min-width: 0;
 }
 .sof-tk .meta .sym {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   font-weight: 600;
   font-size: 14px;
   color: var(--text-primary);
@@ -2107,7 +2205,7 @@ table.sof-refineries tbody td.num {
   max-width: 140px;
 }
 .sof-tk .meta .mint {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 10.5px;
   color: var(--text-disabled);
   margin-top: 2px;
@@ -2135,7 +2233,7 @@ table.sof-refineries tbody td.num {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
 }
 .sof-pool-vals .a { font-size: 12.5px; color: var(--text-primary); }
 .sof-pool-vals .b { font-size: 11px; color: var(--text-tertiary); }
@@ -2157,7 +2255,7 @@ table.sof-refineries tbody td.num {
 .sof-pool-bar-thin.warn .fill { background: var(--warning); }
 .sof-pool-bar-thin.danger .fill { background: var(--error); }
 .sof-pct {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 10.5px;
   color: var(--text-tertiary);
 }
@@ -2169,12 +2267,12 @@ table.sof-refineries tbody td.num {
   gap: 1px;
 }
 .sof-rate-cell .a {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 12.5px;
   color: var(--text-primary);
 }
 .sof-rate-cell .b {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 11px;
   color: var(--text-tertiary);
 }
@@ -2186,14 +2284,14 @@ table.sof-refineries tbody td.num {
 }
 .sof-snap-cell .a { font-size: 12px; color: var(--text-secondary); }
 .sof-snap-cell .b {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 11px;
   color: var(--text-tertiary);
   margin-top: 2px;
 }
 
 .sof-win-cell {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 12px;
   color: var(--text-primary);
   display: flex;
@@ -2203,7 +2301,7 @@ table.sof-refineries tbody td.num {
 .sof-win-cell .b {
   font-size: 10.5px;
   color: var(--text-tertiary);
-  font-family: var(--font-body, "Inter"), sans-serif;
+  font-family: var(--font-body, "Geist"), sans-serif;
   margin-top: 2px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -2219,7 +2317,7 @@ table.sof-refineries tbody td.num {
 }
 .sof-risk {
   font-size: 10.5px;
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   padding: 2px 6px;
   border-radius: 3px;
   background: var(--bg-input);
@@ -2270,7 +2368,7 @@ table.sof-refineries tbody td.num {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
 }
 .sof-pagi-btns button:hover {
   border-color: var(--border-strong);
@@ -2299,7 +2397,7 @@ table.sof-refineries tbody td.num {
 @media (max-width: 1100px) {
   .sof-home-hero { padding: 56px 32px 40px; }
   .sof-home-hero-grid { grid-template-columns: 1fr; gap: 40px; }
-  .sof-barrel-stage { max-width: 360px; margin: 0; }
+  .sof-hero-status { max-width: 480px; margin: 0; }
   .sof-home-h1 { font-size: 56px; }
   .sof-home-s { padding: 64px 32px; }
   .sof-how-grid { grid-template-columns: 1fr; gap: 48px; }
@@ -2312,6 +2410,11 @@ table.sof-refineries tbody td.num {
   .sof-home-hero { padding: 40px 20px 32px; }
   .sof-home-h1 { font-size: 42px; }
   .sof-home-sub { font-size: 16px; }
+  .sof-hero-status { padding: 20px 18px 16px; max-width: 100%; }
+  .sof-hero-status-stat .num { font-size: 48px; }
+  .sof-hero-status-eyebrow { margin-bottom: 18px; }
+  .sof-hero-status-meta { padding-top: 12px; }
+  .sof-home-trust-micro { font-size: 11px; gap: 8px; }
   .sof-home-s { padding: 48px 20px; }
   .sof-home-section-head { flex-direction: column; align-items: flex-start; gap: 12px; }
   .sof-home-section-head h2 { font-size: 28px; }
@@ -2332,7 +2435,7 @@ table.sof-refineries tbody td.num {
   padding: 20px 48px 0;
   font-size: 12px;
   color: var(--text-tertiary);
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
 }
 .sof-rd-crumb a { color: var(--text-secondary); }
 .sof-rd-crumb a:hover { color: var(--text-primary); }
@@ -2354,7 +2457,7 @@ table.sof-refineries tbody td.num {
   min-width: 0;
 }
 .sof-rd-hdr-meta h1 {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   font-weight: 600;
   font-size: 28px;
   letter-spacing: -0.02em;
@@ -2366,7 +2469,7 @@ table.sof-refineries tbody td.num {
 }
 .sof-rd-hdr-meta h1 .sym {
   color: var(--text-tertiary);
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 14px;
   font-weight: 500;
 }
@@ -2381,7 +2484,7 @@ table.sof-refineries tbody td.num {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 12px;
   color: var(--text-secondary);
   background: var(--bg-input);
@@ -2432,7 +2535,7 @@ table.sof-refineries tbody td.num {
 }
 .sof-rd-stat:last-child { border-right: 0; }
 .sof-rd-stat .k {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 10.5px;
   color: var(--text-tertiary);
   text-transform: uppercase;
@@ -2442,7 +2545,7 @@ table.sof-refineries tbody td.num {
   gap: 6px;
 }
 .sof-rd-stat .v {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 24px;
   color: var(--text-primary);
   margin-top: 8px;
@@ -2450,7 +2553,7 @@ table.sof-refineries tbody td.num {
   letter-spacing: -0.01em;
 }
 .sof-rd-stat .v small {
-  font-family: var(--font-body, "Inter"), sans-serif;
+  font-family: var(--font-body, "Geist"), sans-serif;
   font-size: 12px;
   color: var(--text-tertiary);
   font-weight: 400;
@@ -2512,7 +2615,7 @@ table.sof-refineries tbody td.num {
   flex-wrap: wrap;
 }
 .sof-rd-panel-head h3 {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   font-size: 14px;
   font-weight: 600;
   margin: 0;
@@ -2522,7 +2625,7 @@ table.sof-refineries tbody td.num {
 .sof-rd-panel-head .meta {
   font-size: 11.5px;
   color: var(--text-tertiary);
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
 }
 .sof-rd-seg-mini {
   display: inline-flex;
@@ -2534,7 +2637,7 @@ table.sof-refineries tbody td.num {
 .sof-rd-seg-mini button {
   padding: 4px 9px;
   border-radius: 3px;
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 10.5px;
   color: var(--text-tertiary);
 }
@@ -2555,7 +2658,7 @@ table.sof-refineries tbody td.num {
   display: block;
 }
 .sof-rd-chart-axis {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 9.5px;
   fill: var(--text-tertiary);
   letter-spacing: 0.04em;
@@ -2567,8 +2670,13 @@ table.sof-refineries tbody td.num {
 }
 
 /* Mini tables */
+.sof-rd-panel .sof-rd-mtable-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
 .sof-rd-mtable {
   width: 100%;
+  min-width: max-content;
   border-collapse: separate;
   border-spacing: 0;
   font-size: 13px;
@@ -2576,7 +2684,7 @@ table.sof-refineries tbody td.num {
 .sof-rd-mtable thead th {
   text-align: left;
   padding: 10px 20px;
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 10.5px;
   color: var(--text-tertiary);
   text-transform: uppercase;
@@ -2595,12 +2703,12 @@ table.sof-refineries tbody td.num {
 .sof-rd-mtable td.num,
 .sof-rd-mtable th.num {
   text-align: right;
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 12.5px;
 }
 .sof-rd-mtable td.fade {
   color: var(--text-tertiary);
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 11.5px;
 }
 
@@ -2609,7 +2717,7 @@ table.sof-refineries tbody td.num {
   padding: 20px;
 }
 .sof-rd-elig .label {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 10.5px;
   color: var(--text-tertiary);
   text-transform: uppercase;
@@ -2637,7 +2745,7 @@ table.sof-refineries tbody td.num {
   box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.18);
 }
 .sof-rd-elig h4 {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   font-size: 18px;
   font-weight: 600;
   margin: 0 0 6px;
@@ -2668,7 +2776,7 @@ table.sof-refineries tbody td.num {
 .sof-rd-elig .kvg .k { color: var(--text-tertiary); }
 .sof-rd-elig .kvg .v {
   color: var(--text-primary);
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 13px;
 }
 .sof-rd-elig .receive {
@@ -2681,14 +2789,14 @@ table.sof-refineries tbody td.num {
   align-items: baseline;
 }
 .sof-rd-elig .receive .k {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 10.5px;
   color: var(--accent);
   text-transform: uppercase;
   letter-spacing: 0.12em;
 }
 .sof-rd-elig .receive .v {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 22px;
   color: var(--accent);
   font-weight: 500;
@@ -2727,7 +2835,7 @@ table.sof-refineries tbody td.num {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 12px;
   color: var(--accent);
   margin-top: 6px;
@@ -2741,7 +2849,7 @@ table.sof-refineries tbody td.num {
   display: flex;
   gap: 6px;
   align-items: center;
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 10.5px;
   flex-wrap: wrap;
 }
@@ -2756,7 +2864,7 @@ table.sof-refineries tbody td.num {
   background: var(--bg-input);
   color: var(--text-secondary);
   border: 1px solid var(--border-subtle);
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 10px;
 }
 .sof-rd-state-picker button.on {
@@ -2780,14 +2888,14 @@ table.sof-refineries tbody td.num {
 }
 .sof-rd-token-info > div:nth-child(-n + 2) { border-top: 0; }
 .sof-rd-token-info .k {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 10.5px;
   color: var(--text-tertiary);
   text-transform: uppercase;
   letter-spacing: 0.1em;
 }
 .sof-rd-token-info .v {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 13px;
   color: var(--text-primary);
   margin-top: 4px;
@@ -2810,7 +2918,7 @@ table.sof-refineries tbody td.num {
   gap: 8px;
 }
 .sof-rd-risk-row .vl {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 12px;
 }
 .sof-rd-risk-row .vl.ok { color: var(--success); }
@@ -2858,10 +2966,10 @@ table.sof-refineries tbody td.num {
   color: var(--text-tertiary);
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
 }
 .sof-rd-op-stats .v {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 14px;
   color: var(--text-primary);
   margin-top: 3px;
@@ -2879,12 +2987,12 @@ table.sof-refineries tbody td.num {
 }
 .sof-rd-feed-row:last-child { border-bottom: 0; }
 .sof-rd-feed-row .amt {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   color: var(--text-primary);
   text-align: right;
 }
 .sof-rd-feed-row .ago {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 11px;
   color: var(--text-tertiary);
   text-align: right;
@@ -2896,23 +3004,62 @@ table.sof-refineries tbody td.num {
 .sof-rd-feed-row .lnk:hover { color: var(--accent); }
 
 .sof-rd-snap-merkle {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 11px;
   color: var(--text-tertiary);
 }
 .sof-rd-snap-merkle:hover { color: var(--text-secondary); }
 
 @media (max-width: 1100px) {
-  .sof-rd-body { grid-template-columns: 1fr; padding: 24px 32px; }
+  .sof-rd-body { grid-template-columns: 1fr; padding: 24px 32px; gap: 20px; }
+  .sof-rd-hdr { padding: 20px 32px 24px; }
+  .sof-rd-crumb { padding: 18px 32px 0; }
   .sof-rd-stat-strip { grid-template-columns: repeat(2, 1fr); }
   .sof-rd-stat:nth-child(2n) { border-right: 0; }
   .sof-rd-stat:nth-child(-n + 2) { border-bottom: 1px solid var(--border-subtle); }
 }
 @media (max-width: 680px) {
-  .sof-rd-hdr { padding: 16px 20px; }
-  .sof-rd-crumb { padding: 14px 20px 0; }
-  .sof-rd-body { padding: 20px; }
-  .sof-rd-hdr-r { width: 100%; justify-content: flex-start; }
+  .sof-rd-crumb { padding: 14px 20px 0; font-size: 11.5px; }
+  .sof-rd-hdr {
+    padding: 18px 20px 22px;
+    gap: 16px;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .sof-rd-hdr-l { gap: 14px; }
+  .sof-rd-hdr-meta h1 {
+    font-size: 22px;
+    gap: 8px;
+    margin-bottom: 2px;
+  }
+  .sof-rd-hdr-meta h1 .sym { font-size: 12px; }
+  .sof-rd-hdr-meta .row { gap: 8px; margin-top: 10px; }
+  .sof-rd-copy-mint { font-size: 11px; padding: 4px 8px; }
+  .sof-rd-ext { font-size: 11px; }
+  .sof-rd-hdr-r {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .sof-rd-share { width: 38px; height: 38px; }
+  .sof-rd-hdr-r .sof-btn { flex: 1; min-width: 0; }
+
+  .sof-rd-stat { padding: 14px 16px; }
+  .sof-rd-stat .v { font-size: 20px; }
+  .sof-rd-stat .v small { font-size: 11px; }
+  .sof-rd-stat .sub { font-size: 11px; }
+
+  .sof-rd-body { padding: 16px 20px 28px; }
+  .sof-rd-col-l, .sof-rd-col-r { gap: 16px; }
+  .sof-rd-panel-head { padding: 14px 16px; }
+  .sof-rd-panel-head h3 { font-size: 13px; }
+}
+@media (max-width: 480px) {
+  .sof-rd-stat-strip { grid-template-columns: 1fr; }
+  .sof-rd-stat { border-right: 0; border-bottom: 1px solid var(--border-subtle); }
+  .sof-rd-stat:last-child { border-bottom: 0; }
+  .sof-rd-hdr-meta h1 { font-size: 20px; }
 }
 
 /* ============================================================
@@ -2925,11 +3072,11 @@ table.sof-refineries tbody td.num {
 .sof-lw-hdr .crumb {
   font-size: 12px;
   color: var(--text-tertiary);
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   margin-bottom: 14px;
 }
 .sof-lw-hdr h1 {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   font-weight: 600;
   font-size: 32px;
   letter-spacing: -0.02em;
@@ -2967,7 +3114,7 @@ table.sof-refineries tbody td.num {
   color: var(--text-tertiary);
   display: grid;
   place-items: center;
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 11px;
   font-weight: 600;
   border: 1px solid var(--border-subtle);
@@ -3038,14 +3185,14 @@ table.sof-refineries tbody td.num {
   align-items: baseline;
 }
 .sof-lw-card-head h3 {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   font-size: 18px;
   font-weight: 600;
   letter-spacing: -0.005em;
   margin: 0;
 }
 .sof-lw-card-head .step-num {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 11px;
   color: var(--text-tertiary);
   text-transform: uppercase;
@@ -3073,7 +3220,7 @@ table.sof-refineries tbody td.num {
   font-size: 11.5px;
   color: var(--text-tertiary);
   font-weight: 400;
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
 }
 .sof-lw-input {
   background: var(--bg-input);
@@ -3082,7 +3229,7 @@ table.sof-refineries tbody td.num {
   padding: 11px 14px;
   font-size: 14px;
   color: var(--text-primary);
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   width: 100%;
 }
 .sof-lw-input:focus {
@@ -3106,7 +3253,7 @@ table.sof-refineries tbody td.num {
   right: 14px;
   top: 50%;
   transform: translateY(-50%);
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 12px;
   color: var(--text-tertiary);
   pointer-events: none;
@@ -3134,7 +3281,7 @@ table.sof-refineries tbody td.num {
   gap: 12px;
 }
 .sof-lw-token-preview .nm {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   font-size: 15px;
   font-weight: 600;
 }
@@ -3168,7 +3315,7 @@ table.sof-refineries tbody td.num {
 .sof-lw-check-row .ind.err { background: var(--error); }
 .sof-lw-check-row .v {
   margin-left: auto;
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 11.5px;
   color: var(--text-tertiary);
 }
@@ -3186,7 +3333,7 @@ table.sof-refineries tbody td.num {
 .sof-lw-seg button {
   padding: 6px 14px;
   border-radius: 4px;
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 11.5px;
   color: var(--text-tertiary);
   font-weight: 500;
@@ -3230,7 +3377,7 @@ table.sof-refineries tbody td.num {
   margin-top: 18px;
 }
 .sof-lw-fund-vis .ttl {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 10.5px;
   color: var(--text-tertiary);
   text-transform: uppercase;
@@ -3247,7 +3394,7 @@ table.sof-refineries tbody td.num {
 .sof-lw-fund-vis .row:first-of-type { border-top: 0; }
 .sof-lw-fund-vis .row .l { color: var(--text-secondary); }
 .sof-lw-fund-vis .row .r {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   color: var(--text-primary);
 }
 .sof-lw-fund-vis .row.tot {
@@ -3297,7 +3444,7 @@ table.sof-refineries tbody td.num {
 .sof-lw-snap-pic .lab {
   position: absolute;
   top: 10px;
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 9.5px;
   color: var(--text-tertiary);
   transform: translateX(-50%);
@@ -3310,7 +3457,7 @@ table.sof-refineries tbody td.num {
 }
 .sof-lw-rev-grp:last-of-type { border-bottom: 0; }
 .sof-lw-rev-grp h4 {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 10.5px;
   color: var(--text-tertiary);
   text-transform: uppercase;
@@ -3321,7 +3468,7 @@ table.sof-refineries tbody td.num {
   align-items: center;
 }
 .sof-lw-rev-grp h4 a {
-  font-family: var(--font-body, "Inter"), sans-serif;
+  font-family: var(--font-body, "Geist"), sans-serif;
   text-transform: none;
   letter-spacing: 0;
   font-size: 11.5px;
@@ -3341,7 +3488,7 @@ table.sof-refineries tbody td.num {
 }
 .sof-lw-rev-list .k { color: var(--text-secondary); }
 .sof-lw-rev-list .v {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   color: var(--text-primary);
 }
 
@@ -3369,7 +3516,7 @@ table.sof-refineries tbody td.num {
   border-bottom: 1px solid var(--border-subtle);
 }
 .sof-lw-summary-card .head h4 {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 10.5px;
   color: var(--text-tertiary);
   text-transform: uppercase;
@@ -3377,7 +3524,7 @@ table.sof-refineries tbody td.num {
   margin: 0;
 }
 .sof-lw-summary-card .head .nm {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   font-size: 18px;
   font-weight: 600;
   margin-top: 4px;
@@ -3395,7 +3542,7 @@ table.sof-refineries tbody td.num {
 }
 .sof-lw-summary-card .body .row .k { color: var(--text-tertiary); }
 .sof-lw-summary-card .body .row .v {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   color: var(--text-primary);
 }
 .sof-lw-summary-card .body .row.acc .v { color: var(--accent); }
@@ -3407,7 +3554,7 @@ table.sof-refineries tbody td.num {
   line-height: 1.6;
 }
 .sof-lw-help-card h5 {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   font-size: 13px;
   color: var(--text-primary);
   margin: 0 0 8px;
@@ -3469,7 +3616,7 @@ table.sof-refineries tbody td.num {
   flex-wrap: wrap;
 }
 .sof-dh-hdr h1 {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   font-weight: 600;
   font-size: 30px;
   letter-spacing: -0.02em;
@@ -3506,7 +3653,7 @@ table.sof-refineries tbody td.num {
 .sof-dh-tab .badge {
   background: var(--bg-input);
   color: var(--text-tertiary);
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 10.5px;
   padding: 2px 6px;
   border-radius: 3px;
@@ -3536,28 +3683,28 @@ table.sof-refineries tbody td.num {
   padding: 18px 20px;
 }
 .sof-dh-kpi .k {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 10.5px;
   color: var(--text-tertiary);
   text-transform: uppercase;
   letter-spacing: 0.12em;
 }
 .sof-dh-kpi .v {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 26px;
   color: var(--text-primary);
   margin-top: 8px;
   letter-spacing: -0.01em;
 }
 .sof-dh-kpi .v small {
-  font-family: var(--font-body, "Inter"), sans-serif;
+  font-family: var(--font-body, "Geist"), sans-serif;
   font-size: 12px;
   color: var(--text-tertiary);
   font-weight: 400;
   margin-left: 4px;
 }
 .sof-dh-kpi .delta {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 11.5px;
   margin-top: 6px;
 }
@@ -3581,7 +3728,7 @@ table.sof-refineries tbody td.num {
   flex-wrap: wrap;
 }
 .sof-dh-panel-h h3 {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   font-size: 14px;
   font-weight: 600;
   text-transform: uppercase;
@@ -3591,7 +3738,7 @@ table.sof-refineries tbody td.num {
 .sof-dh-panel-h .meta {
   font-size: 11.5px;
   color: var(--text-tertiary);
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
 }
 
 .sof-dh-op-table {
@@ -3603,7 +3750,7 @@ table.sof-refineries tbody td.num {
 .sof-dh-op-table thead th {
   text-align: left;
   padding: 11px 20px;
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 10.5px;
   color: var(--text-tertiary);
   text-transform: uppercase;
@@ -3621,11 +3768,11 @@ table.sof-refineries tbody td.num {
 .sof-dh-op-table tbody tr:hover { background: var(--bg-overlay); }
 .sof-dh-op-table td.num {
   text-align: right;
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 12.5px;
 }
 .sof-dh-op-table .pill {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 10.5px;
   padding: 3px 8px;
   border-radius: 3px;
@@ -3654,7 +3801,7 @@ table.sof-refineries tbody td.num {
   border: 1px solid var(--border-subtle);
   font-size: 11.5px;
   color: var(--text-secondary);
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   background: transparent;
 }
 .sof-dh-actions button:hover {
@@ -3692,7 +3839,7 @@ table.sof-refineries tbody td.num {
   border-radius: 5px;
   display: grid;
   place-items: center;
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 11px;
   flex: none;
 }
@@ -3720,12 +3867,12 @@ table.sof-refineries tbody td.num {
 .sof-dh-feed-item .body .when {
   font-size: 11px;
   color: var(--text-tertiary);
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   display: block;
   margin-top: 2px;
 }
 .sof-dh-feed-item .amt {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 12px;
   color: var(--text-secondary);
   text-align: right;
@@ -3742,37 +3889,37 @@ table.sof-refineries tbody td.num {
 }
 .sof-dh-cc-row:last-child { border-bottom: 0; }
 .sof-dh-cc-row .nm {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   font-size: 14px;
   font-weight: 600;
 }
 .sof-dh-cc-row .sym {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 11.5px;
   color: var(--text-tertiary);
   margin-left: 6px;
 }
 .sof-dh-cc-row .amt {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 14px;
   color: var(--text-primary);
 }
 .sof-dh-cc-row .usd {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 11px;
   color: var(--text-tertiary);
   display: block;
   margin-top: 2px;
 }
 .sof-dh-cc-row .when {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 11.5px;
   color: var(--text-tertiary);
   width: 120px;
   text-align: right;
 }
 .sof-dh-cc-row .lnk {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 11px;
   color: var(--text-tertiary);
   text-align: right;
@@ -3786,7 +3933,7 @@ table.sof-refineries tbody td.num {
   padding: 20px;
 }
 .sof-dh-api-card h4 {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   font-size: 14px;
   margin: 0 0 8px;
   font-weight: 600;
@@ -3802,7 +3949,7 @@ table.sof-refineries tbody td.num {
   border: 1px solid var(--border-subtle);
   border-radius: 6px;
   padding: 14px 16px;
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 12px;
   color: #a3e635;
   line-height: 1.6;
@@ -3822,7 +3969,7 @@ table.sof-refineries tbody td.num {
   border: 1px solid var(--border-subtle);
   border-radius: 6px;
   margin-bottom: 8px;
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 12px;
 }
 .sof-dh-key-row .id { color: var(--text-tertiary); }
@@ -3864,132 +4011,269 @@ table.sof-refineries tbody td.num {
  * reputation gauge + warning card (right).
  * ============================================================ */
 
-.sof-w-crumb {
-  padding: 20px 48px 0;
-  font-size: 12px;
-  color: var(--text-tertiary);
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
-}
-.sof-w-crumb a {
-  color: var(--text-secondary);
-  cursor: pointer;
-}
-.sof-w-crumb a:hover { color: var(--text-primary); }
-
 .sof-w-hdr {
-  padding: 24px 48px 28px;
+  padding: 28px 48px 24px;
   border-bottom: 1px solid var(--border-subtle);
   display: flex;
-  gap: 24px;
-  align-items: flex-start;
+  flex-direction: column;
+  gap: 22px;
+}
+.sof-w-hdr-top {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  justify-content: space-between;
   flex-wrap: wrap;
 }
-.sof-w-hdr .av {
-  width: 88px; height: 88px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #f5a623, #7c3aed);
-  flex: none;
-  position: relative;
-}
-.sof-w-hdr .av::after {
-  content: "";
-  position: absolute;
-  inset: 6px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, #fff, transparent 50%);
-  opacity: 0.15;
-}
-.sof-w-hdr h1 {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
-  font-size: 26px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  margin: 0 0 8px;
+.sof-w-hdr-id {
   display: flex;
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
+  min-width: 0;
 }
-.sof-w-hdr h1 .pl {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-secondary);
-  background: var(--bg-input);
-  border: 1px solid var(--border-subtle);
-  padding: 5px 12px;
-  border-radius: 5px;
+.sof-w-hdr h1 {
+  font-family: var(--font-display, "Geist"), sans-serif;
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  margin: 0;
+  color: var(--text-primary);
+  line-height: 1.1;
 }
-.sof-w-hdr .meta {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  color: var(--text-tertiary);
-  font-size: 12.5px;
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
-  flex-wrap: wrap;
-}
-.sof-w-hdr .meta .sep { color: var(--text-disabled); }
-.sof-w-hdr .actions {
-  margin-left: auto;
+.sof-w-hdr-actions {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Copy address button — sits inline with the truncated address */
+.sof-w-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-input);
+  color: var(--text-secondary);
+  font-family: var(--font-mono, "Geist Mono"), monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: color 120ms ease, background 120ms ease, border-color 120ms ease;
+}
+.sof-w-copy-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-overlay);
+  border-color: var(--border-strong);
+}
+.sof-w-copy-btn.on {
+  color: var(--success);
+  border-color: rgba(34, 197, 94, 0.32);
+  background: rgba(34, 197, 94, 0.08);
+}
+.sof-w-copy-btn.compact {
+  padding: 6px;
+}
+.sof-w-copy-btn .lab {
+  letter-spacing: 0.02em;
+}
+
+/* "Your wallet" pill — kept; placed inline with the address */
+.sof-w-you-pill {
+  font-family: var(--font-mono, "Geist Mono"), monospace;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: var(--accent-bg);
+  border: 1px solid rgba(245, 166, 35, 0.32);
+  padding: 4px 9px;
+  border-radius: 999px;
+  line-height: 1;
+}
+
+/* Stat chips row — KEY/VALUE pairs replacing the old bullet-meta */
+.sof-w-hdr-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+.sof-w-stat-chip {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 14px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  background: var(--bg-elevated);
+  min-width: 0;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+.sof-w-stat-chip.linkable {
+  cursor: pointer;
+}
+.sof-w-stat-chip.linkable:hover {
+  border-color: var(--border-strong);
+  background: var(--bg-overlay);
+}
+.sof-w-stat-chip .k {
+  font-family: var(--font-mono, "Geist Mono"), monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+.sof-w-stat-chip .v {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  letter-spacing: -0.005em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sof-w-stat-chip .v .led {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--success);
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
+  flex: none;
+}
+.sof-w-stat-chip.linkable:hover .v {
+  color: var(--accent);
 }
 
 .sof-w-kpi-strip {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+  padding: 24px 48px;
+}
+.sof-w-kpi {
   background: var(--bg-elevated);
-  border-bottom: 1px solid var(--border-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 120ms ease, background 120ms ease;
 }
-.sof-w-kpi-strip .it {
-  padding: 18px 24px;
-  border-right: 1px solid var(--border-subtle);
+.sof-w-kpi:hover {
+  border-color: var(--border-strong);
 }
-.sof-w-kpi-strip .it:last-child { border-right: 0; }
-.sof-w-kpi-strip .k {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+.sof-w-kpi.accent {
+  border-color: rgba(245, 166, 35, 0.32);
+  background: linear-gradient(
+    180deg,
+    rgba(245, 166, 35, 0.06) 0%,
+    var(--bg-elevated) 80%
+  );
+}
+.sof-w-kpi.muted {
+  opacity: 0.65;
+}
+.sof-w-kpi .k {
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 10.5px;
   color: var(--text-tertiary);
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.14em;
 }
-.sof-w-kpi-strip .v {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
-  font-size: 22px;
+.sof-w-kpi .v {
+  font-family: var(--font-display, "Geist"), sans-serif;
+  font-size: 32px;
+  font-weight: 600;
   color: var(--text-primary);
-  margin-top: 6px;
-  letter-spacing: -0.005em;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
 }
-.sof-w-kpi-strip .v small {
-  font-family: var(--font-body, "Inter"), sans-serif;
+.sof-w-kpi.accent .v {
+  color: var(--accent);
+}
+.sof-w-kpi .sub {
   font-size: 11.5px;
   color: var(--text-tertiary);
-  font-weight: 400;
-  margin-left: 3px;
-}
-.sof-w-kpi-strip .sub {
-  font-size: 11px;
-  color: var(--text-tertiary);
-  margin-top: 3px;
+  line-height: 1.35;
 }
 
 .sof-w-body {
-  padding: 32px 48px;
-  display: grid;
-  grid-template-columns: minmax(0, 2fr) 360px;
-  gap: 32px;
-}
-.sof-w-col-l {
+  padding: 20px 48px 40px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
+}
+
+/* Reputation panel — internal 3-column horizontal layout.
+ * Gauge | Signal bars | Detail lines + methodology link.
+ * Each cell has a small mono eyebrow heading and the columns are
+ * separated by 1px borders rather than gaps for a tighter dashboard
+ * feel. */
+.sof-w-rep-grid {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr) minmax(0, 1fr);
+  align-items: stretch;
+}
+.sof-w-rep-cell {
+  padding: 18px 22px;
   min-width: 0;
 }
-.sof-w-col-r {
+.sof-w-rep-cell + .sof-w-rep-cell {
+  border-left: 1px solid var(--border-subtle);
+}
+.sof-w-rep-cell-h {
+  font-family: var(--font-mono, "Geist Mono"), monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  margin-bottom: 14px;
+}
+.sof-w-rep-cell-gauge {
+  padding: 14px 18px 14px;
+}
+.sof-w-rep-cell-gauge .sof-w-gauge {
+  padding: 0;
+}
+.sof-w-rep-cell-bars .sof-w-brk {
+  padding: 0;
+  border-top: 0;
+}
+.sof-w-rep-cell-bars .sof-w-brk-row {
+  padding: 7px 0;
+}
+.sof-w-rep-cell-details .sof-w-brk-detail {
+  padding: 0;
+  border-top: 0;
+  font-size: 12px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 6px;
+}
+.sof-w-rep-methodology {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 500;
+  text-decoration: none;
+}
+.sof-w-rep-methodology:hover {
+  text-decoration: underline;
 }
 
 .sof-w-panel {
@@ -3999,7 +4283,7 @@ table.sof-refineries tbody td.num {
   overflow: hidden;
 }
 .sof-w-panel-h {
-  padding: 14px 20px;
+  padding: 12px 18px;
   border-bottom: 1px solid var(--border-subtle);
   display: flex;
   justify-content: space-between;
@@ -4008,7 +4292,7 @@ table.sof-refineries tbody td.num {
   flex-wrap: wrap;
 }
 .sof-w-panel-h h3 {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   font-size: 14px;
   font-weight: 600;
   text-transform: uppercase;
@@ -4018,25 +4302,76 @@ table.sof-refineries tbody td.num {
 .sof-w-panel-h .meta {
   font-size: 11.5px;
   color: var(--text-tertiary);
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
 }
 
-.sof-w-tabs {
+/* Radix-driven profile tabs (replaces visual-only .sof-w-tab) */
+.sof-wp-tabs {
+  display: flex;
+  flex-direction: column;
+}
+.sof-wp-tabs-list {
   display: flex;
   border-bottom: 1px solid var(--border-subtle);
+  padding: 0 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  scroll-snap-type: x proximity;
 }
-.sof-w-tab {
-  padding: 11px 20px;
+.sof-wp-tabs-list::-webkit-scrollbar {
+  display: none;
+}
+.sof-wp-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 14px 12px;
   font-size: 13px;
+  font-weight: 500;
   color: var(--text-tertiary);
   cursor: pointer;
-  border-bottom: 2px solid transparent;
-  font-weight: 500;
+  border: none;
   background: transparent;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  white-space: nowrap;
+  scroll-snap-align: start;
+  transition: color 120ms ease, border-color 120ms ease;
 }
-.sof-w-tab.on {
+.sof-wp-tab:hover:not([data-state="active"]) {
+  color: var(--text-secondary);
+}
+.sof-wp-tab[data-state="active"] {
   color: var(--text-primary);
   border-bottom-color: var(--accent);
+}
+.sof-wp-tab .cnt {
+  font-family: var(--font-mono, "Geist Mono"), monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.02em;
+  background: var(--bg-input);
+  color: var(--text-tertiary);
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid var(--border-subtle);
+  transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+}
+.sof-wp-tab[data-state="active"] .cnt {
+  background: var(--accent-bg);
+  color: var(--accent);
+  border-color: rgba(245, 166, 35, 0.32);
+}
+.sof-wp-tab:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  border-radius: 4px;
+}
+.sof-wp-tabs-panel {
+  outline: none;
+}
+.sof-wp-tabs-panel[hidden] {
+  display: none;
 }
 
 .sof-w-tbl {
@@ -4048,7 +4383,7 @@ table.sof-refineries tbody td.num {
 .sof-w-tbl thead th {
   text-align: left;
   padding: 11px 20px;
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 10.5px;
   color: var(--text-tertiary);
   text-transform: uppercase;
@@ -4064,23 +4399,81 @@ table.sof-refineries tbody td.num {
 .sof-w-tbl tbody tr:last-child td { border-bottom: 0; }
 .sof-w-tbl td.num {
   text-align: right;
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
 }
 .sof-w-tbl .fade {
   color: var(--text-tertiary);
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 11.5px;
 }
 
-.sof-w-heatmap {
-  padding: 20px;
+/* Outer wrapper — handles all padding so the inner grid has none */
+.sof-w-heatmap-outer {
+  padding: 10px 18px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Each row: corner/day-label column + the grid column */
+.sof-w-heatmap-axis-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+/* Top-left spacer — same width as day-label column */
+.sof-w-heatmap-corner {
+  width: 26px;
+  flex-shrink: 0;
+}
+
+/* Month labels — identical column template to the cell grid */
+.sof-w-heatmap-months {
+  flex: 1;
   display: grid;
   grid-template-columns: repeat(53, 1fr);
-  gap: 2px;
+  gap: 3px;
+}
+.sof-w-heatmap-month-cell {
+  font-size: 10px;
+  line-height: 14px;
+  height: 14px;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono, "Geist Mono"), monospace;
+  white-space: nowrap;
+  overflow: visible;
+}
+
+/* Day-of-week labels column */
+.sof-w-heatmap-days {
+  width: 26px;
+  flex-shrink: 0;
+  display: grid;
+  grid-template-rows: repeat(7, 1fr);
+  gap: 3px;
+}
+.sof-w-heatmap-day-cell {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono, "Geist Mono"), monospace;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  aspect-ratio: 1;
+}
+
+/* Cell grid — no padding (outer handles it) */
+.sof-w-heatmap {
+  flex: 1;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(53, 1fr);
+  gap: 3px;
 }
 .sof-w-heatmap .cell {
   aspect-ratio: 1;
-  border-radius: 1px;
+  border-radius: 2px;
   background: var(--bg-input);
 }
 .sof-w-heatmap .cell.l1 { background: rgba(245, 166, 35, 0.25); }
@@ -4088,15 +4481,45 @@ table.sof-refineries tbody td.num {
 .sof-w-heatmap .cell.l3 { background: rgba(245, 166, 35, 0.75); }
 .sof-w-heatmap .cell.l4 { background: var(--accent); }
 
+/* Snapshot status pill */
+.sof-snap-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 500;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
+}
+.sof-snap-pill.claimed  { background: rgba(245,166,35,0.15); color: var(--accent); }
+.sof-snap-pill.pending  { background: var(--bg-input); color: var(--text-secondary); }
+.sof-snap-pill.missed   { background: var(--bg-input); color: var(--text-tertiary); }
+
+/* Reputation signal delta badge */
+.sof-rep-delta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
+  letter-spacing: 0.02em;
+}
+.sof-rep-delta.pos { background: rgba(245,166,35,0.15); color: var(--accent); }
+.sof-rep-delta.neg { background: rgba(255,80,80,0.08);  color: #f87171; }
+
 .sof-w-heatmap-legend {
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 6px;
-  padding: 0 20px 16px;
+  padding: 4px 18px 12px;
   font-size: 11px;
   color: var(--text-tertiary);
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
 }
 .sof-w-heatmap-legend .leg { display: flex; gap: 2px; }
 .sof-w-heatmap-legend .leg div {
@@ -4104,17 +4527,62 @@ table.sof-refineries tbody td.num {
   border-radius: 1px;
 }
 
-/* Reputation gauge */
+/* Reputation gauge — physically clipped to a circle so nothing
+ * rectangular can render around the SVG, plus aggressive resets for
+ * every browser-default that could draw a visible rectangle
+ * (tap-highlight, focus ring, SVG container box, etc.). */
 .sof-w-gauge {
-  padding: 24px 20px;
+  padding: 22px 18px 16px;
   text-align: center;
+  background: transparent;
+  border: 0;
+  outline: 0;
+}
+.sof-w-gauge,
+.sof-w-gauge *,
+.sof-w-gauge *::before,
+.sof-w-gauge *::after {
+  -webkit-tap-highlight-color: transparent;
 }
 .sof-w-gauge .ring {
-  width: 170px; height: 170px;
+  width: 180px;
+  height: 180px;
   margin: 0 auto;
   position: relative;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  /* Physically force a circular bounding region. Anything that tries
+     to paint a rectangle inside this container gets clipped to the
+     inscribed circle. */
+  border-radius: 50%;
+  clip-path: circle(50%);
+  -webkit-clip-path: circle(50%);
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  user-select: none;
+  /* Isolate from parent stacking effects */
+  isolation: isolate;
 }
-.sof-w-gauge .ring svg { transform: rotate(-90deg); }
+.sof-w-gauge .ring:focus,
+.sof-w-gauge .ring:focus-visible,
+.sof-w-gauge .ring:active,
+.sof-w-gauge .ring *,
+.sof-w-gauge .ring *:focus,
+.sof-w-gauge .ring *:focus-visible,
+.sof-w-gauge .ring *:active {
+  outline: 0 !important;
+  outline-offset: 0 !important;
+  box-shadow: none !important;
+  border: 0 !important;
+}
+.sof-w-gauge .ring svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  background: transparent;
+}
 .sof-w-gauge .v {
   position: absolute;
   inset: 0;
@@ -4122,63 +4590,72 @@ table.sof-refineries tbody td.num {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 2px;
 }
 .sof-w-gauge .v .num {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
-  font-size: 46px;
+  font-family: var(--font-display, "Geist"), sans-serif;
+  font-size: 52px;
   font-weight: 600;
-  color: var(--accent);
-  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  letter-spacing: -0.035em;
   line-height: 1;
 }
 .sof-w-gauge .v .lab {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
-  font-size: 10.5px;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
+  font-size: 10px;
   color: var(--text-tertiary);
   text-transform: uppercase;
-  letter-spacing: 0.14em;
-  margin-top: 6px;
+  letter-spacing: 0.16em;
+  margin-top: 2px;
 }
 .sof-w-gauge .tier {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
-  font-size: 14px;
+  font-family: var(--font-display, "Geist"), sans-serif;
+  font-size: 13px;
   font-weight: 600;
-  margin-top: 14px;
+  margin-top: 18px;
   color: var(--success);
+  letter-spacing: 0.02em;
+  position: relative;
+  z-index: 1;
 }
 .sof-w-gauge .tier-bar {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 3px;
+  gap: 4px;
   margin-top: 14px;
-  padding: 0 4px;
+  padding: 0 14px;
+  position: relative;
+  z-index: 1;
 }
 .sof-w-gauge .tier-bar > div {
-  height: 5px;
-  border-radius: 2px;
+  height: 4px;
+  border-radius: 999px;
   background: var(--bg-input);
+  transition: background 200ms ease;
 }
 .sof-w-gauge .tier-bar > div.on:nth-child(1) { background: var(--error); }
 .sof-w-gauge .tier-bar > div.on:nth-child(2) { background: var(--warning); }
-.sof-w-gauge .tier-bar > div.on:nth-child(3) { background: #a3a3a3; }
+.sof-w-gauge .tier-bar > div.on:nth-child(3) { background: var(--text-tertiary); }
 .sof-w-gauge .tier-bar > div.on:nth-child(4) { background: var(--success); }
-.sof-w-gauge .tier-bar > div.on:nth-child(5) { background: #22c55e; }
+.sof-w-gauge .tier-bar > div.on:nth-child(5) { background: #22c55e; box-shadow: 0 0 12px rgba(34, 197, 94, 0.35); }
 .sof-w-gauge .tier-labels {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 3px;
-  margin-top: 6px;
-  padding: 0 4px;
+  gap: 4px;
+  margin-top: 8px;
+  padding: 0 14px;
+  position: relative;
+  z-index: 1;
 }
 .sof-w-gauge .tier-labels > span {
   font-size: 9.5px;
   color: var(--text-tertiary);
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   text-align: center;
 }
 
 .sof-w-brk {
-  padding: 14px 20px;
+  padding: 10px 18px;
   border-top: 1px solid var(--border-subtle);
 }
 .sof-w-brk-row {
@@ -4190,7 +4667,7 @@ table.sof-refineries tbody td.num {
 }
 .sof-w-brk-row .k { color: var(--text-secondary); }
 .sof-w-brk-row .v {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   color: var(--text-primary);
 }
 .sof-w-brk-row .v.up { color: var(--success); }
@@ -4220,7 +4697,7 @@ table.sof-refineries tbody td.num {
   line-height: 1.55;
 }
 .sof-w-warning-card h5 {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   font-size: 13px;
   font-weight: 600;
   color: #fbbf24;
@@ -4229,17 +4706,324 @@ table.sof-refineries tbody td.num {
   align-items: center;
   gap: 6px;
 }
+.sof-w-warning-card p {
+  margin: 0;
+}
+
+/* ---------- Token cell helper (used by both tables) ---------- */
+.sof-w-token-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.sof-w-token-id {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.sof-w-token-id .nm {
+  font-family: var(--font-display, "Geist"), sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sof-w-token-id .sym {
+  font-family: var(--font-mono, "Geist Mono"), monospace;
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+.sof-w-cell-link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  transition: opacity 120ms ease;
+}
+.sof-w-cell-link:hover {
+  opacity: 0.85;
+}
+.sof-w-cell-link:hover .nm {
+  color: var(--accent);
+}
+
+.sof-w-row-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
+  font-size: 11.5px;
+  color: var(--accent);
+  text-decoration: none;
+  padding: 4px 8px;
+  border-radius: 5px;
+  transition: background 120ms ease;
+}
+.sof-w-row-cta:hover {
+  background: var(--accent-bg);
+}
+
+.sof-w-txlink {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  text-decoration: none;
+}
+.sof-w-txlink:hover {
+  color: var(--accent) !important;
+}
+
+.sof-w-tbl-wrap {
+  overflow-x: auto;
+}
+
+/* ---------- Empty panel inside tabs ---------- */
+.sof-w-empty {
+  padding: 40px 28px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.sof-w-empty-title {
+  font-family: var(--font-display, "Geist"), sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+.sof-w-empty p {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-tertiary);
+  margin: 0;
+  max-width: 46ch;
+}
+.sof-w-empty-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 8px 14px;
+  border-radius: 6px;
+  background: var(--accent-bg);
+  border: 1px solid rgba(245, 166, 35, 0.32);
+  color: var(--accent);
+  font-size: 12.5px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 120ms ease;
+}
+.sof-w-empty-cta:hover {
+  background: rgba(245, 166, 35, 0.18);
+}
+
+/* ---------- Refined reputation breakdown ---------- */
+.sof-w-brk-row .k b {
+  font-family: var(--font-mono, "Geist Mono"), monospace;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-right: 2px;
+}
+.sof-w-brk-detail {
+  padding: 10px 18px 14px;
+  font-size: 11.5px;
+  color: var(--text-tertiary);
+  line-height: 1.55;
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.sof-w-brk-detail strong {
+  color: var(--text-secondary);
+  font-family: var(--font-mono, "Geist Mono"), monospace;
+  font-weight: 600;
+  margin-right: 4px;
+}
+/* ---------- Loading skeletons (sof-w-sk-* prefix) ---------- */
+.sof-w-sk-line {
+  display: block;
+  background: linear-gradient(
+    90deg,
+    var(--bg-input) 0%,
+    var(--bg-overlay) 50%,
+    var(--bg-input) 100%
+  );
+  background-size: 200% 100%;
+  border-radius: 4px;
+  animation: sof-w-sk-shimmer 1.6s ease-in-out infinite;
+}
+.sof-w-sk-block {
+  width: 100%;
+  background: var(--bg-input);
+  border-radius: 8px;
+  animation: sof-w-sk-pulse 1.6s ease-in-out infinite;
+}
+.sof-w-sk-circle {
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: var(--bg-input);
+  margin: 0 auto;
+  animation: sof-w-sk-pulse 1.6s ease-in-out infinite;
+}
+.sof-w-sk-card {
+  display: flex !important;
+  flex-direction: column;
+  gap: 0;
+}
+.sof-w-sk-panel {
+  padding: 18px 20px;
+}
+@keyframes sof-w-sk-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+@keyframes sof-w-sk-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sof-w-sk-line,
+  .sof-w-sk-block,
+  .sof-w-sk-circle {
+    animation: none;
+  }
+}
 
 @media (max-width: 1100px) {
-  .sof-w-body { grid-template-columns: 1fr; padding: 24px 32px; }
-  .sof-w-kpi-strip { grid-template-columns: repeat(2, 1fr); }
+  .sof-w-body { padding: 18px 32px 32px; }
+  .sof-w-hdr { padding: 24px 32px 22px; }
+  .sof-w-hdr-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+  .sof-w-kpi-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); padding-left: 32px; padding-right: 32px; }
+  .sof-w-rep-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .sof-w-rep-cell-gauge {
+    grid-column: 1 / -1;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .sof-w-rep-cell + .sof-w-rep-cell {
+    border-left: 1px solid var(--border-subtle);
+  }
+  .sof-w-rep-cell-gauge + .sof-w-rep-cell {
+    border-left: 0;
+  }
 }
 @media (max-width: 680px) {
-  .sof-w-crumb,
   .sof-w-hdr,
   .sof-w-body { padding-left: 20px; padding-right: 20px; }
-  .sof-w-hdr .actions { width: 100%; margin-left: 0; }
-  .sof-w-heatmap { grid-template-columns: repeat(26, 1fr); }
+  .sof-w-hdr { padding: 22px 20px; gap: 18px; }
+  .sof-w-hdr h1 { font-size: 22px; }
+  .sof-w-hdr-top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .sof-w-hdr-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .sof-w-copy-btn { padding: 5px 9px; font-size: 10.5px; }
+  .sof-w-hdr-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .sof-w-stat-chip { padding: 9px 12px; }
+  .sof-w-stat-chip .k { font-size: 9.5px; }
+  .sof-w-stat-chip .v { font-size: 12.5px; }
+  .sof-w-body { padding-bottom: 28px; gap: 12px; }
+  .sof-w-kpi-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 20px 20px;
+    gap: 8px;
+  }
+  .sof-w-kpi { padding: 14px 14px; }
+  .sof-w-kpi .v { font-size: 24px; }
+  .sof-w-heatmap,
+  .sof-w-heatmap-months { grid-template-columns: repeat(26, 1fr); }
+
+  /* Reputation panel — stack to single column on mobile */
+  .sof-w-rep-grid {
+    grid-template-columns: 1fr;
+  }
+  .sof-w-rep-cell {
+    padding: 16px 18px;
+  }
+  .sof-w-rep-cell + .sof-w-rep-cell {
+    border-left: 0;
+    border-top: 1px solid var(--border-subtle);
+  }
+  .sof-w-rep-cell-gauge {
+    border-bottom: 0;
+  }
+
+  /* Tabs scroll-snap on mobile (already enabled by overflow-x: auto above) */
+  .sof-wp-tabs-list { padding: 0 4px; }
+  .sof-wp-tab { padding: 12px 10px; font-size: 12.5px; }
+  .sof-wp-tab .cnt { font-size: 10px; padding: 1px 6px; }
+
+  /* Tables → card list on mobile */
+  .sof-w-tbl-wrap {
+    overflow-x: visible;
+    padding: 8px 14px 14px;
+  }
+  .sof-w-tbl,
+  .sof-w-tbl tbody,
+  .sof-w-tbl tr,
+  .sof-w-tbl td {
+    display: block;
+    width: 100%;
+  }
+  .sof-w-tbl thead {
+    display: none;
+  }
+  .sof-w-tbl tbody tr {
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    background: var(--bg-elevated);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .sof-w-tbl tbody td {
+    padding: 6px 0 !important;
+    border-bottom: 1px dashed var(--border-subtle) !important;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    text-align: right !important;
+  }
+  .sof-w-tbl tbody td:last-child {
+    border-bottom: 0 !important;
+    padding-bottom: 0 !important;
+  }
+  .sof-w-tbl tbody td::before {
+    content: attr(data-label);
+    font-family: var(--font-mono, "Geist Mono"), monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-tertiary);
+    flex: none;
+  }
+  /* Token cell: stack the label above the row */
+  .sof-w-tbl tbody td:has(.sof-w-token-row) {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: left !important;
+  }
+  .sof-w-tbl tbody td:has(.sof-w-token-row)::before {
+    margin-bottom: 4px;
+  }
+  .sof-w-tbl .fade { font-size: 11px; }
+  .sof-w-tbl-wrap .sof-w-tbl td.num { font-family: var(--font-mono, "Geist Mono"), monospace; }
 }
 
 /* ============================================================
@@ -4248,7 +5032,7 @@ table.sof-refineries tbody td.num {
 
 .sof-lb-hdr { padding: 32px 48px 0; }
 .sof-lb-hdr h1 {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   font-weight: 600;
   font-size: 30px;
   letter-spacing: -0.02em;
@@ -4302,7 +5086,7 @@ table.sof-refineries tbody td.num {
 .sof-lb-toolbar .seg button {
   padding: 6px 12px;
   border-radius: 4px;
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 11px;
   color: var(--text-tertiary);
   background: transparent;
@@ -4313,7 +5097,7 @@ table.sof-refineries tbody td.num {
 }
 .sof-lb-toolbar .meta {
   margin-left: auto;
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 11px;
   color: var(--text-tertiary);
 }
@@ -4327,7 +5111,7 @@ table.sof-refineries tbody td.num {
   margin-bottom: 14px;
 }
 .sof-lb-section-h h2 {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   font-size: 20px;
   font-weight: 600;
   margin: 0;
@@ -4358,7 +5142,7 @@ table.sof-refineries tbody td.num {
   );
 }
 .sof-lb-podium-card .rank {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 11px;
   color: var(--text-tertiary);
   text-transform: uppercase;
@@ -4383,7 +5167,7 @@ table.sof-refineries tbody td.num {
   flex: none;
 }
 .sof-lb-podium-card .nm {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   font-size: 16px;
   font-weight: 600;
   display: inline-flex;
@@ -4392,7 +5176,7 @@ table.sof-refineries tbody td.num {
   flex-wrap: wrap;
 }
 .sof-lb-podium-card .pl {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 11.5px;
   color: var(--text-tertiary);
   margin-top: 1px;
@@ -4408,10 +5192,10 @@ table.sof-refineries tbody td.num {
   color: var(--text-tertiary);
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
 }
 .sof-lb-podium-card .stats .v {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 18px;
   color: var(--text-primary);
   margin-top: 4px;
@@ -4435,7 +5219,7 @@ table.sof-refineries tbody td.num {
 .sof-lb-table thead th {
   text-align: left;
   padding: 12px 22px;
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 10.5px;
   color: var(--text-tertiary);
   text-transform: uppercase;
@@ -4454,10 +5238,10 @@ table.sof-refineries tbody td.num {
 .sof-lb-table tbody tr:hover { background: var(--bg-overlay); }
 .sof-lb-table td.num {
   text-align: right;
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
 }
 .sof-lb-table .rk {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 13px;
   color: var(--text-tertiary);
   width: 50px;
@@ -4488,18 +5272,18 @@ table.sof-refineries tbody td.num {
   background: linear-gradient(135deg, #ef4444, #f59e0b);
 }
 .sof-lb-table .who .nm {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   font-weight: 600;
   font-size: 13.5px;
 }
 .sof-lb-table .who .pl {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 11px;
   color: var(--text-tertiary);
   margin-top: 1px;
 }
 .sof-lb-table .delta {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 11.5px;
 }
 .sof-lb-table .delta.up { color: var(--success); }
@@ -4552,7 +5336,7 @@ table.sof-refineries tbody td.num {
   font-size: 12.5px;
 }
 .sof-doc-toc h6 {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 10.5px;
   color: var(--text-tertiary);
   text-transform: uppercase;
@@ -4586,14 +5370,14 @@ table.sof-refineries tbody td.num {
   margin-bottom: 32px;
 }
 .sof-doc-hdr .meta {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 11px;
   color: var(--text-tertiary);
   text-transform: uppercase;
   letter-spacing: 0.14em;
 }
 .sof-doc-hdr h1 {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   font-size: 40px;
   font-weight: 600;
   letter-spacing: -0.02em;
@@ -4612,7 +5396,7 @@ table.sof-refineries tbody td.num {
   scroll-margin-top: 24px;
 }
 .sof-doc-main h2 {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   font-size: 22px;
   font-weight: 600;
   letter-spacing: -0.01em;
@@ -4623,7 +5407,7 @@ table.sof-refineries tbody td.num {
   flex-wrap: wrap;
 }
 .sof-doc-main h2 .nm {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 11px;
   color: var(--text-tertiary);
   text-transform: uppercase;
@@ -4649,7 +5433,7 @@ table.sof-refineries tbody td.num {
 }
 .sof-doc-main ul li { margin-bottom: 6px; }
 .sof-doc-main code {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 12.5px;
   background: var(--bg-input);
   padding: 2px 6px;
@@ -4664,7 +5448,7 @@ table.sof-refineries tbody td.num {
   border-radius: 8px;
   padding: 24px;
   margin: 18px 0;
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 13px;
   line-height: 1.8;
   color: var(--text-primary);
@@ -4703,12 +5487,12 @@ table.sof-refineries tbody td.num {
 .sof-doc-tier:nth-child(4) .top { background: var(--success); }
 .sof-doc-tier:nth-child(5) .top { background: #22c55e; }
 .sof-doc-tier .nm {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   font-size: 13px;
   font-weight: 600;
 }
 .sof-doc-tier .rng {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 11px;
   color: var(--text-tertiary);
   margin-top: 4px;
@@ -4734,7 +5518,7 @@ table.sof-refineries tbody td.num {
   background: var(--bg-elevated);
   text-align: left;
   padding: 11px 16px;
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 10.5px;
   color: var(--text-tertiary);
   text-transform: uppercase;
@@ -4750,15 +5534,15 @@ table.sof-refineries tbody td.num {
 .sof-doc-brk-tbl tbody tr:last-child td { border-bottom: 0; }
 .sof-doc-brk-tbl td.num {
   text-align: right;
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
 }
 .sof-doc-brk-tbl td.pos {
   color: var(--success);
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
 }
 .sof-doc-brk-tbl td.neg {
   color: var(--error);
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
 }
 .sof-doc-brk-tbl tr:hover { background: var(--bg-overlay); }
 
@@ -4770,7 +5554,7 @@ table.sof-refineries tbody td.num {
   margin: 18px 0;
 }
 .sof-doc-callout h4 {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   font-size: 14px;
   color: var(--accent);
   margin: 0 0 6px;
@@ -4807,7 +5591,7 @@ table.sof-refineries tbody td.num {
   border-bottom: 1px solid var(--border-subtle);
 }
 .sof-tx-hdr h1 {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   font-weight: 600;
   font-size: 32px;
   letter-spacing: -0.02em;
@@ -4845,14 +5629,14 @@ table.sof-refineries tbody td.num {
   flex: none;
 }
 .sof-tx-banner .nm {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   font-size: 18px;
   font-weight: 600;
   color: var(--success);
 }
 .sof-tx-banner .det {
   margin-left: auto;
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 11.5px;
   color: var(--text-tertiary);
 }
@@ -4876,12 +5660,12 @@ table.sof-refineries tbody td.num {
   gap: 12px;
 }
 .sof-tx-svc-top .nm {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   font-size: 14px;
   font-weight: 600;
 }
 .sof-tx-svc-top .det {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 11px;
   color: var(--text-tertiary);
   margin-top: 2px;
@@ -4890,7 +5674,7 @@ table.sof-refineries tbody td.num {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 11px;
   color: var(--success);
 }
@@ -4915,14 +5699,14 @@ table.sof-refineries tbody td.num {
 .sof-tx-svc .scale {
   display: flex;
   justify-content: space-between;
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 9.5px;
   color: var(--text-tertiary);
   margin-top: 6px;
 }
 
 .sof-tx-section h3 {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   font-size: 18px;
   font-weight: 600;
   letter-spacing: -0.005em;
@@ -4944,14 +5728,14 @@ table.sof-refineries tbody td.num {
   gap: 6px;
 }
 .sof-tx-audit .lab {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 10.5px;
   color: var(--text-tertiary);
   text-transform: uppercase;
   letter-spacing: 0.12em;
 }
 .sof-tx-audit .v {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   font-size: 18px;
   font-weight: 600;
 }
@@ -4982,7 +5766,7 @@ table.sof-refineries tbody td.num {
   padding: 16px 18px;
 }
 .sof-tx-prog .nm {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   font-size: 14px;
   font-weight: 600;
   display: flex;
@@ -4991,12 +5775,12 @@ table.sof-refineries tbody td.num {
   gap: 10px;
 }
 .sof-tx-prog .nm .v {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 11px;
   color: var(--success);
 }
 .sof-tx-prog .id {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 11.5px;
   color: var(--text-tertiary);
   margin-top: 6px;
@@ -5012,7 +5796,7 @@ table.sof-refineries tbody td.num {
 }
 .sof-tx-prog .det b {
   color: var(--text-primary);
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
 }
 
 .sof-tx-incidents {
@@ -5031,12 +5815,12 @@ table.sof-refineries tbody td.num {
 }
 .sof-tx-inc-row:last-child { border-bottom: 0; }
 .sof-tx-inc-row .when {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 11.5px;
   color: var(--text-tertiary);
 }
 .sof-tx-inc-row .sev {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 10.5px;
   padding: 3px 8px;
   border-radius: 3px;
@@ -5068,7 +5852,7 @@ table.sof-refineries tbody td.num {
   margin-bottom: 3px;
 }
 .sof-tx-inc-row .dur {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 11px;
   color: var(--text-tertiary);
 }
@@ -5088,45 +5872,45 @@ table.sof-refineries tbody td.num {
  * DEVELOPERS (sof-dv-* prefix).
  * ============================================================ */
 .sof-dv-hero { padding: 56px 48px 32px; border-bottom: 1px solid var(--border-subtle); background: radial-gradient(circle at 80% 0%, rgba(245, 166, 35, 0.08), transparent 50%); }
-.sof-dv-hero .meta { font-family: var(--font-mono, "JetBrains Mono"), monospace; font-size: 11px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.14em; margin-bottom: 14px; }
-.sof-dv-hero h1 { font-family: var(--font-display, "Space Grotesk"), sans-serif; font-size: 42px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 14px; line-height: 1.05; max-width: 780px; }
+.sof-dv-hero .meta { font-family: var(--font-mono, "Geist Mono"), monospace; font-size: 11px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.14em; margin-bottom: 14px; }
+.sof-dv-hero h1 { font-family: var(--font-display, "Geist"), sans-serif; font-size: 42px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 14px; line-height: 1.05; max-width: 780px; }
 .sof-dv-hero p { font-size: 16px; color: var(--text-secondary); line-height: 1.6; max-width: 640px; margin: 0 0 24px; }
 .sof-dv-hero .cta-row { display: flex; gap: 10px; flex-wrap: wrap; }
 .sof-dv-body { padding: 48px; display: flex; flex-direction: column; gap: 48px; max-width: 1280px; margin: 0 auto; }
-.sof-dv-section h3 { font-family: var(--font-display, "Space Grotesk"), sans-serif; font-size: 22px; font-weight: 600; letter-spacing: -0.01em; margin: 0 0 8px; }
+.sof-dv-section h3 { font-family: var(--font-display, "Geist"), sans-serif; font-size: 22px; font-weight: 600; letter-spacing: -0.01em; margin: 0 0 8px; }
 .sof-dv-section .sub { color: var(--text-secondary); font-size: 13.5px; margin: 0 0 22px; max-width: 560px; line-height: 1.55; }
 .sof-dv-code-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .sof-dv-code-card { background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: 10px; overflow: hidden; }
 .sof-dv-code-card .head { padding: 12px 18px; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center; }
-.sof-dv-code-card .head h4 { font-family: var(--font-display, "Space Grotesk"), sans-serif; font-size: 13px; font-weight: 600; margin: 0; }
-.sof-dv-code-card .head .lang { font-family: var(--font-mono, "JetBrains Mono"), monospace; font-size: 10.5px; color: var(--text-tertiary); background: var(--bg-input); padding: 3px 8px; border-radius: 3px; letter-spacing: 0.06em; }
-.sof-dv-code-card pre { margin: 0; padding: 18px; font-family: var(--font-mono, "JetBrains Mono"), monospace; font-size: 12px; line-height: 1.7; color: #e5e7eb; overflow-x: auto; background: #0a0a0a; }
+.sof-dv-code-card .head h4 { font-family: var(--font-display, "Geist"), sans-serif; font-size: 13px; font-weight: 600; margin: 0; }
+.sof-dv-code-card .head .lang { font-family: var(--font-mono, "Geist Mono"), monospace; font-size: 10.5px; color: var(--text-tertiary); background: var(--bg-input); padding: 3px 8px; border-radius: 3px; letter-spacing: 0.06em; }
+.sof-dv-code-card pre { margin: 0; padding: 18px; font-family: var(--font-mono, "Geist Mono"), monospace; font-size: 12px; line-height: 1.7; color: #e5e7eb; overflow-x: auto; background: #0a0a0a; }
 .sof-dv-code-card .com { color: #737373; }
 .sof-dv-code-card .key { color: #60a5fa; }
 .sof-dv-code-card .str { color: #fbbf24; }
 .sof-dv-code-card .fn { color: #a3e635; }
 .sof-dv-code-card .ty { color: #f0abfc; }
 .sof-dv-endpoints { background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: 10px; overflow: hidden; }
-.sof-dv-ep-row { display: grid; grid-template-columns: 80px 1fr 200px; align-items: center; gap: 18px; padding: 14px 20px; border-bottom: 1px solid var(--border-subtle); font-family: var(--font-mono, "JetBrains Mono"), monospace; font-size: 13px; }
+.sof-dv-ep-row { display: grid; grid-template-columns: 80px 1fr 200px; align-items: center; gap: 18px; padding: 14px 20px; border-bottom: 1px solid var(--border-subtle); font-family: var(--font-mono, "Geist Mono"), monospace; font-size: 13px; }
 .sof-dv-ep-row:last-child { border-bottom: 0; }
 .sof-dv-ep-row .m { padding: 3px 8px; border-radius: 3px; font-size: 10.5px; font-weight: 600; text-align: center; letter-spacing: 0.04em; }
 .sof-dv-ep-row .m.get { background: rgba(34, 197, 94, 0.12); color: #4ade80; }
 .sof-dv-ep-row .m.post { background: rgba(245, 166, 35, 0.12); color: var(--accent); }
 .sof-dv-ep-row .m.ws { background: rgba(124, 58, 237, 0.18); color: #c4b5fd; }
 .sof-dv-ep-row .path { color: var(--text-primary); }
-.sof-dv-ep-row .desc { color: var(--text-tertiary); font-family: var(--font-body, "Inter"), sans-serif; font-size: 12.5px; text-align: right; }
+.sof-dv-ep-row .desc { color: var(--text-tertiary); font-family: var(--font-body, "Geist"), sans-serif; font-size: 12.5px; text-align: right; }
 .sof-dv-sdk-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
 .sof-dv-sdk-card { background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 22px; }
-.sof-dv-sdk-card .nm { font-family: var(--font-display, "Space Grotesk"), sans-serif; font-size: 16px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
-.sof-dv-sdk-card .nm .lang { font-family: var(--font-mono, "JetBrains Mono"), monospace; font-size: 10.5px; color: var(--text-tertiary); background: var(--bg-input); padding: 3px 8px; border-radius: 3px; }
-.sof-dv-sdk-card .install { font-family: var(--font-mono, "JetBrains Mono"), monospace; font-size: 12px; color: #a3e635; background: #0a0a0a; padding: 10px 12px; border-radius: 5px; margin: 14px 0; border: 1px solid var(--border-subtle); }
+.sof-dv-sdk-card .nm { font-family: var(--font-display, "Geist"), sans-serif; font-size: 16px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.sof-dv-sdk-card .nm .lang { font-family: var(--font-mono, "Geist Mono"), monospace; font-size: 10.5px; color: var(--text-tertiary); background: var(--bg-input); padding: 3px 8px; border-radius: 3px; }
+.sof-dv-sdk-card .install { font-family: var(--font-mono, "Geist Mono"), monospace; font-size: 12px; color: #a3e635; background: #0a0a0a; padding: 10px 12px; border-radius: 5px; margin: 14px 0; border: 1px solid var(--border-subtle); }
 .sof-dv-sdk-card .det { font-size: 12.5px; color: var(--text-secondary); line-height: 1.55; }
 .sof-dv-sdk-card a { color: var(--accent); font-size: 12px; display: inline-block; margin-top: 10px; cursor: pointer; }
 .sof-dv-guide-list { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .sof-dv-guide { background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 18px 20px; display: flex; gap: 16px; align-items: flex-start; cursor: pointer; transition: border-color 120ms; }
 .sof-dv-guide:hover { border-color: var(--accent); }
-.sof-dv-guide .num { font-family: var(--font-mono, "JetBrains Mono"), monospace; font-size: 18px; color: var(--text-tertiary); font-weight: 600; flex: none; width: 32px; }
-.sof-dv-guide h5 { font-family: var(--font-display, "Space Grotesk"), sans-serif; font-size: 14px; font-weight: 600; margin: 0 0 4px; }
+.sof-dv-guide .num { font-family: var(--font-mono, "Geist Mono"), monospace; font-size: 18px; color: var(--text-tertiary); font-weight: 600; flex: none; width: 32px; }
+.sof-dv-guide h5 { font-family: var(--font-display, "Geist"), sans-serif; font-size: 14px; font-weight: 600; margin: 0 0 4px; }
 .sof-dv-guide p { font-size: 12.5px; color: var(--text-secondary); margin: 0; line-height: 1.5; }
 .sof-dv-guide .ml { margin-left: auto; color: var(--text-tertiary); }
 @media (max-width: 900px) {
@@ -5138,21 +5922,21 @@ table.sof-refineries tbody td.num {
  * HELP CENTER (sof-hp-* prefix).
  * ============================================================ */
 .sof-hp-hero { padding: 56px 48px 40px; text-align: center; border-bottom: 1px solid var(--border-subtle); }
-.sof-hp-hero h1 { font-family: var(--font-display, "Space Grotesk"), sans-serif; font-size: 38px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 12px; }
+.sof-hp-hero h1 { font-family: var(--font-display, "Geist"), sans-serif; font-size: 38px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 12px; }
 .sof-hp-hero p { color: var(--text-secondary); font-size: 15px; max-width: 540px; margin: 0 auto 24px; line-height: 1.55; }
 .sof-hp-search { max-width: 560px; margin: 0 auto; background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 14px 18px; display: flex; align-items: center; gap: 12px; }
 .sof-hp-search input { flex: 1; background: transparent; border: 0; color: var(--text-primary); font-size: 15px; outline: 0; }
 .sof-hp-search input::placeholder { color: var(--text-tertiary); }
-.sof-hp-search .kbd { font-family: var(--font-mono, "JetBrains Mono"), monospace; font-size: 11px; color: var(--text-tertiary); background: var(--bg-input); padding: 3px 7px; border-radius: 4px; border: 1px solid var(--border-subtle); }
+.sof-hp-search .kbd { font-family: var(--font-mono, "Geist Mono"), monospace; font-size: 11px; color: var(--text-tertiary); background: var(--bg-input); padding: 3px 7px; border-radius: 4px; border: 1px solid var(--border-subtle); }
 .sof-hp-body { padding: 48px; max-width: 1080px; margin: 0 auto; display: flex; flex-direction: column; gap: 40px; }
 .sof-hp-cat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
 .sof-hp-cat { background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 24px; cursor: pointer; transition: border-color 120ms, transform 120ms; display: flex; flex-direction: column; }
 .sof-hp-cat:hover { border-color: var(--accent); transform: translateY(-2px); }
 .sof-hp-cat .ic { width: 36px; height: 36px; border-radius: 8px; background: var(--accent-bg); color: var(--accent); display: grid; place-items: center; margin-bottom: 14px; }
-.sof-hp-cat h4 { font-family: var(--font-display, "Space Grotesk"), sans-serif; font-size: 15px; font-weight: 600; margin: 0 0 4px; }
+.sof-hp-cat h4 { font-family: var(--font-display, "Geist"), sans-serif; font-size: 15px; font-weight: 600; margin: 0 0 4px; }
 .sof-hp-cat p { font-size: 12.5px; color: var(--text-tertiary); margin: 0 0 12px; line-height: 1.5; }
-.sof-hp-cat .count { font-family: var(--font-mono, "JetBrains Mono"), monospace; font-size: 11px; color: var(--text-secondary); display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-subtle); padding-top: 12px; margin-top: auto; }
-.sof-hp-faq h3 { font-family: var(--font-display, "Space Grotesk"), sans-serif; font-size: 20px; font-weight: 600; margin: 0 0 18px; }
+.sof-hp-cat .count { font-family: var(--font-mono, "Geist Mono"), monospace; font-size: 11px; color: var(--text-secondary); display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-subtle); padding-top: 12px; margin-top: auto; }
+.sof-hp-faq h3 { font-family: var(--font-display, "Geist"), sans-serif; font-size: 20px; font-weight: 600; margin: 0 0 18px; }
 .sof-hp-faq-list { display: flex; flex-direction: column; background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: 10px; overflow: hidden; }
 .sof-hp-faq-item { border-bottom: 1px solid var(--border-subtle); padding: 0; }
 .sof-hp-faq-item:last-child { border-bottom: 0; }
@@ -5163,10 +5947,10 @@ table.sof-refineries tbody td.num {
 .sof-hp-faq-item[open] summary .ic { transform: rotate(45deg); color: var(--accent); }
 .sof-hp-faq-item .a { padding: 0 22px 18px; font-size: 13.5px; color: var(--text-secondary); line-height: 1.65; }
 .sof-hp-contact { background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-.sof-hp-contact h4 { font-family: var(--font-display, "Space Grotesk"), sans-serif; font-size: 16px; font-weight: 600; margin: 0 0 4px; }
+.sof-hp-contact h4 { font-family: var(--font-display, "Geist"), sans-serif; font-size: 16px; font-weight: 600; margin: 0 0 4px; }
 .sof-hp-contact p { font-size: 13px; color: var(--text-secondary); margin: 0 0 14px; line-height: 1.55; }
 .sof-hp-contact .ch { display: flex; flex-direction: column; gap: 6px; }
-.sof-hp-contact .ch .nm { font-family: var(--font-display, "Space Grotesk"), sans-serif; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.sof-hp-contact .ch .nm { font-family: var(--font-display, "Geist"), sans-serif; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
 .sof-hp-contact .ch .det { font-size: 12px; color: var(--text-secondary); }
 @media (max-width: 900px) {
   .sof-hp-cat-grid, .sof-hp-contact { grid-template-columns: 1fr; }
@@ -5182,10 +5966,10 @@ table.sof-refineries tbody td.num {
 .sof-lg-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border-subtle); margin-bottom: 36px; flex-wrap: wrap; }
 .sof-lg-tabs a { padding: 12px 22px; font-size: 14px; font-weight: 500; color: var(--text-tertiary); border-bottom: 2px solid transparent; cursor: pointer; }
 .sof-lg-tabs a.on { color: var(--text-primary); border-bottom-color: var(--accent); }
-.sof-lg-doc h1 { font-family: var(--font-display, "Space Grotesk"), sans-serif; font-size: 32px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 8px; line-height: 1.1; }
-.sof-lg-doc .meta { font-family: var(--font-mono, "JetBrains Mono"), monospace; font-size: 11.5px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 32px; }
-.sof-lg-doc h2 { font-family: var(--font-display, "Space Grotesk"), sans-serif; font-size: 18px; font-weight: 600; letter-spacing: -0.005em; margin: 36px 0 12px; display: flex; align-items: baseline; gap: 10px; }
-.sof-lg-doc h2::before { content: counter(s, decimal-leading-zero) " ·"; counter-increment: s; font-family: var(--font-mono, "JetBrains Mono"), monospace; font-size: 11px; color: var(--text-tertiary); letter-spacing: 0.12em; font-weight: 500; }
+.sof-lg-doc h1 { font-family: var(--font-display, "Geist"), sans-serif; font-size: 32px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 8px; line-height: 1.1; }
+.sof-lg-doc .meta { font-family: var(--font-mono, "Geist Mono"), monospace; font-size: 11.5px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 32px; }
+.sof-lg-doc h2 { font-family: var(--font-display, "Geist"), sans-serif; font-size: 18px; font-weight: 600; letter-spacing: -0.005em; margin: 36px 0 12px; display: flex; align-items: baseline; gap: 10px; }
+.sof-lg-doc h2::before { content: counter(s, decimal-leading-zero) " ·"; counter-increment: s; font-family: var(--font-mono, "Geist Mono"), monospace; font-size: 11px; color: var(--text-tertiary); letter-spacing: 0.12em; font-weight: 500; }
 .sof-lg-doc p { font-size: 14px; color: var(--text-secondary); line-height: 1.7; margin: 0 0 14px; }
 .sof-lg-doc p b, .sof-lg-doc p strong { color: var(--text-primary); font-weight: 600; }
 .sof-lg-doc ul { padding-left: 18px; color: var(--text-secondary); font-size: 14px; line-height: 1.7; margin: 0 0 14px; }
@@ -5204,19 +5988,19 @@ table.sof-refineries tbody td.num {
 .sof-nf-stage { min-height: calc(100vh - 80px); display: grid; place-items: center; padding: 48px; position: relative; overflow: hidden; }
 .sof-nf-stage::before { content: ""; position: absolute; inset: 0; background-image: linear-gradient(var(--border-subtle) 1px, transparent 1px), linear-gradient(90deg, var(--border-subtle) 1px, transparent 1px); background-size: 48px 48px; opacity: 0.4; pointer-events: none; mask: radial-gradient(circle at center, black, transparent 70%); }
 .sof-nf-card { position: relative; text-align: center; max-width: 560px; background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: 14px; padding: 48px 40px; box-shadow: 0 24px 64px rgba(0, 0, 0, 0.4); }
-.sof-nf-code { font-family: var(--font-mono, "JetBrains Mono"), monospace; font-size: 11px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.18em; margin-bottom: 18px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+.sof-nf-code { font-family: var(--font-mono, "Geist Mono"), monospace; font-size: 11px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.18em; margin-bottom: 18px; display: flex; align-items: center; justify-content: center; gap: 10px; }
 .sof-nf-code::before, .sof-nf-code::after { content: ""; width: 24px; height: 1px; background: var(--border-subtle); }
-.sof-nf-art { margin: 0 auto 22px; width: 120px; height: 120px; border-radius: 14px; background: linear-gradient(180deg, var(--bg-input), var(--bg-overlay)); border: 1px solid var(--border-subtle); position: relative; display: grid; place-items: center; font-family: var(--font-mono, "JetBrains Mono"), monospace; font-size: 48px; color: var(--accent); font-weight: 600; letter-spacing: -0.03em; }
+.sof-nf-art { margin: 0 auto 22px; width: 120px; height: 120px; border-radius: 14px; background: linear-gradient(180deg, var(--bg-input), var(--bg-overlay)); border: 1px solid var(--border-subtle); position: relative; display: grid; place-items: center; font-family: var(--font-mono, "Geist Mono"), monospace; font-size: 48px; color: var(--accent); font-weight: 600; letter-spacing: -0.03em; }
 .sof-nf-art::after { content: "⛔"; position: absolute; bottom: -8px; right: -8px; font-size: 24px; }
-.sof-nf-card h1 { font-family: var(--font-display, "Space Grotesk"), sans-serif; font-size: 30px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 12px; }
+.sof-nf-card h1 { font-family: var(--font-display, "Geist"), sans-serif; font-size: 30px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 12px; }
 .sof-nf-card .det { font-size: 14.5px; color: var(--text-secondary); line-height: 1.6; margin: 0 0 24px; }
-.sof-nf-card .det code { font-family: var(--font-mono, "JetBrains Mono"), monospace; font-size: 12px; background: var(--bg-input); padding: 2px 7px; border-radius: 3px; color: var(--text-primary); border: 1px solid var(--border-subtle); }
+.sof-nf-card .det code { font-family: var(--font-mono, "Geist Mono"), monospace; font-size: 12px; background: var(--bg-input); padding: 2px 7px; border-radius: 3px; color: var(--text-primary); border: 1px solid var(--border-subtle); }
 .sof-nf-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
 .sof-nf-suggest { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border-subtle); display: flex; flex-direction: column; gap: 8px; }
-.sof-nf-suggest .ttl { font-family: var(--font-mono, "JetBrains Mono"), monospace; font-size: 10.5px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.14em; margin-bottom: 6px; }
+.sof-nf-suggest .ttl { font-family: var(--font-mono, "Geist Mono"), monospace; font-size: 10.5px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.14em; margin-bottom: 6px; }
 .sof-nf-suggest a { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-subtle); font-size: 13px; color: var(--text-primary); text-align: left; cursor: pointer; }
 .sof-nf-suggest a:hover { border-color: var(--accent); background: var(--accent-bg); }
-.sof-nf-suggest a .det { font-family: var(--font-mono, "JetBrains Mono"), monospace; font-size: 11px; color: var(--text-tertiary); }
+.sof-nf-suggest a .det { font-family: var(--font-mono, "Geist Mono"), monospace; font-size: 11px; color: var(--text-tertiary); }
 
 /* ============================================================
  * MODALS · CONNECT WALLET + CMD+K PALETTE (sof-mo-* prefix).
@@ -5257,37 +6041,43 @@ table.sof-refineries tbody td.num {
   to { opacity: 1; transform: none; }
 }
 .sof-mo-h {
-  padding: 20px 24px;
-  border-bottom: 1px solid var(--border-subtle);
+  padding: 18px 20px 14px;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
 }
+.sof-mo-h-title {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+}
 .sof-mo-h h3 {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
-  font-size: 18px;
+  font-family: var(--font-display, "Geist"), sans-serif;
+  font-size: 16px;
   font-weight: 600;
-  letter-spacing: -0.005em;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
   margin: 0;
 }
-.sof-mo-h p {
-  font-size: 12.5px;
+.sof-mo-h-count {
+  font-family: var(--font-mono, "Geist Mono"), monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
   color: var(--text-tertiary);
-  margin: 4px 0 0;
-  line-height: 1.5;
+  text-transform: uppercase;
 }
 .sof-mo-h .x {
   color: var(--text-tertiary);
-  font-size: 20px;
-  line-height: 1;
-  width: 28px;
-  height: 28px;
-  border-radius: 5px;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
   display: grid;
   place-items: center;
   background: transparent;
   flex: none;
+  transition: color 120ms, background 120ms;
 }
 .sof-mo-h .x:hover {
   color: var(--text-primary);
@@ -5295,77 +6085,140 @@ table.sof-refineries tbody td.num {
 }
 
 .sof-mo-wallets {
-  padding: 14px 16px;
+  padding: 4px 12px 14px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 2px;
 }
 .sof-mo-wallet-opt {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 12px 14px;
-  border-radius: 8px;
-  border: 1px solid var(--border-subtle);
-  background: var(--bg-input);
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
   cursor: pointer;
-  transition: border-color 120ms, background 120ms;
+  transition: background 120ms ease, border-color 120ms ease;
+  width: 100%;
+  text-align: left;
 }
-.sof-mo-wallet-opt:hover {
-  border-color: var(--accent);
+.sof-mo-wallet-opt:hover:not(:disabled) {
+  background: var(--bg-input);
+  border-color: var(--border-subtle);
+}
+.sof-mo-wallet-opt:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+.sof-mo-wallet-opt.last-used {
   background: var(--accent-bg);
+  border-color: rgba(245, 166, 35, 0.32);
+}
+.sof-mo-wallet-opt.last-used:hover:not(:disabled) {
+  background: var(--accent-bg);
+  border-color: var(--accent);
 }
 .sof-mo-wallet-opt img {
-  width: 28px; height: 28px;
-  border-radius: 6px;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
   flex: none;
+  background: var(--bg-input);
 }
 .sof-mo-wallet-opt .nm {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   font-size: 14px;
   font-weight: 600;
+  color: var(--text-primary);
   flex: 1;
+  letter-spacing: -0.005em;
 }
-.sof-mo-wallet-opt .det {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
-  font-size: 11px;
-  color: var(--text-tertiary);
-}
-.sof-mo-wallet-opt.detected .det { color: var(--success); }
-.sof-mo-wallet-opt .arrow { color: var(--text-tertiary); }
-.sof-mo-wallet-opt:hover .arrow { color: var(--accent); }
 .sof-mo-wallet-opt .more-ic {
-  width: 28px; height: 28px;
-  border-radius: 6px;
-  background: var(--bg-overlay);
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--bg-input);
   display: grid;
   place-items: center;
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
-  font-size: 11px;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
+  font-size: 12px;
   color: var(--text-tertiary);
+  flex: none;
+}
+
+.sof-mo-tag {
+  font-family: var(--font-mono, "Geist Mono"), monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(245, 166, 35, 0.12);
+  border: 1px solid rgba(245, 166, 35, 0.28);
+  flex: none;
+}
+.sof-mo-tag.muted {
+  color: var(--text-tertiary);
+  background: transparent;
+  border-color: var(--border-subtle);
+}
+
+.sof-mo-empty {
+  padding: 24px 14px;
+  font-size: 13px;
+  color: var(--text-tertiary);
+  line-height: 1.6;
+  text-align: center;
+}
+.sof-mo-empty a {
+  color: var(--accent);
+}
+
+.sof-mo-error {
+  margin: 0 16px 12px;
+  padding: 9px 12px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: var(--error);
+  border-radius: 8px;
+  font-size: 12.5px;
 }
 
 .sof-mo-foot {
-  padding: 14px 24px;
+  padding: 14px 20px 16px;
   background: var(--bg-overlay);
   border-top: 1px solid var(--border-subtle);
-  font-size: 12px;
-  color: var(--text-tertiary);
-  line-height: 1.55;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
-.sof-mo-foot .row {
+.sof-mo-foot-trust {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 500;
 }
-.sof-mo-foot .row svg {
-  width: 14px;
-  height: 14px;
-  flex: none;
+.sof-mo-foot-trust svg {
   color: var(--success);
+  flex: none;
 }
-.sof-mo-foot a { color: var(--accent); cursor: pointer; }
+.sof-mo-foot-legal {
+  font-size: 11.5px;
+  color: var(--text-tertiary);
+  line-height: 1.55;
+}
+.sof-mo-foot a {
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: none;
+}
+.sof-mo-foot a:hover {
+  text-decoration: underline;
+}
 
 /* Signing state */
 .sof-mo-signing {
@@ -5382,7 +6235,7 @@ table.sof-refineries tbody td.num {
 }
 @keyframes sof-spin { to { transform: rotate(360deg); } }
 .sof-mo-signing h4 {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   font-size: 16px;
   font-weight: 600;
   margin: 0 0 8px;
@@ -5401,7 +6254,7 @@ table.sof-refineries tbody td.num {
   border-radius: 6px;
   font-size: 11.5px;
   color: var(--text-tertiary);
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   line-height: 1.5;
   text-align: left;
 }
@@ -5439,12 +6292,12 @@ table.sof-refineries tbody td.num {
   border: 0;
   color: var(--text-primary);
   font-size: 15px;
-  font-family: var(--font-body, "Inter"), sans-serif;
+  font-family: var(--font-body, "Geist"), sans-serif;
   outline: 0;
 }
 .sof-mo-pal-input input::placeholder { color: var(--text-tertiary); }
 .sof-mo-pal-input .esc {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 10.5px;
   color: var(--text-tertiary);
   background: var(--bg-input);
@@ -5462,7 +6315,7 @@ table.sof-refineries tbody td.num {
   padding: 6px 18px;
 }
 .sof-mo-pal-grp .ttl {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 10px;
   color: var(--text-tertiary);
   text-transform: uppercase;
@@ -5506,13 +6359,13 @@ table.sof-refineries tbody td.num {
 }
 .sof-mo-pal-row .lab b { font-weight: 500; }
 .sof-mo-pal-row .det {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 10.5px;
   color: var(--text-tertiary);
 }
 .sof-mo-pal-row .det.live { color: var(--success); }
 .sof-mo-pal-row .kbd {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 10px;
   background: var(--bg-input);
   border: 1px solid var(--border-subtle);
@@ -5529,7 +6382,7 @@ table.sof-refineries tbody td.num {
   justify-content: space-between;
   font-size: 11px;
   color: var(--text-tertiary);
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   flex-wrap: wrap;
   gap: 14px;
 }
@@ -5555,6 +6408,70 @@ table.sof-refineries tbody td.num {
   text-align: center;
   font-size: 13px;
   color: var(--text-tertiary);
+}
+
+@media (max-width: 680px) {
+  .sof-mo-scrim {
+    padding-top: 56px;
+    padding-left: 12px;
+    padding-right: 12px;
+    align-items: flex-start;
+  }
+  .sof-mo-modal {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 12px;
+  }
+  .sof-mo-h {
+    padding: 16px 16px 12px;
+  }
+  .sof-mo-h h3 {
+    font-size: 15px;
+  }
+  .sof-mo-h-count {
+    font-size: 10px;
+  }
+  .sof-mo-wallets {
+    padding: 4px 10px 12px;
+  }
+  .sof-mo-wallet-opt {
+    padding: 11px 12px;
+    gap: 11px;
+  }
+  .sof-mo-wallet-opt .nm {
+    font-size: 13.5px;
+  }
+  .sof-mo-tag {
+    font-size: 9.5px;
+    padding: 2px 6px;
+  }
+  .sof-mo-foot {
+    padding: 12px 16px 14px;
+  }
+  .sof-mo-foot-trust {
+    font-size: 11.5px;
+  }
+  .sof-mo-foot-legal {
+    font-size: 11px;
+  }
+  .sof-mo-signing {
+    padding: 28px 18px;
+  }
+  /* Command palette tightens too — same modal shell. */
+  .sof-mo-pal-input {
+    padding: 12px 14px;
+  }
+  .sof-mo-pal-input input {
+    font-size: 14px;
+  }
+  .sof-mo-pal-row {
+    padding: 9px 12px;
+    gap: 10px;
+  }
+  .sof-mo-pal-foot {
+    padding: 10px 14px;
+    font-size: 10.5px;
+  }
 }
 
 /* ============================================================
@@ -5612,7 +6529,7 @@ table.sof-refineries tbody td.num {
   display: grid;
   place-items: center;
   border-radius: 4px;
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 11px;
   font-weight: 600;
 }
@@ -5655,7 +6572,7 @@ table.sof-refineries tbody td.num {
   cursor: pointer;
 }
 .sof-tt-action {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 11px;
   padding: 4px 8px;
   border-radius: 4px;
@@ -5704,7 +6621,7 @@ table.sof-refineries tbody td.num {
   max-width: 920px;
 }
 .sof-lp-hero h1 {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   font-size: 38px;
   font-weight: 600;
   letter-spacing: -0.02em;
@@ -5746,7 +6663,7 @@ table.sof-refineries tbody td.num {
   color: var(--accent);
 }
 .sof-lp-refine-cta h2 {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   font-size: 18px;
   margin: 0;
 }
@@ -5774,7 +6691,7 @@ table.sof-refineries tbody td.num {
   align-items: center;
 }
 .sof-lp-refine-head .title {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -5787,7 +6704,7 @@ table.sof-refineries tbody td.num {
   display: flex;
   gap: 8px;
   align-items: baseline;
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 12.5px;
   color: var(--text-secondary);
 }
@@ -5831,14 +6748,14 @@ table.sof-refineries tbody td.num {
   border-color: rgba(245, 158, 11, 0.32);
 }
 .sof-lp-stream .hd .ey {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 10.5px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--text-tertiary);
 }
 .sof-lp-stream .hd h3 {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   font-size: 18px;
   font-weight: 600;
   margin: 4px 0 0;
@@ -5850,14 +6767,14 @@ table.sof-refineries tbody td.num {
   margin: 0;
 }
 .sof-lp-stream dl.stats dt {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 10.5px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text-tertiary);
 }
 .sof-lp-stream dl.stats dd {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 18px;
   font-weight: 500;
   color: var(--text-primary);
@@ -5896,7 +6813,7 @@ table.sof-refineries tbody td.num {
   color: var(--text-primary);
 }
 .sof-lp-stream .meta {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 11.5px;
   color: var(--text-tertiary);
   margin-top: 2px;
@@ -5973,7 +6890,7 @@ table.sof-refineries tbody td.num {
   background: var(--bg-input);
   display: grid;
   place-items: center;
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 14px;
   color: var(--text-secondary);
   overflow: hidden;
@@ -5984,13 +6901,13 @@ table.sof-refineries tbody td.num {
   object-fit: cover;
 }
 .sof-lp-feed-card .lp-feed-meta .nm {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   font-size: 14px;
   font-weight: 600;
   line-height: 1.25;
 }
 .sof-lp-feed-card .lp-feed-meta .sym {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 11px;
   color: var(--accent);
   margin-top: 2px;
@@ -6007,7 +6924,7 @@ table.sof-refineries tbody td.num {
 }
 .sof-lp-feed-card .lp-feed-ext {
   grid-column: 1 / -1;
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 11px;
   color: var(--text-tertiary);
   text-decoration: none;
@@ -6040,12 +6957,12 @@ table.sof-refineries tbody td.num {
   font-size: 13px;
 }
 .sof-lp-lb li .rk {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 12px;
   color: var(--text-tertiary);
 }
 .sof-lp-lb li .ti {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 10.5px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -6062,7 +6979,7 @@ table.sof-refineries tbody td.num {
 }
 .sof-lp-lb li .sub {
   grid-column: 2 / -1;
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 10.5px;
   color: var(--text-tertiary);
   margin-top: 2px;
@@ -6117,7 +7034,7 @@ table.sof-refineries tbody td.num {
   gap: 24px;
 }
 .sof-lp-howitworks h2 {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   font-size: 24px;
   font-weight: 600;
   margin: 0;
@@ -6141,13 +7058,13 @@ table.sof-refineries tbody td.num {
   gap: 12px;
 }
 .sof-lp-howitworks .num {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 11px;
   letter-spacing: 0.18em;
   color: var(--accent);
 }
 .sof-lp-howitworks h3 {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   font-size: 16px;
   font-weight: 600;
   margin: 0 0 6px;
@@ -6169,7 +7086,7 @@ table.sof-refineries tbody td.num {
   gap: 24px;
 }
 .sof-lp-math h2 {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   font-size: 24px;
   font-weight: 600;
   margin: 0;
@@ -6198,14 +7115,14 @@ table.sof-refineries tbody td.num {
   gap: 6px;
 }
 .sof-lp-math .card .badge {
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 10.5px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--text-tertiary);
 }
 .sof-lp-math .card h3 {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   font-size: 18px;
   font-weight: 600;
   margin: 0;
@@ -6230,7 +7147,7 @@ table.sof-refineries tbody td.num {
 }
 .sof-lp-math dd {
   margin: 0;
-  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 12.5px;
   color: var(--text-primary);
 }
@@ -6275,7 +7192,7 @@ table.sof-refineries tbody td.num {
 /* Feed v2 */
 .sof-lp-feed { display: flex; flex-direction: column; gap: 18px; }
 .sof-lp-feed > header h2 {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   font-size: 24px;
   font-weight: 600;
   margin: 0;
@@ -6357,7 +7274,7 @@ table.sof-refineries tbody td.num {
   object-fit: cover;
 }
 .sof-lp-feed .card .meta .nm {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   font-size: 15px;
   font-weight: 600;
   line-height: 1.25;
@@ -6407,7 +7324,7 @@ table.sof-refineries tbody td.num {
   gap: 16px;
 }
 .sof-lp-prestige h2 {
-  font-family: var(--font-display, "Space Grotesk"), sans-serif;
+  font-family: var(--font-display, "Geist"), sans-serif;
   font-size: 24px;
   font-weight: 600;
   margin: 0;
@@ -6528,31 +7445,51 @@ table.sof-refineries tbody td.num {
     top: 0;
     bottom: 0;
     right: 0;
-    width: min(280px, 80vw);
+    width: min(300px, 86vw);
     z-index: 80;
     background: var(--bg-elevated);
     border-left: 1px solid var(--border-subtle);
     transform: translateX(100%);
-    transition: transform 150ms ease-out;
-    overflow-y: auto;
+    transition: transform 180ms ease-out;
+    box-shadow: -16px 0 32px rgba(0, 0, 0, 0.3);
   }
   .sof-mobile-drawer.on {
     transform: translateX(0);
   }
+
+  /* Static top — never scrolls */
   .sof-mobile-drawer .hdr {
+    flex: none;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 14px 18px;
+    gap: 12px;
+    padding: 14px 16px;
     border-bottom: 1px solid var(--border-subtle);
+    background: var(--bg-elevated);
   }
   .sof-mobile-drawer .hdr .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: var(--text-primary);
     font-family: var(--font-display, sans-serif);
     font-weight: 600;
     font-size: 14px;
-    color: var(--text-primary);
+    letter-spacing: -0.005em;
+    min-width: 0;
+  }
+  .sof-mobile-drawer .hdr .brand img {
+    flex: none;
+  }
+  .sof-mobile-drawer .hdr .brand span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .sof-mobile-drawer .hdr .x {
+    flex: none;
     width: 32px;
     height: 32px;
     display: grid;
@@ -6562,16 +7499,40 @@ table.sof-refineries tbody td.num {
     border: 1px solid var(--border-subtle);
     color: var(--text-secondary);
     cursor: pointer;
+    transition: color 120ms ease, background 120ms ease;
   }
   .sof-mobile-drawer .hdr .x:hover {
     color: var(--text-primary);
     background: var(--bg-overlay);
   }
+
+  /* Middle — only this section scrolls */
+  .sof-mobile-drawer .scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    padding: 8px 0 12px;
+  }
+  .sof-mobile-drawer .scroll::-webkit-scrollbar {
+    width: 6px;
+  }
+  .sof-mobile-drawer .scroll::-webkit-scrollbar-thumb {
+    background: var(--border-subtle);
+    border-radius: 3px;
+  }
+
   .sof-mobile-drawer .grp {
-    padding: 14px 12px 8px;
+    padding: 10px 12px 6px;
     display: flex;
     flex-direction: column;
     gap: 2px;
+  }
+  .sof-mobile-drawer .grp + .grp {
+    border-top: 1px solid var(--border-subtle);
+    margin-top: 6px;
+    padding-top: 14px;
   }
   .sof-mobile-drawer .grp .lab {
     font-family: var(--font-mono, monospace);
@@ -6584,41 +7545,90 @@ table.sof-refineries tbody td.num {
   .sof-mobile-drawer .itm {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 11px 10px;
-    border-radius: 6px;
+    gap: 12px;
+    padding: 11px 12px;
+    border-radius: 8px;
     color: var(--text-secondary);
     text-decoration: none;
     font-size: 14px;
+    font-weight: 500;
     min-height: 44px;
     transition: background 150ms ease-out, color 150ms ease-out;
+  }
+  .sof-mobile-drawer .itm svg {
+    color: var(--text-tertiary);
+    transition: color 150ms ease-out;
+    flex: none;
   }
   .sof-mobile-drawer .itm:hover {
     background: var(--bg-overlay);
     color: var(--text-primary);
   }
+  .sof-mobile-drawer .itm:hover svg {
+    color: var(--text-primary);
+  }
   .sof-mobile-drawer .itm.on {
-    background: var(--bg-overlay);
+    background: var(--accent-bg);
     color: var(--accent);
   }
+  .sof-mobile-drawer .itm.on svg {
+    color: var(--accent);
+  }
+
+  /* Static bottom — never scrolls */
   .sof-mobile-drawer .ft {
-    margin-top: auto;
+    flex: none;
     border-top: 1px solid var(--border-subtle);
-    padding: 14px 16px 18px;
+    background: var(--bg-elevated);
+    padding: 12px 16px 16px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
   }
-  .sof-mobile-drawer .ft .row {
+  .sof-mobile-drawer .ft .net-row {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    color: var(--text-tertiary);
-    font-size: 12px;
+    gap: 10px;
+    padding: 6px 4px;
   }
-  .sof-mobile-drawer .ft .net {
-    font-family: var(--font-mono, monospace);
-    letter-spacing: 0.04em;
+  .sof-mobile-drawer .ft .net-row .net-led {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--warning);
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18);
+    flex: none;
+  }
+  .sof-mobile-drawer .ft .net-row .net-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+  }
+  .sof-mobile-drawer .ft .net-row .net-text .k {
+    font-size: 10px;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-family: var(--font-mono, "Geist Mono"), monospace;
+  }
+  .sof-mobile-drawer .ft .net-row .net-text .v {
+    font-size: 13px;
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+  .sof-mobile-drawer .ft .theme-row {
+    display: flex;
+    justify-content: flex-start;
+  }
+  .sof-mobile-drawer .ft .theme-row .sof-theme-seg {
+    width: 100%;
+    height: 36px;
+    padding: 3px;
+  }
+  .sof-mobile-drawer .ft .theme-row .sof-theme-seg-opt {
+    flex: 1;
+    height: 100%;
+    width: auto;
   }
 
   .sof-mobile-connect {
@@ -6984,56 +7994,6 @@ table.sof-refineries tbody td.num {
     font-size: 12px;
   }
 
-  /* Wallet profile */
-  .sof-w-hdr {
-    padding: 18px 14px;
-    flex-wrap: wrap;
-    gap: 14px;
-  }
-  .sof-w-hdr .av {
-    width: 56px;
-    height: 56px;
-  }
-  .sof-w-hdr h1 {
-    font-size: 18px;
-    line-height: 1.25;
-  }
-  .sof-w-hdr h1 .pl {
-    font-size: 11px;
-  }
-  .sof-w-hdr .meta {
-    font-size: 12px;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-  .sof-w-hdr .actions {
-    width: 100%;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  .sof-w-kpi-strip {
-    grid-template-columns: 1fr;
-    gap: 10px;
-    padding: 0 14px;
-  }
-  .sof-w-crumb {
-    padding: 14px 14px 0;
-    font-size: 12px;
-  }
-
-  /* Dashboard */
-  .sof-dh-hero {
-    padding: 18px 14px;
-  }
-  .sof-dh-kpi-strip {
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-  }
-  .sof-dh-cards {
-    padding: 0 12px;
-    gap: 14px;
-  }
-
   /* Refinery launch wizard */
   .sof-lw-page {
     padding: 16px 12px;
@@ -7118,4 +8078,134 @@ table.sof-refineries tbody td.num {
 /* Admin default spacing (desktop) */
 .sof-admin-page {
   padding: 32px 16px;
+}
+
+/* ============================================================
+ * /wallet — disconnected empty state (sof-wp-* prefix).
+ * ============================================================ */
+.sof-wp-empty-stage {
+  min-height: calc(100vh - 80px);
+  display: grid;
+  place-items: center;
+  padding: 48px 24px;
+  position: relative;
+  overflow: hidden;
+  flex: 1;
+}
+.sof-wp-empty-backdrop {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--border-subtle) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border-subtle) 1px, transparent 1px);
+  background-size: 48px 48px;
+  opacity: 0.35;
+  pointer-events: none;
+  -webkit-mask-image: radial-gradient(circle at center, black, transparent 70%);
+  mask-image: radial-gradient(circle at center, black, transparent 70%);
+}
+.sof-wp-empty-card {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  width: 100%;
+  max-width: 480px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  padding: 40px 36px 28px;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+}
+.sof-wp-empty-icon {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 18px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  background: var(--accent-bg);
+  color: var(--accent);
+  border: 1px solid rgba(245, 166, 35, 0.28);
+}
+.sof-wp-empty-eyebrow {
+  font-family: var(--font-mono, "Geist Mono"), monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  color: var(--text-tertiary);
+  margin-bottom: 10px;
+}
+.sof-wp-empty-title {
+  font-family: var(--font-display, "Geist"), sans-serif;
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  margin: 0 0 10px;
+  line-height: 1.2;
+}
+.sof-wp-empty-desc {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  margin: 0 0 24px;
+}
+.sof-wp-empty-actions {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+.sof-wp-empty-features {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-subtle);
+}
+.sof-wp-empty-feature {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12.5px;
+  color: var(--text-tertiary);
+  justify-content: center;
+}
+.sof-wp-empty-feature svg.ok { color: var(--success); }
+.sof-wp-empty-feature svg.acc { color: var(--accent); }
+
+@media (max-width: 680px) {
+  .sof-wp-empty-stage {
+    padding: 28px 14px 40px;
+    min-height: calc(100vh - 120px);
+  }
+  .sof-wp-empty-card {
+    padding: 32px 22px 24px;
+    border-radius: 12px;
+  }
+  .sof-wp-empty-icon {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 16px;
+    border-radius: 12px;
+  }
+  .sof-wp-empty-icon svg {
+    width: 22px;
+    height: 22px;
+  }
+  .sof-wp-empty-title {
+    font-size: 21px;
+    margin-bottom: 8px;
+  }
+  .sof-wp-empty-desc {
+    font-size: 13.5px;
+    margin-bottom: 20px;
+  }
+  .sof-wp-empty-features {
+    padding-top: 16px;
+    gap: 9px;
+  }
+  .sof-wp-empty-feature {
+    font-size: 12px;
+    text-align: left;
+    justify-content: flex-start;
+  }
 }
