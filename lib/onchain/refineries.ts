@@ -16,6 +16,7 @@ import {
   shortPubkey,
 } from "./token-registry";
 import { fetchMetadataFor, tokenMetaWithOverride } from "./metadata";
+import { fetchMint } from "./mint";
 import { computeReputation } from "@/lib/indexer/reputation";
 
 /**
@@ -133,25 +134,46 @@ export async function fetchAllRefineries(): Promise<UiRefinery[]> {
     return mapRefinery(r.publicKey, a, snap, i + 1, now, metaOverride);
   });
 
-  // Backfill live operator reputation. Dedupe by operator address —
-  // one operator can run multiple refineries, no point computing the
-  // same reputation twice. Failures default to 0 (treated identically
-  // to "unknown" by ReputationChip).
+  // Backfill live operator reputation + token market caps. Both
+  // dedupe before fetching — operators / mints can be reused across
+  // refineries, no point hitting the chain twice. All failures
+  // default to 0 (treated as "unknown" by the UI).
   const uniqueOperators = Array.from(
     new Set(ui.map((r) => r.operatorFull).filter((a): a is string => Boolean(a))),
   );
-  const reps = await Promise.all(
-    uniqueOperators.map((addr) =>
-      computeReputation(addr).then(
-        (r) => r.score,
-        () => 0,
+  const uniqueMints = Array.from(
+    new Set(ui.map((r) => r.tokenMintFull).filter((m): m is string => Boolean(m))),
+  );
+
+  const [reps, mints] = await Promise.all([
+    Promise.all(
+      uniqueOperators.map((addr) =>
+        computeReputation(addr).then(
+          (r) => r.score,
+          () => 0,
+        ),
       ),
     ),
-  );
+    Promise.all(
+      uniqueMints.map((mint) => fetchMint(mint).catch(() => null)),
+    ),
+  ]);
+
   const repByOperator = new Map(uniqueOperators.map((addr, i) => [addr, reps[i]]));
+  const mintByAddr = new Map(uniqueMints.map((mint, i) => [mint, mints[i]]));
+
   for (const r of ui) {
     if (r.operatorFull) {
       r.operatorReputation = repByOperator.get(r.operatorFull) ?? 0;
+    }
+    if (r.tokenMintFull && r.poolInitial > 0 && r.poolUsd > 0) {
+      const info = mintByAddr.get(r.tokenMintFull);
+      if (info && info.supply > BigInt(0)) {
+        const priceUsd = r.poolUsd / r.poolInitial;
+        const supplyWhole =
+          Number(info.supply) / Math.pow(10, info.decimals);
+        r.marketCapUsd = supplyWhole * priceUsd;
+      }
     }
   }
 

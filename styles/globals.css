@@ -2154,37 +2154,73 @@ button {
 
 /* Table */
 .sof-table-wrap {
-  padding: 0 48px 48px;
+  padding: 0 0 48px;
   flex: 1;
   min-width: 0;
 }
 /* Inner wrapper so only the table scrolls horizontally, not the
-   meta row above or the pagination below. */
+   meta row above or the pagination below. Establishes the
+   scrolling ancestor for the sticky Token column. */
 .sof-table-scroll {
   overflow-x: auto;
-  border-radius: 8px;
+  overflow-y: hidden;
+  border: 1px solid var(--border-subtle);
+  border-radius: 0;
+  background: var(--bg-elevated);
+  margin-top: 20px;
 }
 .sof-table-scroll > table.sof-refineries {
-  min-width: 1200px;
+  min-width: 1390px;
 }
-.sof-meta-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 14px 0;
-  font-size: 12.5px;
-  color: var(--text-tertiary);
+/* The whole row is clickable — wire up cursor + hover + focus
+   states so it feels like a link target, not just a hover-tinted
+   row. Status pill etc. remain visually inert. */
+table.sof-refineries tbody tr.sof-refinery-row {
+  cursor: pointer;
 }
-.sof-meta-row .sel { color: var(--text-secondary); }
+table.sof-refineries tbody tr.sof-refinery-row:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
 
+/* Vertical column borders between every column. */
+table.sof-refineries thead th,
+table.sof-refineries tbody td {
+  border-right: 1px solid var(--border-subtle);
+}
+table.sof-refineries thead th:last-child,
+table.sof-refineries tbody td:last-child {
+  border-right: 0;
+}
+
+/* Sticky Token column — pinned to the left edge of .sof-table-scroll
+   while the other columns scroll horizontally underneath. */
+table.sof-refineries th.sof-col-token,
+table.sof-refineries td.sof-col-token {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: var(--bg-elevated);
+}
+/* Match the row hover for the sticky token cell. We layer the
+   white tint on top of --bg-elevated so the cell still occludes
+   columns scrolling underneath, but the visible color matches the
+   rest of the row. */
+table.sof-refineries tbody tr.sof-refinery-row:hover td.sof-col-token {
+  background-color: var(--bg-elevated);
+  background-image: linear-gradient(
+    color-mix(in srgb, var(--text-primary) 6%, transparent),
+    color-mix(in srgb, var(--text-primary) 6%, transparent)
+  );
+}
 table.sof-refineries {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
   background: var(--bg-elevated);
-  border: 1px solid var(--border-subtle);
-  border-radius: 8px;
-  overflow: hidden;
+  /* No overflow:hidden here — it would create a containing block
+     for position:sticky and break the Token column pinning. The
+     parent .sof-table-scroll handles visual clipping + corners. */
 }
 table.sof-refineries thead th {
   background: var(--bg-elevated);
@@ -2192,10 +2228,10 @@ table.sof-refineries thead th {
   padding: 12px 16px;
   font-family: var(--font-mono, "Geist Mono"), monospace;
   font-size: 11px;
-  color: var(--text-tertiary);
+  color: var(--text-primary);
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  font-weight: 500;
+  font-weight: 700;
   border-bottom: 1px solid var(--border-subtle);
   white-space: nowrap;
   user-select: none;
@@ -2215,7 +2251,12 @@ table.sof-refineries tbody td {
   font-size: 13px;
 }
 table.sof-refineries tbody tr { transition: background 80ms; }
-table.sof-refineries tbody tr:hover { background: var(--bg-overlay); }
+table.sof-refineries tbody tr:hover {
+  /* Translucent white tint so the vertical column borders stay
+     visible through the hover highlight (becomes a subtle dark
+     tint in light mode via --text-primary). */
+  background: color-mix(in srgb, var(--text-primary) 6%, transparent);
+}
 table.sof-refineries tbody tr:last-child td { border-bottom: 0; }
 table.sof-refineries tbody td.num {
   text-align: right;
@@ -2224,36 +2265,64 @@ table.sof-refineries tbody td.num {
 }
 
 /* Cell layouts */
+/* Token cell — Dexscreener-style: #rank · logo · TICKER /SOL name */
 .sof-tk {
   display: flex;
   align-items: center;
-  gap: 11px;
+  gap: 10px;
+  min-width: 0;
+}
+.sof-tk .rank {
+  font-family: var(--font-mono, "Geist Mono"), monospace;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  flex: none;
+  min-width: 26px;
 }
 .sof-tk .meta {
   display: flex;
-  flex-direction: column;
-  line-height: 1.25;
+  align-items: baseline;
+  gap: 6px;
   min-width: 0;
+  flex-wrap: nowrap;
+  overflow: hidden;
 }
 .sof-tk .meta .sym {
   font-family: var(--font-display, "Geist"), sans-serif;
-  font-weight: 600;
-  font-size: 14px;
+  font-weight: 700;
+  font-size: 13.5px;
   color: var(--text-primary);
+  letter-spacing: -0.005em;
+  flex: none;
+}
+.sof-tk .meta .sol {
+  font-family: var(--font-mono, "Geist Mono"), monospace;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  flex: none;
 }
 .sof-tk .meta .nm {
-  font-size: 11.5px;
-  color: var(--text-tertiary);
+  font-size: 12.5px;
+  color: var(--text-secondary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 140px;
+  min-width: 0;
 }
-.sof-tk .meta .mint {
+
+/* MCAP / Price / Age cells — mono numerics like Dexscreener */
+.sof-mcap, .sof-price {
   font-family: var(--font-mono, "Geist Mono"), monospace;
-  font-size: 10.5px;
-  color: var(--text-disabled);
-  margin-top: 2px;
+  font-size: 12.5px;
+  color: var(--text-primary);
+}
+.sof-mcap {
+  color: var(--info);
+}
+.sof-age {
+  font-family: var(--font-mono, "Geist Mono"), monospace;
+  font-size: 12px;
+  color: var(--text-primary);
 }
 
 /* Pool amount cell — single value, mono, right-aligned via .num */
@@ -2337,12 +2406,6 @@ table.sof-refineries tbody td.num {
   border-color: rgba(34, 197, 94, 0.18);
 }
 
-.sof-row-actions {
-  display: flex;
-  gap: 6px;
-  justify-content: flex-end;
-}
-
 .sof-pagination {
   display: flex;
   justify-content: space-between;
@@ -2384,9 +2447,37 @@ table.sof-refineries tbody td.num {
   .sof-dir-head { padding: 24px 20px 16px; flex-direction: column; align-items: flex-start; gap: 14px; }
   .sof-filter-bar { padding: 14px 20px; gap: 10px; }
   .sof-search { min-width: 0; }
-  .sof-table-wrap { padding: 0 0 32px; overflow-x: auto; }
-  table.sof-refineries { border-radius: 0; border-left: 0; border-right: 0; min-width: 1100px; }
+  /* Mobile: the table wrap goes full-bleed, the inner scroll
+     container loses its rounded corners/side borders so the table
+     reaches the screen edges. Horizontal scroll is owned by
+     .sof-table-scroll so it stays smooth on touch. */
+  .sof-table-wrap { padding: 0 0 24px; }
+  .sof-table-scroll {
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
+    -webkit-overflow-scrolling: touch;
+  }
   .sof-pagination { padding: 14px 20px; }
+}
+@media (max-width: 767px) {
+  /* Tighten the table for mobile readability — smaller paddings,
+     slightly smaller mono numerics. Token column stays sticky. */
+  table.sof-refineries thead th {
+    padding: 10px 12px;
+    font-size: 9.5px;
+  }
+  table.sof-refineries tbody td {
+    padding: 12px;
+    font-size: 12px;
+  }
+  .sof-tk { gap: 8px; }
+  .sof-tk .rank { min-width: 22px; font-size: 10.5px; }
+  .sof-tk .meta .sym { font-size: 13px; }
+  .sof-tk .meta .nm { font-size: 11.5px; max-width: 120px; }
+  .sof-table-scroll > table.sof-refineries {
+    min-width: 1180px;
+  }
 }
 
 /* Responsive collapse */
@@ -7808,25 +7899,15 @@ table.sof-refineries tbody td.num {
 }
 
 /* ---------- REFINERIES MOBILE CARDS ---------- */
-/* Default: card list hidden on desktop (table wins). */
+/* Mobile card list is deprecated — the desktop table now scrolls
+   horizontally on mobile too, with the Token column sticky-left.
+   Card list stays in code (rendered by the page) but is hidden at
+   every viewport so we keep a single canonical view. */
 .sof-refineries-mobile {
-  display: none;
+  display: none !important;
 }
 
 @media (max-width: 767px) {
-  /* Swap the table for the card list. */
-  .sof-table-wrap {
-    overflow: visible;
-  }
-  table.sof-refineries {
-    display: none;
-  }
-  .sof-refineries-mobile {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding: 0 12px 24px;
-  }
 
   /* Compact header — stack title + actions, drop the inline
    * "indexed 2 sec ago" status into a wrap. */
@@ -7904,12 +7985,6 @@ table.sof-refineries tbody td.num {
   }
 
   /* Meta row above the cards. */
-  .sof-meta-row {
-    padding: 14px 12px 8px;
-    font-size: 12px;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
   /* The lower "Showing N of M" pagination duplicates the meta row
    * above the cards; hide it on mobile to avoid redundancy. */
   .sof-pagination {

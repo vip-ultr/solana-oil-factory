@@ -10,6 +10,7 @@
  * pagination via the indexer endpoint.
  */
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { Search, Plus, ChevronDown, ArrowDown } from "lucide-react";
 import { cn } from "@/lib/cn";
@@ -50,6 +51,33 @@ const STATUS_TABS: { value: StatusFilter; label: string }[] = [
 
 interface RefineryDirectoryProps {
   refineries: Refinery[];
+}
+
+function formatAge(launchedAtIso: string): string {
+  const ms = Date.now() - new Date(launchedAtIso).getTime();
+  if (Number.isNaN(ms)) return "—";
+  if (ms < 0) return "—";
+  const seconds = ms / 1000;
+  if (seconds < 60) return seconds < 5 ? "now" : `${Math.floor(seconds)}s`;
+  const minutes = seconds / 60;
+  if (minutes < 60) return `${Math.floor(minutes)}m`;
+  const hours = minutes / 60;
+  if (hours < 24) return `${Math.floor(hours)}h`;
+  const days = hours / 24;
+  if (days < 30) return `${Math.floor(days)}d`;
+  const months = days / 30;
+  if (months < 12) return `${Math.floor(months)}mo`;
+  const years = days / 365;
+  return `${Math.floor(years)}y`;
+}
+
+/** Adaptive USD price formatter — shows micro-prices with extra
+ *  precision so sub-cent values don't all collapse to "$0.00". */
+function formatPriceUsd(price: number): string {
+  if (price === 0) return "$0";
+  if (price >= 1) return `$${price.toFixed(2)}`;
+  if (price >= 0.01) return `$${price.toFixed(4)}`;
+  return `$${price.toFixed(6)}`;
 }
 
 export function RefineryDirectory({ refineries }: RefineryDirectoryProps) {
@@ -246,20 +274,14 @@ export function RefineryDirectory({ refineries }: RefineryDirectoryProps) {
       </div>
 
       <section className="sof-table-wrap">
-        <div className="sof-meta-row">
-          <span className="sel">
-            Showing {filtered.length} of {refineries.length} refineries
-          </span>
-          <span>
-            Live from <span className="font-mono">devnet</span>
-          </span>
-        </div>
-
         <div className="sof-table-scroll">
         <table className="sof-refineries">
           <thead>
             <tr>
-              <th style={{ width: 220 }}>Token</th>
+              <th className="sof-col-token" style={{ width: 300 }}>Token</th>
+              <th className="num" style={{ width: 100 }}>MCAP</th>
+              <th className="num" style={{ width: 110 }}>Price</th>
+              <th style={{ width: 80 }}>Age</th>
               <th style={{ width: 80 }}>Rep</th>
               <th
                 className={cn("sortable num")}
@@ -279,12 +301,10 @@ export function RefineryDirectory({ refineries }: RefineryDirectoryProps) {
               </th>
               <th className="num" style={{ width: 90 }}>Filled</th>
               <th className="num" style={{ width: 100 }}>Rate / 1%</th>
-              <th style={{ width: 110 }}>Last snapshot</th>
+              <th style={{ width: 150 }}>Last snapshot</th>
               <th className="num" style={{ width: 80 }}>Holders</th>
-              <th style={{ width: 110 }}>Window</th>
               <th style={{ width: 150 }}>Risk</th>
-              <th style={{ width: 100 }}>Status</th>
-              <th className="num" style={{ width: 130 }}></th>
+              <th style={{ width: 130 }}>Status</th>
             </tr>
           </thead>
           <tbody>
@@ -343,28 +363,31 @@ export function RefineryDirectory({ refineries }: RefineryDirectoryProps) {
 }
 
 function Row({ r }: { r: Refinery }) {
+  const router = useRouter();
+  const href = `/refinery/${r.id}`;
   const poolPct = r.poolInitial > 0 ? Math.round((r.poolRemaining / r.poolInitial) * 100) : 0;
   const poolBarTone = poolPct < 20 ? "danger" : poolPct < 35 ? "warn" : "";
-  const isClosed = r.status === "closed";
-  const windowKind: "open" | "urgent" | "closed" | "normal" =
-    r.claimWindowDaysLeft === null
-      ? "open"
-      : r.claimWindowDaysLeft === 0
-        ? "closed"
-        : r.claimWindowDaysLeft <= 1
-          ? "urgent"
-          : "normal";
-  const windowText =
-    windowKind === "open"
-      ? "Open-ended"
-      : windowKind === "closed"
-        ? "Closed"
-        : `${r.claimWindowDaysLeft}d left`;
+  const priceUsd =
+    r.poolInitial > 0 && r.poolUsd > 0 ? r.poolUsd / r.poolInitial : 0;
+  const ageStr = formatAge(r.launchedAtIso);
 
   return (
-    <tr>
-      <td>
+    <tr
+      className="sof-refinery-row"
+      role="link"
+      tabIndex={0}
+      onClick={() => router.push(href)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          router.push(href);
+        }
+      }}
+      aria-label={`Open ${r.tokenName} refinery`}
+    >
+      <td className="sof-col-token">
         <div className="sof-tk">
+          <span className="rank">#{r.rank}</span>
           <TokenMark
             variant={r.tokenMarkVariant}
             symbol={r.tokenSymbol}
@@ -372,10 +395,27 @@ function Row({ r }: { r: Refinery }) {
           />
           <div className="meta">
             <span className="sym">{r.tokenSymbol}</span>
+            <span className="sol">/SOL</span>
             <span className="nm">{r.tokenName}</span>
-            <span className="mint">{r.tokenMint}</span>
           </div>
         </div>
+      </td>
+      <td className="num">
+        {r.marketCapUsd && r.marketCapUsd > 0 ? (
+          <span className="sof-mcap">{formatUsd(r.marketCapUsd)}</span>
+        ) : (
+          <span style={{ color: "var(--text-tertiary)" }}>—</span>
+        )}
+      </td>
+      <td className="num">
+        {priceUsd > 0 ? (
+          <span className="sof-price">{formatPriceUsd(priceUsd)}</span>
+        ) : (
+          <span style={{ color: "var(--text-tertiary)" }}>—</span>
+        )}
+      </td>
+      <td>
+        <span className="sof-age">{ageStr}</span>
       </td>
       <td>
         <ReputationChip score={r.operatorReputation} />
@@ -406,7 +446,7 @@ function Row({ r }: { r: Refinery }) {
           <span style={{ color: "var(--text-tertiary)" }}>—</span>
         )}
       </td>
-      <td>
+      <td style={{ whiteSpace: "nowrap" }}>
         {r.snapshotAgeSeconds > 0 ? (
           formatRelativeTime(r.snapshotAgeSeconds)
         ) : (
@@ -419,11 +459,6 @@ function Row({ r }: { r: Refinery }) {
         ) : (
           <span style={{ color: "var(--text-tertiary)" }}>—</span>
         )}
-      </td>
-      <td>
-        <span className={cn("sof-win-text", windowKind === "urgent" && "urgent", windowKind === "closed" && "closed")}>
-          {windowText}
-        </span>
       </td>
       <td>
         <div className="sof-risk-cell">
@@ -458,20 +493,8 @@ function Row({ r }: { r: Refinery }) {
           )}
         </div>
       </td>
-      <td>
+      <td style={{ whiteSpace: "nowrap" }}>
         <StatusPill status={r.status} />
-      </td>
-      <td>
-        <div className="sof-row-actions">
-          <Link href={`/refinery/${r.id}`} className="sof-btn-mini ghost">
-            View
-          </Link>
-          {!isClosed && (
-            <Link href={`/refinery/${r.id}?action=claim`} className="sof-btn-mini primary">
-              Claim
-            </Link>
-          )}
-        </div>
       </td>
     </tr>
   );

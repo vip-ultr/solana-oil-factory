@@ -45,6 +45,9 @@ export interface Refinery {
   poolRemaining: number;            // base units
   poolUsd: number;
   poolRemainingUsd: number;
+  /** Token market cap in USD = total_supply × priceUsd. 0 when supply
+   *  or price is unknown (devnet tokens with no oracle). */
+  marketCapUsd?: number;
   holdersEligible: number;
   holdersClaimed: number;
   claimRatePer1Pct: number;         // tokens per 1% of supply held
