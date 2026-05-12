@@ -7,7 +7,6 @@ import {
   Home,
   Building2,
   Factory,
-  LayoutDashboard,
   User,
   Star,
   Shield,
@@ -38,7 +37,6 @@ const NAV_PRIMARY: NavItem[] = [
 ];
 
 const NAV_SECONDARY: NavItem[] = [
-  { key: "dashboard", label: "My dashboard", href: "/dashboard", Icon: LayoutDashboard, match: "prefix" },
   { key: "profile", label: "Profile", href: "/wallet", Icon: User, match: "prefix" },
   { key: "reputation", label: "Reputation", href: "/reputation", Icon: Star, match: "prefix" },
   { key: "trust", label: "Trust & status", href: "/trust", Icon: Shield, match: "prefix" },

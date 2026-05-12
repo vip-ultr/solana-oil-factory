@@ -49,10 +49,10 @@ export function PoolDrainChart() {
         <g>
           <circle cx="120" cy="72" r="4" fill="#F5A623" stroke="var(--bg-elevated)" strokeWidth="2" />
           <circle cx="320" cy="140" r="4" fill="#F5A623" stroke="var(--bg-elevated)" strokeWidth="2" />
-          <text x="128" y="62" fill="#A3A3A3" fontFamily="var(--font-mono, JetBrains Mono)" fontSize="9">
+          <text x="128" y="62" fill="#A3A3A3" fontFamily="var(--font-mono, Geist Mono)" fontSize="9">
             Snapshot #6
           </text>
-          <text x="328" y="130" fill="#A3A3A3" fontFamily="var(--font-mono, JetBrains Mono)" fontSize="9">
+          <text x="328" y="130" fill="#A3A3A3" fontFamily="var(--font-mono, Geist Mono)" fontSize="9">
             Snapshot #7
           </text>
         </g>

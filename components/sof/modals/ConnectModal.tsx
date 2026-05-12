@@ -1,9 +1,30 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ArrowRight, Check, X } from "lucide-react";
+import { ArrowRight, ShieldCheck, X } from "lucide-react";
 import { useWalletConnection } from "@solana/react-hooks";
 import { useSiws } from "@/components/sof/SiwsProvider";
+import { cn } from "@/lib/cn";
+
+const LAST_USED_KEY = "sof:last-connector";
+
+function readLastUsed(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return window.localStorage.getItem(LAST_USED_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function writeLastUsed(connectorId: string) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(LAST_USED_KEY, connectorId);
+  } catch {
+    // localStorage unavailable — silent.
+  }
+}
 
 /**
  * Mobile detection — UA-based. We only use this to decide whether
@@ -60,6 +81,13 @@ export function ConnectModal({ open, onClose }: Props) {
   // aren't actually wallet-standard ready yet.
   const [picked, setPicked] = useState<string | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
+  const [lastUsed, setLastUsed] = useState<string | null>(null);
+
+  // Read remembered last-used connector when the modal opens so we
+  // can surface it as the primary affordance.
+  useEffect(() => {
+    if (open) setLastUsed(readLastUsed());
+  }, [open]);
 
   // Wait a short beat after open for wallet-standard registrations
   // to land (MWA on Android registers asynchronously). After the
@@ -117,6 +145,7 @@ export function ConnectModal({ open, onClose }: Props) {
     setLocalError(null);
     try {
       await connect(connectorId);
+      writeLastUsed(connectorId);
       // useEffect above closes the modal once `connected` flips.
     } catch (err) {
       setLocalError(
@@ -143,8 +172,12 @@ export function ConnectModal({ open, onClose }: Props) {
   // browser extensions are installed. `ready` is false for
   // wallets the user hasn't installed yet; we still surface them
   // so they can be prompted to install.
+  // Order: last-used (if installed) → other installed (alphabetical) → not-installed.
   const sortedConnectors = [...connectors].sort((a, b) => {
-    // Ready wallets first, then alphabetical.
+    const aLast = a.ready && a.id === lastUsed;
+    const bLast = b.ready && b.id === lastUsed;
+    if (aLast && !bLast) return -1;
+    if (bLast && !aLast) return 1;
     if (a.ready && !b.ready) return -1;
     if (b.ready && !a.ready) return 1;
     return a.name.localeCompare(b.name);
@@ -179,8 +212,9 @@ export function ConnectModal({ open, onClose }: Props) {
         ) : (
           <PickPhase
             connectors={sortedConnectors}
-            isReady={isReady && !grace}
+            isReady={isReady}
             errorMessage={errorMessage}
+            lastUsed={lastUsed}
             onPick={handlePick}
             onClose={onClose}
           />
@@ -194,6 +228,7 @@ interface PickProps {
   connectors: ReturnType<typeof useWalletConnection>["connectors"];
   isReady: boolean;
   errorMessage: string | null;
+  lastUsed: string | null;
   onPick: (connectorId: string, name: string) => void;
   onClose: () => void;
 }
@@ -202,18 +237,22 @@ function PickPhase({
   connectors,
   isReady,
   errorMessage,
+  lastUsed,
   onPick,
   onClose,
 }: PickProps) {
+  const installedCount = connectors.filter((c) => c.ready).length;
+
   return (
     <>
       <div className="sof-mo-h">
-        <div>
-          <h3 id="sof-mo-title">Connect wallet</h3>
-          <p>
-            Choose a Solana wallet. We&apos;ll request a free signature
-            challenge — never an approval transaction.
-          </p>
+        <div className="sof-mo-h-title">
+          <h3 id="sof-mo-title">Connect a wallet</h3>
+          {installedCount > 0 && (
+            <span className="sof-mo-h-count">
+              {installedCount} detected
+            </span>
+          )}
         </div>
         <button
           type="button"
@@ -226,77 +265,56 @@ function PickPhase({
       </div>
 
       <div className="sof-mo-wallets">
-        {!isReady ? (
-          <div
-            style={{
-              padding: "20px 14px",
-              fontSize: 12.5,
-              color: "var(--text-tertiary)",
-            }}
-          >
-            Detecting installed wallets…
-          </div>
+        {connectors.length === 0 && !isReady ? (
+          <div className="sof-mo-empty">Detecting installed wallets…</div>
         ) : connectors.length === 0 ? (
-          <div
-            style={{
-              padding: "20px 14px",
-              fontSize: 12.5,
-              color: "var(--text-tertiary)",
-              lineHeight: 1.55,
-            }}
-          >
+          <div className="sof-mo-empty">
             No Solana wallets detected. Install{" "}
             <a
               href="https://phantom.app/"
               target="_blank"
               rel="noreferrer"
-              style={{ color: "var(--accent)" }}
             >
               Phantom
-            </a>
-            ,{" "}
+            </a>{" "}
+            or{" "}
             <a
               href="https://solflare.com/"
               target="_blank"
               rel="noreferrer"
-              style={{ color: "var(--accent)" }}
             >
               Solflare
-            </a>
-            , or{" "}
-            <a
-              href="https://backpack.app/"
-              target="_blank"
-              rel="noreferrer"
-              style={{ color: "var(--accent)" }}
-            >
-              Backpack
             </a>{" "}
             and reload.
           </div>
         ) : (
           connectors.map((c) => {
             const ready = c.ready ?? true;
+            const isLastUsed = ready && c.id === lastUsed;
             return (
               <button
                 key={c.id}
                 type="button"
-                className={`sof-mo-wallet-opt${ready ? " detected" : ""}`}
+                className={cn(
+                  "sof-mo-wallet-opt",
+                  ready && "detected",
+                  isLastUsed && "last-used",
+                )}
                 onClick={() => ready && onPick(c.id, c.name)}
                 disabled={!ready}
                 aria-disabled={!ready}
               >
                 {c.icon ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={c.icon} alt="" width={28} height={28} />
+                  <img src={c.icon} alt="" width={30} height={30} />
                 ) : (
                   <span className="more-ic" aria-hidden="true">
                     {c.name.slice(0, 1)}
                   </span>
                 )}
                 <span className="nm">{c.name}</span>
-                <span className="det">{ready ? "DETECTED" : "Install ↗"}</span>
-                <span className="arrow">→</span>
+                {isLastUsed && <span className="sof-mo-tag">Last used</span>}
+                {!ready && <span className="sof-mo-tag muted">Install</span>}
               </button>
             );
           })
@@ -304,43 +322,19 @@ function PickPhase({
       </div>
 
       {errorMessage && (
-        <div
-          role="alert"
-          style={{
-            margin: "0 16px 4px",
-            padding: "10px 12px",
-            background: "rgba(239, 68, 68, 0.08)",
-            border: "1px solid rgba(239, 68, 68, 0.3)",
-            color: "var(--error)",
-            borderRadius: 6,
-            fontSize: 12.5,
-          }}
-        >
+        <div role="alert" className="sof-mo-error">
           {errorMessage}
         </div>
       )}
 
       <div className="sof-mo-foot">
-        <div className="row">
-          <Check strokeWidth={2} aria-hidden="true" />
-          <span>
-            <b style={{ color: "var(--text-primary)" }}>Non-custodial.</b> We
-            never see or store your private key.
-          </span>
+        <div className="sof-mo-foot-trust">
+          <ShieldCheck size={13} strokeWidth={2} aria-hidden="true" />
+          <span>Non-custodial · Free signature · No transaction</span>
         </div>
-        <div className="row">
-          <Check strokeWidth={2} aria-hidden="true" />
-          <span>
-            <b style={{ color: "var(--text-primary)" }}>
-              No transaction at connect.
-            </b>{" "}
-            Just a wallet handshake to prove you own the address.
-          </span>
-        </div>
-        <div style={{ marginTop: 8 }}>
-          By connecting you agree to the{" "}
-          <a href="/legal/terms">terms</a>. Programs are{" "}
-          <a href="/trust">verified on-chain</a>.
+        <div className="sof-mo-foot-legal">
+          By connecting you agree to the <a href="/legal/terms">terms</a>.
+          Programs are <a href="/trust">verified on-chain</a>.
         </div>
       </div>
     </>

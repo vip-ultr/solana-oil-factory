@@ -15,7 +15,22 @@ export const revalidate = 0;
 
 export default async function HomePage() {
   const refineries = await fetchAllRefineries();
-  const featured = refineries[0] ?? null;
+  // Pick a refinery with actual activity to feature — first preference is
+  // active with non-empty pool, then any active, then any. Falling back to
+  // refineries[0] would surface empty/closed pools on devnet and make the
+  // homepage card look like a placeholder.
+  const featured =
+    refineries.find(
+      (r) =>
+        (r.status === "active" || r.status === "closingSoon") &&
+        r.poolInitial > 0 &&
+        r.poolRemaining > 0,
+    ) ??
+    refineries.find(
+      (r) => r.status === "active" || r.status === "closingSoon",
+    ) ??
+    refineries[0] ??
+    null;
   const activeCount = refineries.filter(
     (r) => r.status === "active" || r.status === "closingSoon",
   ).length;
@@ -23,7 +38,11 @@ export default async function HomePage() {
 
   return (
     <>
-      <HeroSection featured={featured} activeCount={activeCount} />
+      <HeroSection
+        featured={featured}
+        activeCount={activeCount}
+        totalCount={refineries.length}
+      />
       <TrustStrip />
       <HowItWorks featured={featured} />
       <ActivityTicker events={activity} />

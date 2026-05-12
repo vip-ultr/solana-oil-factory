@@ -10,7 +10,6 @@ import {
   Factory,
   HelpCircle,
   Home,
-  LayoutDashboard,
   LogOut,
   Menu,
   Shield,
@@ -38,7 +37,6 @@ const NAV_PRIMARY: NavLink[] = [
 ];
 
 const NAV_WALLET: NavLink[] = [
-  { key: "dashboard", label: "Dashboard", href: "/dashboard", match: "prefix" },
   { key: "profile", label: "Profile", href: "/wallet", match: "prefix" },
 ];
 
@@ -133,7 +131,10 @@ function MobileDrawer({
         aria-hidden={!open}
       >
         <div className="hdr">
-          <span className="brand">Solana Oil Factory</span>
+          <Link href="/" className="brand" onClick={onClose}>
+            <Image src="/logo.png" alt="" width={24} height={24} priority />
+            <span>Solana Oil Factory</span>
+          </Link>
           <button
             type="button"
             className="x"
@@ -144,31 +145,39 @@ function MobileDrawer({
           </button>
         </div>
 
-        <DrawerGroup
-          title="NAVIGATE"
-          items={NAV_PRIMARY}
-          pathname={pathname}
-          onLink={onClose}
-        />
-        <DrawerGroup
-          title="YOUR WALLET"
-          items={NAV_WALLET}
-          pathname={pathname}
-          onLink={onClose}
-        />
-        <DrawerGroup
-          title="LEARN"
-          items={NAV_LEARN}
-          pathname={pathname}
-          onLink={onClose}
-        />
+        <div className="scroll">
+          <DrawerGroup
+            title="NAVIGATE"
+            items={NAV_PRIMARY}
+            pathname={pathname}
+            onLink={onClose}
+          />
+          <DrawerGroup
+            title="YOUR WALLET"
+            items={NAV_WALLET}
+            pathname={pathname}
+            onLink={onClose}
+          />
+          <DrawerGroup
+            title="LEARN"
+            items={NAV_LEARN}
+            pathname={pathname}
+            onLink={onClose}
+          />
+        </div>
 
         <div className="ft">
-          <ConnectControl />
-          <div className="row">
-            <span className="net">Devnet</span>
+          <div className="net-row" title="Solana Devnet">
+            <span className="net-led" aria-hidden="true" />
+            <div className="net-text">
+              <span className="k">NETWORK</span>
+              <span className="v">Devnet</span>
+            </div>
+          </div>
+          <div className="theme-row">
             <ThemeToggle />
           </div>
+          <ConnectControl />
         </div>
       </aside>
     </>
@@ -213,7 +222,6 @@ const ICON_FOR: Record<string, React.ReactNode> = {
   home: <Home size={16} strokeWidth={1.6} aria-hidden="true" />,
   refineries: <Building2 size={16} strokeWidth={1.6} aria-hidden="true" />,
   launch: <Factory size={16} strokeWidth={1.6} aria-hidden="true" />,
-  dashboard: <LayoutDashboard size={16} strokeWidth={1.6} aria-hidden="true" />,
   profile: <User size={16} strokeWidth={1.6} aria-hidden="true" />,
   reputation: <Star size={16} strokeWidth={1.6} aria-hidden="true" />,
   trust: <Shield size={16} strokeWidth={1.6} aria-hidden="true" />,
@@ -273,7 +281,7 @@ function ConnectControl() {
 
 /**
  * Bottom tab bar shown on viewports < 768px. Four quick targets:
- * Home, Refineries, Launch, Dashboard. Sticky to viewport
+ * Home, Refineries, Launch, Profile. Sticky to viewport
  * bottom; the layout reserves 64px of bottom padding for it.
  */
 export function MobileTabBar() {
@@ -301,10 +309,10 @@ export function MobileTabBar() {
       match: "prefix",
     },
     {
-      key: "dashboard",
-      label: "Dashboard",
-      href: "/dashboard",
-      icon: <LayoutDashboard size={18} strokeWidth={1.6} aria-hidden="true" />,
+      key: "profile",
+      label: "Profile",
+      href: "/wallet",
+      icon: <User size={18} strokeWidth={1.6} aria-hidden="true" />,
       match: "prefix",
     },
   ];

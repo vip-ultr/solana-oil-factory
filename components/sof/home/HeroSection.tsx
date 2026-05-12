@@ -1,23 +1,19 @@
-import { ArrowRight } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { ButtonLink } from "@/components/sof/primitives";
-import { BarrelGauge } from "./BarrelGauge";
 import type { Refinery } from "@/lib/mock-data";
-import { formatTokens } from "@/lib/mock-data";
 
 interface HeroProps {
-  /** Top refinery to feature in the barrel gauge. Null when no
+  /** Top refinery to feature in the status card. Null when no
    *  refinery has launched on this cluster yet. */
   featured: Refinery | null;
   /** Active refinery count from on-chain. */
   activeCount: number;
+  /** Total refineries ever launched on this cluster. */
+  totalCount: number;
 }
 
-export function HeroSection({ featured, activeCount }: HeroProps) {
-  const fillPercent =
-    featured && featured.poolInitial > 0
-      ? Math.round((featured.poolRemaining / featured.poolInitial) * 100)
-      : 0;
-
+export function HeroSection({ featured, activeCount, totalCount }: HeroProps) {
   return (
     <section className="sof-home-hero">
       <div className="sof-home-hero-grid">
@@ -34,9 +30,8 @@ export function HeroSection({ featured, activeCount }: HeroProps) {
           </h1>
 
           <p className="sof-home-sub">
-            Permissionless token distribution on Solana. Operators launch
-            refineries. Holders claim their share. Reputation builds with
-            every claim.
+            Permissionless token distribution for Solana. Operators reward
+            verified holders, and every claim builds on-chain reputation.
           </p>
 
           <div className="sof-home-cta">
@@ -48,84 +43,57 @@ export function HeroSection({ featured, activeCount }: HeroProps) {
             </ButtonLink>
           </div>
 
-          <div className="sof-home-metric-strip">
-            <span>
-              <b>{activeCount}</b> active refineries
-            </span>
-            {/* Aggregate counters (tokens distributed, unique
-                holders, verified operators) require an off-chain
-                indexer to compute across every claim and
-                refinery. Hidden until the indexer ships in v1.1
-                rather than fabricated. */}
+          <div className="sof-home-trust-micro">
+            <span className="dot" aria-hidden="true" />
+            <span>No registration</span>
+            <span className="sep" aria-hidden="true">·</span>
+            <span>No whitelist</span>
+            <span className="sep" aria-hidden="true">·</span>
+            <span>Verified on-chain</span>
           </div>
         </div>
 
-        {featured ? (
-          <BarrelGauge
-            fillPercent={fillPercent}
-            arcLabel={`POOL · ${featured.tokenSymbol} · FEATURED`}
-            tags={[
-              {
-                position: "tl",
-                label: "POOL REMAINING",
-                value: `${formatTokens(featured.poolRemaining)} ${featured.tokenSymbol}`,
-              },
-              {
-                position: "tr",
-                label: `${fillPercent}%`,
-                pinLabel: "FILLED",
-                value: `of ${formatTokens(featured.poolInitial)} initial`,
-              },
-              {
-                position: "bl",
-                label: "HOLDERS CLAIMED",
-                value:
-                  featured.holdersEligible > 0
-                    ? `${featured.holdersClaimed.toLocaleString()} / ${featured.holdersEligible.toLocaleString()}`
-                    : `${featured.holdersClaimed.toLocaleString()} so far`,
-              },
-              {
-                position: "br",
-                label:
-                  featured.claimWindowDaysLeft === null
-                    ? "WINDOW"
-                    : "WINDOW LEFT",
-                value:
-                  featured.claimWindowDaysLeft === null
-                    ? "Open-ended"
-                    : `${featured.claimWindowDaysLeft}d`,
-              },
-            ]}
-          />
-        ) : (
-          <BarrelGauge
-            fillPercent={0}
-            arcLabel="NO ACTIVE REFINERIES"
-            tags={[
-              {
-                position: "tl",
-                label: "POOL REMAINING",
-                value: "—",
-              },
-              {
-                position: "tr",
-                label: "0%",
-                pinLabel: "FILLED",
-                value: "no refinery yet",
-              },
-              {
-                position: "bl",
-                label: "HOLDERS CLAIMED",
-                value: "—",
-              },
-              {
-                position: "br",
-                label: "STATUS",
-                value: "Awaiting first launch",
-              },
-            ]}
-          />
-        )}
+        <div className="sof-hero-status">
+          <div className="sof-hero-status-glow" aria-hidden="true" />
+
+          <div className="sof-hero-status-eyebrow">
+            <span className="pulse" aria-hidden="true" />
+            <span>LIVE PLATFORM</span>
+          </div>
+
+          <div className="sof-hero-status-stat">
+            <div className="num">{activeCount}</div>
+            <div className="lab">
+              Active {activeCount === 1 ? "refinery" : "refineries"} on devnet
+            </div>
+          </div>
+
+          <div className="sof-hero-status-meta">
+            <div className="row">
+              <span className="k">Total launched</span>
+              <span className="v">{totalCount}</span>
+            </div>
+            <div className="row">
+              <span className="k">Network</span>
+              <span className="v">Devnet</span>
+            </div>
+            <div className="row">
+              <span className="k">Audit</span>
+              <span className="v">Pending</span>
+            </div>
+          </div>
+
+          {featured && (
+            <Link
+              href={`/refinery/${featured.id}`}
+              className="sof-hero-status-feat"
+            >
+              <span className="k">Featured</span>
+              <span className="v">{featured.tokenSymbol}</span>
+              <ArrowUpRight size={13} strokeWidth={2} aria-hidden="true" />
+            </Link>
+          )}
+        </div>
       </div>
     </section>
   );

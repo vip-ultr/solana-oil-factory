@@ -85,16 +85,16 @@ export function CommandPalette({ open, onClose }: Props) {
         });
       }
       list.push({
-        key: "recent-dashboard",
+        key: "recent-profile",
         group: "Recent",
         label: (
           <>
-            Open my <b>dashboard</b>
+            Open my <b>profile</b>
           </>
         ),
         kbd: "⌘D",
         iconText: "↗",
-        onPick: () => router.push("/dashboard"),
+        onPick: () => router.push("/wallet"),
       });
     }
 

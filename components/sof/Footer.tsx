@@ -1,5 +1,29 @@
 import Image from "next/image";
 import Link from "next/link";
+import { FaXTwitter, FaDiscord, FaGithub } from "react-icons/fa6";
+
+// TODO — replace these with your actual handles when ready. The
+// icons + structure are wired; only the href values need to change.
+const SOCIAL_LINKS = [
+  {
+    key: "x",
+    label: "Follow on X",
+    href: "https://x.com/",
+    Icon: FaXTwitter,
+  },
+  {
+    key: "discord",
+    label: "Join the Discord",
+    href: "https://discord.gg/",
+    Icon: FaDiscord,
+  },
+  {
+    key: "github",
+    label: "View source on GitHub",
+    href: "https://github.com/vip-ultr/solana-oil-factory",
+    Icon: FaGithub,
+  },
+] as const;
 
 export function Footer() {
   return (
@@ -23,6 +47,22 @@ export function Footer() {
             Verifiable on-chain claim infrastructure for Solana token operators.
             Non-custodial · live on devnet · audit pending.
           </p>
+
+          <div className="sof-foot-social" aria-label="Community">
+            {SOCIAL_LINKS.map(({ key, label, href, Icon }) => (
+              <a
+                key={key}
+                href={href}
+                target="_blank"
+                rel="noreferrer"
+                className="sof-foot-social-btn"
+                aria-label={label}
+                title={label}
+              >
+                <Icon aria-hidden="true" />
+              </a>
+            ))}
+          </div>
         </div>
 
         <div className="sof-foot-col">
@@ -35,7 +75,7 @@ export function Footer() {
               <Link href="/refinery/launch">Launch refinery</Link>
             </li>
             <li>
-              <Link href="/dashboard">Dashboard</Link>
+              <Link href="/wallet">Profile</Link>
             </li>
           </ul>
         </div>
@@ -70,15 +110,6 @@ export function Footer() {
             <li>
               <Link href="/developers">API reference</Link>
             </li>
-            <li>
-              <a
-                href="https://github.com/vip-ultr/solana-oil-factory"
-                target="_blank"
-                rel="noreferrer"
-              >
-                GitHub
-              </a>
-            </li>
           </ul>
         </div>
 
@@ -102,7 +133,7 @@ export function Footer() {
       </div>
 
       <div className="sof-foot-bottom">
-        <span>
+        <span className="legal">
           © 2026 Solana Oil Factory · Not financial advice · Operators are
           independent and unaffiliated with the platform.
         </span>

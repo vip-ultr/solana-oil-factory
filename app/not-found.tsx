@@ -30,8 +30,8 @@ export default function NotFound() {
             <span>Refineries directory</span>
             <span className="det">Filter live refineries on devnet</span>
           </Link>
-          <Link href="/dashboard">
-            <span>My dashboard</span>
+          <Link href="/wallet">
+            <span>My profile</span>
             <span className="det">My refineries · claims · reputation</span>
           </Link>
           <Link href="/help">

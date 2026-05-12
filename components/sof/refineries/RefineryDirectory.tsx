@@ -11,7 +11,7 @@
  */
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Search, Download, Plus, ChevronDown, ArrowDown } from "lucide-react";
+import { Search, Plus, ChevronDown, ArrowDown } from "lucide-react";
 import { cn } from "@/lib/cn";
 import {
   ButtonLink,
@@ -119,29 +119,8 @@ export function RefineryDirectory({ refineries }: RefineryDirectoryProps) {
       <header className="sof-dir-head">
         <div>
           <h1>Refineries</h1>
-          <div className="sub">
-            <b>{counts.active}</b> active
-            <span className="sep">·</span>
-            <b>{counts.closingSoon}</b> closing soon
-            <span className="sep">·</span>
-            <b>{counts.closed}</b> closed
-            <span className="sep">·</span>
-            indexed{" "}
-            <span className="font-mono" style={{ color: "var(--text-secondary)" }}>
-              2 sec ago
-            </span>
-          </div>
         </div>
         <div className="actions">
-          <button
-            type="button"
-            className="sof-btn sof-btn-secondary"
-            disabled={filtered.length === 0}
-            onClick={() => exportRefineriesCsv(filtered)}
-          >
-            <Download size={14} strokeWidth={1.6} aria-hidden="true" />
-            Export CSV
-          </button>
           <ButtonLink href="/refinery/launch" variant="primary">
             <Plus size={14} strokeWidth={2} aria-hidden="true" />
             Launch refinery
@@ -359,68 +338,6 @@ export function RefineryDirectory({ refineries }: RefineryDirectoryProps) {
       </section>
     </>
   );
-}
-
-function exportRefineriesCsv(rows: Refinery[]): void {
-  if (typeof window === "undefined" || rows.length === 0) return;
-  const header = [
-    "rank",
-    "token_symbol",
-    "token_name",
-    "token_mint",
-    "operator",
-    "pool_remaining",
-    "pool_initial",
-    "pool_remaining_usd",
-    "holders_eligible",
-    "holders_claimed",
-    "claim_rate_per_1pct",
-    "snapshot_strategy",
-    "status",
-    "verification",
-    "claim_window_days_left",
-    "launched_at_iso",
-  ].join(",");
-  const escape = (v: string | number | null) => {
-    if (v === null || v === undefined) return "";
-    const s = String(v);
-    return s.includes(",") || s.includes('"') || s.includes("\n")
-      ? `"${s.replace(/"/g, '""')}"`
-      : s;
-  };
-  const lines = rows.map((r) =>
-    [
-      r.rank,
-      r.tokenSymbol,
-      r.tokenName,
-      r.tokenMintFull ?? r.tokenMint,
-      r.operatorFull ?? r.operator,
-      r.poolRemaining,
-      r.poolInitial,
-      r.poolRemainingUsd,
-      r.holdersEligible,
-      r.holdersClaimed,
-      r.claimRatePer1Pct,
-      r.snapshotStrategy,
-      r.status,
-      r.verification,
-      r.claimWindowDaysLeft,
-      r.launchedAtIso,
-    ]
-      .map(escape)
-      .join(","),
-  );
-  const csv = [header, ...lines].join("\n");
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const ts = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `sof-refineries-${ts}.csv`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
 }
 
 function Row({ r }: { r: Refinery }) {
