@@ -1,3 +1,4 @@
+import { Suspense, cache } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
@@ -18,17 +19,16 @@ import {
   WalletOwnerPill,
 } from "@/components/sof/wallet/WalletViewerControls";
 import { WalletCopyButton } from "@/components/sof/wallet/WalletCopyButton";
-import { fetchAllRefineries } from "@/lib/onchain/refineries";
+import { fetchRefinery } from "@/lib/onchain/refineries";
 import { tokenMetaFor } from "@/lib/onchain/token-registry";
 import { loadEvents } from "@/lib/indexer/store";
 import type { IndexedEvent } from "@/lib/indexer/types";
-import { operatorStatsFor } from "@/lib/indexer/aggregations";
 import {
   computeReputation,
   buildClaimHeatmap,
 } from "@/lib/indexer/reputation";
 import { formatTokens } from "@/lib/mock-data";
-import type { TokenMarkVariant } from "@/lib/mock-data";
+import type { Refinery, TokenMarkVariant } from "@/lib/mock-data";
 import { solscanUrl } from "@/lib/program";
 
 interface PageProps {
@@ -65,84 +65,93 @@ const TIER_INDEX: Record<string, number> = {
   excellent: 4,
 };
 
+// ── Per-request cache wrappers ────────────────────────────────────────────────
+// React cache() deduplicates identical calls within a single render pass.
+// KpiStrip and RepPanel both need reputation — only one DB round-trip happens.
+
+const getClaims = cache((address: string) =>
+  loadEvents({ wallet: address, eventName: "ClaimMade" }),
+);
+
+const getWalletLaunches = cache((address: string) =>
+  loadEvents({ wallet: address, eventName: "RefineryLaunched" }),
+);
+
+const getReputation = cache((address: string) => computeReputation(address));
+
+const getHeatmap = cache((address: string) => buildClaimHeatmap(address));
+
+const getTimeline = cache((address: string) =>
+  loadEvents({ wallet: address, limit: 100 }),
+);
+
+// Build mint map only for refineries this wallet has touched — replaces the
+// full-table loadEvents({ eventName: "RefineryLaunched" }) scan.
+async function getRefineryMintMap(address: string): Promise<Map<string, string>> {
+  const [claims, launches] = await Promise.all([
+    getClaims(address),
+    getWalletLaunches(address),
+  ]);
+
+  const map = new Map<string, string>();
+  for (const e of launches) {
+    const ref = e.data.refinery as string | undefined;
+    const mint = e.data.token_mint as string | undefined;
+    if (ref && mint) map.set(ref, mint);
+  }
+
+  const claimedIds = [
+    ...new Set(claims.map((c) => c.refinery).filter((r): r is string => Boolean(r))),
+  ];
+  const missingIds = claimedIds.filter((id) => !map.has(id));
+
+  if (missingIds.length > 0) {
+    const launchArrays = await Promise.all(
+      missingIds.map((id) => loadEvents({ refinery: id, eventName: "RefineryLaunched" })),
+    );
+    for (const evts of launchArrays) {
+      for (const e of evts) {
+        const ref = e.data.refinery as string | undefined;
+        const mint = e.data.token_mint as string | undefined;
+        if (ref && mint) map.set(ref, mint);
+      }
+    }
+  }
+
+  return map;
+}
+
+// Targeted operator stats — replaces operatorStatsFor → topOperators(10000).
+async function getOperatorStats(address: string) {
+  const launches = await getWalletLaunches(address);
+  const operatedIds = [
+    ...new Set(launches.map((e) => e.data.refinery as string).filter(Boolean)),
+  ];
+  if (operatedIds.length === 0) return null;
+
+  const claimsArrays = await Promise.all(
+    operatedIds.map((id) => loadEvents({ refinery: id, eventName: "ClaimMade" })),
+  );
+  const allClaims = claimsArrays.flat();
+  const totalDistributed = allClaims.reduce(
+    (sum, e) => sum + Number(e.data.amount_claimed ?? 0),
+    0,
+  );
+  const uniqueHolders = new Set(
+    allClaims.map((e) => e.data.holder as string).filter(Boolean),
+  );
+
+  return { totalDistributed, uniqueHoldersServed: uniqueHolders.size };
+}
+
+// ── Page shell — renders immediately, no awaits ───────────────────────────────
+
 export default async function WalletPage({ params }: PageProps) {
   const { address } = await params;
   const truncated =
     address.length > 12
       ? `${address.slice(0, 4)}…${address.slice(-4)}`
       : address;
-
-  const [claims, launches, opStats, reputation, heatmap, allRefineries] =
-    await Promise.all([
-      loadEvents({ wallet: address, eventName: "ClaimMade" }),
-      loadEvents({ eventName: "RefineryLaunched" }),
-      operatorStatsFor(address),
-      computeReputation(address),
-      buildClaimHeatmap(address),
-      fetchAllRefineries(),
-    ]);
-
-  // Phase 2: wallet event timeline + snapshots from claimed refineries.
-  // Snapshot query is per-refinery since SnapshotSubmitted.wallet is the
-  // snapshot authority, not the holder.
-  const claimedRefineryIds = [
-    ...new Set(claims.map((c) => c.refinery).filter((r): r is string => Boolean(r))),
-  ];
-  const [walletTimeline, snapshots] = await Promise.all([
-    loadEvents({ wallet: address, limit: 100 }),
-    claimedRefineryIds.length > 0
-      ? Promise.all(
-          claimedRefineryIds.map((id) =>
-            loadEvents({ refinery: id, eventName: "SnapshotSubmitted" }),
-          ),
-        ).then((arrays) =>
-          arrays
-            .flat()
-            .sort((a, b) => b.slot - a.slot || b.logIndex - a.logIndex),
-        )
-      : Promise.resolve([] as IndexedEvent[]),
-  ]);
-
-  const refineryMintMap = new Map<string, string>();
-  const refineryOperatorMap = new Map<string, string>();
-  for (const e of launches) {
-    const ref = e.data.refinery as string | undefined;
-    const mint = e.data.token_mint as string | undefined;
-    const op = e.data.operator as string | undefined;
-    if (ref && mint) refineryMintMap.set(ref, mint);
-    if (ref && op) refineryOperatorMap.set(ref, op);
-  }
-
-  const operatedRefineries = allRefineries.filter(
-    (r) => refineryOperatorMap.get(r.id) === address,
-  );
-  const fillOffset = CIRCUMFERENCE * (1 - reputation.score / 100);
-
-  const claimsPanel = (
-    <ClaimsPanel
-      claims={claims}
-      refineryMintMap={refineryMintMap}
-    />
-  );
-
-  const refineriesPanel = (
-    <OperatedPanel operated={operatedRefineries} />
-  );
-
-  const snapshotsPanel = (
-    <SnapshotsPanel
-      snapshots={snapshots}
-      claims={claims}
-      refineryMintMap={refineryMintMap}
-    />
-  );
-
-  const activityPanel = (
-    <ReputationEventsPanel
-      events={walletTimeline}
-      refineryMintMap={refineryMintMap}
-    />
-  );
 
   return (
     <>
@@ -190,199 +199,23 @@ export default async function WalletPage({ params }: PageProps) {
         </div>
       </header>
 
-      <div className="sof-w-kpi-strip">
-        <KpiTile
-          label="Reputation"
-          value={reputation.score}
-          sub={TIER_LABEL[reputation.tier] ?? reputation.tier}
-          accent
-        />
-        <KpiTile
-          label="Claims"
-          value={claims.length.toLocaleString()}
-          sub={claims.length === 0 ? "no claims yet" : "since first claim"}
-        />
-        <KpiTile
-          label="Refineries operated"
-          value={operatedRefineries.length}
-          sub={
-            opStats
-              ? `${formatTokens(opStats.totalDistributed)} distributed`
-              : "—"
-          }
-        />
-        <KpiTile
-          label="Holders served"
-          value={opStats?.uniqueHoldersServed ?? 0}
-          sub="across operated refineries"
-        />
-        <KpiTile
-          label="Streak"
-          value="—"
-          sub="ships with v1.1"
-          muted
-        />
-      </div>
+      <Suspense fallback={<KpiStripSkeleton />}>
+        <KpiStrip address={address} />
+      </Suspense>
 
       <div className="sof-w-body">
-        {/* Reputation — full-width, internal 3-section horizontal layout */}
-        <div className="sof-w-panel">
-          <div className="sof-w-panel-h">
-            <h3>Reputation</h3>
-            <span className="meta">v1 · 6 signals</span>
-          </div>
-          <div className="sof-w-rep-grid">
-            <div className="sof-w-rep-cell sof-w-rep-cell-gauge">
-              <div className="sof-w-gauge">
-                <div className="ring">
-                  <svg
-                    viewBox="0 0 170 170"
-                    aria-hidden="true"
-                    focusable="false"
-                    role="presentation"
-                    preserveAspectRatio="xMidYMid meet"
-                  >
-                    <circle
-                      cx="85"
-                      cy="85"
-                      r="74"
-                      fill="none"
-                      stroke="var(--bg-input)"
-                      strokeWidth="10"
-                    />
-                    <circle
-                      cx="85"
-                      cy="85"
-                      r="74"
-                      fill="none"
-                      stroke="var(--accent)"
-                      strokeWidth="10"
-                      strokeLinecap="round"
-                      strokeDasharray={CIRCUMFERENCE.toFixed(2)}
-                      strokeDashoffset={fillOffset.toFixed(2)}
-                      transform="rotate(-90 85 85)"
-                    />
-                  </svg>
-                  <div className="v">
-                    <span className="num">{reputation.score}</span>
-                    <span className="lab">/ 100</span>
-                  </div>
-                </div>
-                <div className="tier">
-                  {TIER_LABEL[reputation.tier] ?? reputation.tier}
-                </div>
-                <div className="tier-bar">
-                  {[0, 1, 2, 3, 4].map((idx) => (
-                    <div
-                      key={idx}
-                      className={
-                        idx === TIER_INDEX[reputation.tier] ? "on" : undefined
-                      }
-                    />
-                  ))}
-                </div>
-                <div className="tier-labels">
-                  <span>Risk</span>
-                  <span>Caution</span>
-                  <span>Neutral</span>
-                  <span>Good</span>
-                  <span>Excellent</span>
-                </div>
-              </div>
-            </div>
+        <Suspense fallback={<RepSkeleton />}>
+          <RepPanel address={address} />
+        </Suspense>
 
-            <div className="sof-w-rep-cell sof-w-rep-cell-bars">
-              <div className="sof-w-rep-cell-h">Signal breakdown</div>
-              <div className="sof-w-brk">
-                {reputation.signals.map((s) => (
-                  <div key={s.code} className="sof-w-brk-row">
-                    <span className="k">
-                      <b>{s.code}</b> · {s.label}
-                    </span>
-                    <span className="bar" aria-hidden="true">
-                      <i style={{ width: `${(s.value / s.max) * 100}%` }} />
-                    </span>
-                    <span className="v">
-                      {s.value}/{s.max}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
+        <Suspense fallback={<TabsSkeleton />}>
+          <TabsPanel address={address} />
+        </Suspense>
 
-            <div className="sof-w-rep-cell sof-w-rep-cell-details">
-              <div className="sof-w-rep-cell-h">How each signal was earned</div>
-              <div className="sof-w-brk-detail">
-                {reputation.signals.map((s) => (
-                  <div key={s.code}>
-                    <strong>{s.code}.</strong> {s.detail}
-                  </div>
-                ))}
-              </div>
-              <Link href="/reputation" className="sof-w-rep-methodology">
-                <Info size={12} strokeWidth={2} aria-hidden="true" />
-                How is this calculated?
-              </Link>
-            </div>
-          </div>
-        </div>
+        <Suspense fallback={<HeatmapSkeleton />}>
+          <HeatmapPanel address={address} />
+        </Suspense>
 
-        {/* Activity tabs — full width */}
-        <div className="sof-w-panel">
-          <WalletProfileTabs
-            tabs={[
-              {
-                value: "claims",
-                label: "Recent claims",
-                count: claims.length,
-                panel: claimsPanel,
-              },
-              {
-                value: "refineries",
-                label: "Refineries",
-                count: operatedRefineries.length,
-                panel: refineriesPanel,
-              },
-              {
-                value: "snapshots",
-                label: "Snapshots",
-                panel: snapshotsPanel,
-              },
-              {
-                value: "activity",
-                label: "Reputation events",
-                panel: activityPanel,
-              },
-            ]}
-          />
-        </div>
-
-        {/* Heatmap — full width */}
-        <div className="sof-w-panel">
-          <div className="sof-w-panel-h">
-            <h3>Claim activity · 53 weeks</h3>
-            <span className="meta">
-              {heatmap.totalClaims} claim
-              {heatmap.totalClaims === 1 ? "" : "s"}
-              {heatmap.longestStreakDays > 0 &&
-                ` · longest streak ${heatmap.longestStreakDays} day${heatmap.longestStreakDays === 1 ? "" : "s"}`}
-            </span>
-          </div>
-          <ClaimHeatmap counts={heatmap.counts} />
-          <div className="sof-w-heatmap-legend">
-            Less
-            <div className="leg" aria-hidden="true">
-              <div style={{ background: "var(--bg-input)" }} />
-              <div style={{ background: "rgba(245,166,35,0.25)" }} />
-              <div style={{ background: "rgba(245,166,35,0.5)" }} />
-              <div style={{ background: "rgba(245,166,35,0.75)" }} />
-              <div style={{ background: "var(--accent)" }} />
-            </div>
-            More
-          </div>
-        </div>
-
-        {/* Trust caveat — full width */}
         <div className="sof-w-warning-card">
           <h5>
             <Sparkles size={13} strokeWidth={2} aria-hidden="true" />
@@ -398,6 +231,330 @@ export default async function WalletPage({ params }: PageProps) {
     </>
   );
 }
+
+// ── Async server components ───────────────────────────────────────────────────
+
+async function KpiStrip({ address }: { address: string }) {
+  const [rep, claims, launches, opStats] = await Promise.all([
+    getReputation(address),
+    getClaims(address),
+    getWalletLaunches(address),
+    getOperatorStats(address),
+  ]);
+
+  const operatedCount = new Set(
+    launches.map((e) => e.data.refinery as string).filter(Boolean),
+  ).size;
+
+  return (
+    <div className="sof-w-kpi-strip">
+      <KpiTile
+        label="Reputation"
+        value={rep.score}
+        sub={TIER_LABEL[rep.tier] ?? rep.tier}
+        accent
+      />
+      <KpiTile
+        label="Claims"
+        value={claims.length.toLocaleString()}
+        sub={claims.length === 0 ? "no claims yet" : "since first claim"}
+      />
+      <KpiTile
+        label="Refineries operated"
+        value={operatedCount}
+        sub={
+          opStats
+            ? `${formatTokens(opStats.totalDistributed)} distributed`
+            : "—"
+        }
+      />
+      <KpiTile
+        label="Holders served"
+        value={opStats?.uniqueHoldersServed ?? 0}
+        sub="across operated refineries"
+      />
+      <KpiTile label="Streak" value="—" sub="ships with v1.1" muted />
+    </div>
+  );
+}
+
+async function RepPanel({ address }: { address: string }) {
+  const reputation = await getReputation(address);
+  const fillOffset = CIRCUMFERENCE * (1 - reputation.score / 100);
+
+  return (
+    <div className="sof-w-panel">
+      <div className="sof-w-panel-h">
+        <h3>Reputation</h3>
+        <span className="meta">v1 · 6 signals</span>
+      </div>
+      <div className="sof-w-rep-grid">
+        <div className="sof-w-rep-cell sof-w-rep-cell-gauge">
+          <div className="sof-w-gauge">
+            <div className="ring">
+              <svg
+                viewBox="0 0 170 170"
+                aria-hidden="true"
+                focusable="false"
+                role="presentation"
+                preserveAspectRatio="xMidYMid meet"
+              >
+                <circle
+                  cx="85"
+                  cy="85"
+                  r="74"
+                  fill="none"
+                  stroke="var(--bg-input)"
+                  strokeWidth="10"
+                />
+                <circle
+                  cx="85"
+                  cy="85"
+                  r="74"
+                  fill="none"
+                  stroke="var(--accent)"
+                  strokeWidth="10"
+                  strokeLinecap="round"
+                  strokeDasharray={CIRCUMFERENCE.toFixed(2)}
+                  strokeDashoffset={fillOffset.toFixed(2)}
+                  transform="rotate(-90 85 85)"
+                />
+              </svg>
+              <div className="v">
+                <span className="num">{reputation.score}</span>
+                <span className="lab">/ 100</span>
+              </div>
+            </div>
+            <div className="tier">
+              {TIER_LABEL[reputation.tier] ?? reputation.tier}
+            </div>
+            <div className="tier-bar">
+              {[0, 1, 2, 3, 4].map((idx) => (
+                <div
+                  key={idx}
+                  className={
+                    idx === TIER_INDEX[reputation.tier] ? "on" : undefined
+                  }
+                />
+              ))}
+            </div>
+            <div className="tier-labels">
+              <span>Risk</span>
+              <span>Caution</span>
+              <span>Neutral</span>
+              <span>Good</span>
+              <span>Excellent</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="sof-w-rep-cell sof-w-rep-cell-bars">
+          <div className="sof-w-rep-cell-h">Signal breakdown</div>
+          <div className="sof-w-brk">
+            {reputation.signals.map((s) => (
+              <div key={s.code} className="sof-w-brk-row">
+                <span className="k">
+                  <b>{s.code}</b> · {s.label}
+                </span>
+                <span className="bar" aria-hidden="true">
+                  <i style={{ width: `${(s.value / s.max) * 100}%` }} />
+                </span>
+                <span className="v">
+                  {s.value}/{s.max}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="sof-w-rep-cell sof-w-rep-cell-details">
+          <div className="sof-w-rep-cell-h">How each signal was earned</div>
+          <div className="sof-w-brk-detail">
+            {reputation.signals.map((s) => (
+              <div key={s.code}>
+                <strong>{s.code}.</strong> {s.detail}
+              </div>
+            ))}
+          </div>
+          <Link href="/reputation" className="sof-w-rep-methodology">
+            <Info size={12} strokeWidth={2} aria-hidden="true" />
+            How is this calculated?
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+async function TabsPanel({ address }: { address: string }) {
+  const [claims, launches, timeline] = await Promise.all([
+    getClaims(address),
+    getWalletLaunches(address),
+    getTimeline(address),
+  ]);
+
+  const refineryMintMap = await getRefineryMintMap(address);
+
+  const operatedIds = [
+    ...new Set(launches.map((e) => e.data.refinery as string).filter(Boolean)),
+  ];
+  const operatedResults = await Promise.all(operatedIds.map((id) => fetchRefinery(id)));
+  const operatedRefineries = operatedResults.filter((r): r is Refinery => r !== null);
+
+  const claimedIds = [
+    ...new Set(claims.map((c) => c.refinery).filter((r): r is string => Boolean(r))),
+  ];
+  const snapshots =
+    claimedIds.length > 0
+      ? await Promise.all(
+          claimedIds.map((id) =>
+            loadEvents({ refinery: id, eventName: "SnapshotSubmitted" }),
+          ),
+        ).then((arrays) =>
+          arrays
+            .flat()
+            .sort((a, b) => b.slot - a.slot || b.logIndex - a.logIndex),
+        )
+      : ([] as IndexedEvent[]);
+
+  return (
+    <div className="sof-w-panel">
+      <WalletProfileTabs
+        tabs={[
+          {
+            value: "claims",
+            label: "Recent claims",
+            count: claims.length,
+            panel: (
+              <ClaimsPanel claims={claims} refineryMintMap={refineryMintMap} />
+            ),
+          },
+          {
+            value: "refineries",
+            label: "Refineries",
+            count: operatedRefineries.length,
+            panel: <OperatedPanel operated={operatedRefineries} />,
+          },
+          {
+            value: "snapshots",
+            label: "Snapshots",
+            panel: (
+              <SnapshotsPanel
+                snapshots={snapshots}
+                claims={claims}
+                refineryMintMap={refineryMintMap}
+              />
+            ),
+          },
+          {
+            value: "activity",
+            label: "Reputation events",
+            panel: (
+              <ReputationEventsPanel
+                events={timeline}
+                refineryMintMap={refineryMintMap}
+              />
+            ),
+          },
+        ]}
+      />
+    </div>
+  );
+}
+
+async function HeatmapPanel({ address }: { address: string }) {
+  const heatmap = await getHeatmap(address);
+
+  return (
+    <div className="sof-w-panel">
+      <div className="sof-w-panel-h">
+        <h3>Claim activity · 53 weeks</h3>
+        <span className="meta">
+          {heatmap.totalClaims} claim
+          {heatmap.totalClaims === 1 ? "" : "s"}
+          {heatmap.longestStreakDays > 0 &&
+            ` · longest streak ${heatmap.longestStreakDays} day${heatmap.longestStreakDays === 1 ? "" : "s"}`}
+        </span>
+      </div>
+      <ClaimHeatmap counts={heatmap.counts} />
+      <div className="sof-w-heatmap-legend">
+        Less
+        <div className="leg" aria-hidden="true">
+          <div style={{ background: "var(--bg-input)" }} />
+          <div style={{ background: "rgba(245,166,35,0.25)" }} />
+          <div style={{ background: "rgba(245,166,35,0.5)" }} />
+          <div style={{ background: "rgba(245,166,35,0.75)" }} />
+          <div style={{ background: "var(--accent)" }} />
+        </div>
+        More
+      </div>
+    </div>
+  );
+}
+
+// ── Skeleton fallbacks ────────────────────────────────────────────────────────
+
+function KpiStripSkeleton() {
+  return (
+    <div className="sof-w-kpi-strip">
+      {Array.from({ length: 5 }).map((_, i) => (
+        <div key={i} className="sof-w-kpi sof-w-sk-card">
+          <div className="sof-w-sk-line" style={{ width: 70, height: 9 }} />
+          <div className="sof-w-sk-line" style={{ width: 60, height: 24, marginTop: 8 }} />
+          <div className="sof-w-sk-line" style={{ width: 100, height: 9, marginTop: 6 }} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function RepSkeleton() {
+  return (
+    <div className="sof-w-panel">
+      <div className="sof-w-rep-grid">
+        <div className="sof-w-rep-cell sof-w-rep-cell-gauge" style={{ textAlign: "center" }}>
+          <div className="sof-w-sk-circle" />
+          <div className="sof-w-sk-line" style={{ width: 80, height: 12, margin: "20px auto 0" }} />
+          <div className="sof-w-sk-line" style={{ width: "100%", height: 4, marginTop: 16, borderRadius: 999 }} />
+        </div>
+        <div className="sof-w-rep-cell">
+          <div className="sof-w-sk-line" style={{ width: 110, height: 10 }} />
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="sof-w-sk-line" style={{ width: "100%", height: 12, marginTop: 14 }} />
+          ))}
+        </div>
+        <div className="sof-w-rep-cell">
+          <div className="sof-w-sk-line" style={{ width: 140, height: 10 }} />
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="sof-w-sk-line" style={{ width: i % 2 ? "92%" : "78%", height: 10, marginTop: 10 }} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TabsSkeleton() {
+  return (
+    <div className="sof-w-panel sof-w-sk-panel">
+      <div className="sof-w-sk-line" style={{ width: 180, height: 14 }} />
+      <div className="sof-w-sk-line" style={{ width: "100%", height: 12, marginTop: 18 }} />
+      <div className="sof-w-sk-line" style={{ width: "92%", height: 12, marginTop: 10 }} />
+      <div className="sof-w-sk-line" style={{ width: "85%", height: 12, marginTop: 10 }} />
+    </div>
+  );
+}
+
+function HeatmapSkeleton() {
+  return (
+    <div className="sof-w-panel sof-w-sk-panel">
+      <div className="sof-w-sk-line" style={{ width: 220, height: 14 }} />
+      <div className="sof-w-sk-block" style={{ marginTop: 16, height: 120 }} />
+    </div>
+  );
+}
+
+// ── UI primitives ─────────────────────────────────────────────────────────────
 
 function KpiTile({
   label,
@@ -542,11 +699,7 @@ function RefineryCell({
   );
 }
 
-function OperatedPanel({
-  operated,
-}: {
-  operated: Awaited<ReturnType<typeof fetchAllRefineries>>;
-}) {
+function OperatedPanel({ operated }: { operated: Refinery[] }) {
   if (operated.length === 0) {
     return (
       <EmptyPanel
@@ -622,7 +775,7 @@ function OperatedPanel({
 
 // ── Snapshots panel ──────────────────────────────────────────────────────────
 
-const SNAP_CLAIM_DELAY = 86_400; // mirrors on-chain SNAPSHOT_CLAIM_DELAY_SECONDS
+const SNAP_CLAIM_DELAY = 86_400;
 
 function SnapshotsPanel({
   snapshots,
@@ -643,7 +796,6 @@ function SnapshotsPanel({
   }
 
   const now = Math.floor(Date.now() / 1000);
-  // Build O(1) lookup: "${refinery}-${snapshotIndex}" → claimed
   const claimedKeys = new Set(
     claims.map((c) => `${c.refinery}-${c.data.snapshot_index}`),
   );
